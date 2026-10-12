@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="roseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F47294"/>
+      <stop offset="50%" stop-color="#E05A7E"/>
+      <stop offset="100%" stop-color="#C94367"/>
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#831843" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  <rect width="512" height="512" rx="128" fill="url(#roseGrad)"/>
+  <!-- Shopping Cart with Shield badge -->
+  <g transform="translate(100, 100)" stroke="#FFFFFF" stroke-width="26" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#shadow)">
+    <!-- Cart Body -->
+    <circle cx="90" cy="260" r="16" fill="#FFFFFF"/>
+    <circle cx="230" cy="260" r="16" fill="#FFFFFF"/>
+    <path d="M10 20 h50 l38 180 h150 l32 -130 h-200" />
+    <!-- Heart / Shield icon inside trolley -->
+    <path d="M160 70 C145 50 120 50 105 70 C85 95 105 130 160 160 C215 130 235 95 215 70 C200 50 175 50 160 70 Z" fill="#FFFFFF" fill-opacity="0.9" stroke="none"/>
+  </g>
+</svg>
