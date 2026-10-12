@@ -19,8 +19,15 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Lucide Icons (Local with CDN fallback) -->
+  <script src="js/lucide.min.js"></script>
+  <script>
+    if (typeof lucide === 'undefined') {
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/lucide@latest';
+      document.head.appendChild(s);
+    }
+  </script>
 
   <!-- Main Stylesheet -->
   <link rel="stylesheet" href="css/style.css">
@@ -128,7 +135,7 @@
           <!-- List Actions & Counter Row -->
           <div class="list-actions-row">
             <span class="list-counter-label" id="listCounterLabel">5 Barang Belanja</span>
-            <button class="add-item-trigger-btn" id="openAddItemBtn">
+            <button type="button" class="add-item-trigger-btn" id="openAddItemBtn" onclick="if(window.openAddItemModal) window.openAddItemModal();">
               <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
               <span>Tambah Barang</span>
             </button>
@@ -146,7 +153,7 @@
             </div>
             <h3>Troli Belanja Masih Kosong</h3>
             <p>Yuk mulai catat kebutuhan belanja bulananmu agar pengeluaran kos tetap terkendali!</p>
-            <button class="btn-primary" id="emptyAddBtn" style="max-width: 200px; margin: 0 auto;">
+            <button type="button" class="btn-primary" id="emptyAddBtn" onclick="if(window.openAddItemModal) window.openAddItemModal();" style="max-width: 200px; margin: 0 auto;">
               <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
               <span>Tambah Belanjaan</span>
             </button>

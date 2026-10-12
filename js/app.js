@@ -59,6 +59,7 @@
     closeItemModalBtn: document.getElementById('closeItemModalBtn'),
     cancelItemModalBtn: document.getElementById('cancelItemModalBtn'),
     saveItemModalBtn: document.getElementById('saveItemModalBtn'),
+    saveBtnText: document.getElementById('saveBtnText'),
     itemSuggestionsScroll: document.getElementById('itemSuggestionsScroll'),
     inputItemName: document.getElementById('inputItemName'),
     inputCategory: document.getElementById('inputCategory'),
@@ -539,27 +540,29 @@
 
   function openAddItemModal() {
     state.editingItemId = null;
-    el.modalTitle.textContent = 'Tambah Belanjaan Baru';
-    el.saveBtnText.textContent = 'Simpan ke Troli';
-    el.inputItemName.value = '';
-    el.inputCategory.value = 'bahan_pokok';
-    el.inputUnit.value = 'pcs';
-    el.inputQty.value = 1;
-    el.inputUnitPrice.value = '';
-    el.inputItemNote.value = '';
+    if (el.modalTitle) el.modalTitle.textContent = 'Tambah Belanjaan Baru';
+    if (el.saveBtnText) el.saveBtnText.textContent = 'Simpan ke Troli';
+    if (el.inputItemName) el.inputItemName.value = '';
+    if (el.inputCategory) el.inputCategory.value = 'bahan_pokok';
+    if (el.inputUnit) el.inputUnit.value = 'pcs';
+    if (el.inputQty) el.inputQty.value = 1;
+    if (el.inputUnitPrice) el.inputUnitPrice.value = '';
+    if (el.inputItemNote) el.inputItemNote.value = '';
 
     setDiscountTab('none');
     updateModalCalculations();
     checkModalPriceComparison();
 
-    el.itemModal.classList.add('open');
-    setTimeout(() => el.inputItemName.focus(), 150);
+    if (el.itemModal) el.itemModal.classList.add('open');
+    setTimeout(() => {
+      if (el.inputItemName) el.inputItemName.focus();
+    }, 150);
   }
 
   function openEditItemModal(item) {
     state.editingItemId = item.id;
-    el.modalTitle.textContent = 'Edit Barang Belanja';
-    el.saveBtnText.textContent = 'Perbarui Barang';
+    if (el.modalTitle) el.modalTitle.textContent = 'Edit Barang Belanja';
+    if (el.saveBtnText) el.saveBtnText.textContent = 'Perbarui Barang';
     el.inputItemName.value = item.name;
     el.inputCategory.value = item.category;
     el.inputUnit.value = item.unit;
@@ -696,14 +699,8 @@
     const note = el.inputItemNote.value.trim();
 
     if (!name) {
-      alert('Silakan masukkan nama barang belanjaan.');
-      el.inputItemName.focus();
-      return;
-    }
-
-    if (unitPrice <= 0) {
-      alert('Silakan masukkan harga satuan barang (harus lebih dari 0).');
-      el.inputUnitPrice.focus();
+      showToast('Silakan masukkan nama barang belanjaan.', 'warning');
+      if (el.inputItemName) el.inputItemName.focus();
       return;
     }
 
@@ -1138,6 +1135,24 @@
     el.cancelItemModalBtn.addEventListener('click', closeItemModal);
     el.saveItemModalBtn.addEventListener('click', saveItemFromModal);
 
+    // Enter key shortcuts to quickly save item
+    if (el.inputItemName) {
+      el.inputItemName.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveItemFromModal();
+        }
+      });
+    }
+    if (el.inputUnitPrice) {
+      el.inputUnitPrice.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          saveItemFromModal();
+        }
+      });
+    }
+
     // Modal Qty Stepper
     el.modalQtyPlus.addEventListener('click', () => {
       el.inputQty.value = (Number(el.inputQty.value) || 1) + 1;
@@ -1257,6 +1272,11 @@
       }
     });
   }
+
+  // Expose helpful functions to window for resilience
+  window.openAddItemModal = openAddItemModal;
+  window.saveItemFromModal = saveItemFromModal;
+  window.closeItemModal = closeItemModal;
 
   // Start app on DOM ready
   if (document.readyState === 'loading') {
