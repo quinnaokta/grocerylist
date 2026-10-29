@@ -251,18 +251,113 @@ class SmartStorage {
     this.set('benchmark_prices', benchmarks);
   }
 
+  // User Authentication & Profile Data
+  static getUsers() {
+    return this.get('users_list', DEFAULT_USERS);
+  }
+
+  static saveUsers(users) {
+    this.set('users_list', users);
+  }
+
+  static getCurrentUser() {
+    return this.get('current_user', DEFAULT_USERS[0]); // Default logged-in as Budi Santoso
+  }
+
+  static setCurrentUser(user) {
+    this.set('current_user', user);
+  }
+
+  static logoutUser() {
+    localStorage.removeItem('sg_current_user');
+  }
+
+  static loginUser(email, password) {
+    const users = this.getUsers();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+
+    const found = users.find(u => 
+      (u.email.toLowerCase() === cleanEmail || u.name.toLowerCase() === cleanEmail) && 
+      u.password === cleanPass
+    );
+
+    if (found) {
+      this.setCurrentUser(found);
+      return { success: true, user: found };
+    }
+    return { success: false, message: 'Email atau password salah. Coba akun demo atau cek kembali.' };
+  }
+
+  static registerUser(userData) {
+    const users = this.getUsers();
+    const cleanEmail = (userData.email || '').trim().toLowerCase();
+
+    if (!userData.name || !userData.email || !userData.password) {
+      return { success: false, message: 'Nama, email, dan password wajib diisi!' };
+    }
+
+    if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
+      return { success: false, message: 'Email sudah terdaftar! Silakan login.' };
+    }
+
+    const newUser = {
+      id: 'user-' + Date.now(),
+      name: userData.name.trim(),
+      email: cleanEmail,
+      password: userData.password,
+      role: userData.role || 'Mahasiswa Rantau',
+      city: userData.city || 'Yogyakarta',
+      budget: Number(userData.budget) || 450000,
+      avatar: userData.avatar || '🎒',
+      createdAt: new Date().toISOString()
+    };
+
+    users.push(newUser);
+    this.saveUsers(users);
+    this.setCurrentUser(newUser);
+    return { success: true, user: newUser };
+  }
+
   // Reset to initial demo data
   static resetToDemo() {
     localStorage.removeItem('sg_active_items');
     localStorage.removeItem('sg_budget_limit');
     localStorage.removeItem('sg_history_trips');
     localStorage.removeItem('sg_benchmark_prices');
+    localStorage.removeItem('sg_current_user');
+    localStorage.removeItem('sg_users_list');
   }
 }
+
+const DEFAULT_USERS = [
+  {
+    id: 'user-budi',
+    name: 'Budi Santoso',
+    email: 'budi@rantau.id',
+    password: '123',
+    role: 'Mahasiswa Rantau',
+    city: 'Yogyakarta',
+    budget: 450000,
+    avatar: '👨‍🎓'
+  },
+  {
+    id: 'user-siti',
+    name: 'Siti Rahma',
+    email: 'siti@rantau.id',
+    password: '123',
+    role: 'Anak Kos Hemat',
+    city: 'Bandung',
+    budget: 400000,
+    avatar: '👩‍💻'
+  }
+];
 
 window.SmartData = {
   CATEGORIES,
   UNITS,
   GROCERY_SUGGESTIONS,
+  DEFAULT_USERS,
   SmartStorage
 };
+

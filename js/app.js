@@ -16,6 +16,8 @@
     deferredPrompt: null,
     editingItemId: null,
     currentDiscountType: 'none', // 'none' | 'regular' | 'stacked'
+    currentUser: null,
+    authTab: 'login', // 'login' | 'register'
     soundEnabled: true
   };
 
@@ -28,8 +30,16 @@
     searchItemInput: document.getElementById('searchItemInput'),
     searchClearBtn: document.getElementById('searchClearBtn'),
     listCounterLabel: document.getElementById('listCounterLabel'),
+    listCheckedStatus: document.getElementById('listCheckedStatus'),
+    toggleCheckAllBtn: document.getElementById('toggleCheckAllBtn'),
+    toggleCheckAllText: document.getElementById('toggleCheckAllText'),
     openAddItemBtn: document.getElementById('openAddItemBtn'),
     emptyAddBtn: document.getElementById('emptyAddBtn'),
+
+    // User Header Pill
+    headerUserBtn: document.getElementById('headerUserBtn'),
+    headerUserAvatar: document.getElementById('headerUserAvatar'),
+    headerUserName: document.getElementById('headerUserName'),
 
     // Budget Header Elements
     headerSpentText: document.getElementById('headerSpentText'),
@@ -52,6 +62,8 @@
     // Bottom Navigation
     bottomNav: document.getElementById('bottomNav'),
     navCartCount: document.getElementById('navCartCount'),
+    navAkun: document.getElementById('navAkun'),
+    navAkunLabel: document.getElementById('navAkunLabel'),
 
     // Item Modal Elements
     itemModal: document.getElementById('itemModal'),
@@ -135,6 +147,46 @@
     budgetCardCurrent: document.getElementById('budgetCardCurrent'),
     budgetCardRemainder: document.getElementById('budgetCardRemainder'),
     budgetCardPercent: document.getElementById('budgetCardPercent'),
+
+    // Akun & Auth Screen Elements
+    viewAkun: document.getElementById('viewAkun'),
+    authLoggedInView: document.getElementById('authLoggedInView'),
+    authLoggedOutView: document.getElementById('authLoggedOutView'),
+    profileBigAvatar: document.getElementById('profileBigAvatar'),
+    profileFullName: document.getElementById('profileFullName'),
+    profileRoleBadge: document.getElementById('profileRoleBadge'),
+    profileEmail: document.getElementById('profileEmail'),
+    profileLocation: document.getElementById('profileLocation'),
+    profileBudgetLimit: document.getElementById('profileBudgetLimit'),
+    profileTripCount: document.getElementById('profileTripCount'),
+    profileTotalSpent: document.getElementById('profileTotalSpent'),
+    quickSwitchChips: document.getElementById('quickSwitchChips'),
+    tabBtnLogin: document.getElementById('tabBtnLogin'),
+    tabBtnRegister: document.getElementById('tabBtnRegister'),
+    loginForm: document.getElementById('loginForm'),
+    registerForm: document.getElementById('registerForm'),
+    loginEmail: document.getElementById('loginEmail'),
+    loginPassword: document.getElementById('loginPassword'),
+    toggleLoginPasswordBtn: document.getElementById('toggleLoginPasswordBtn'),
+    loginEyeIcon: document.getElementById('loginEyeIcon'),
+    submitLoginBtn: document.getElementById('submitLoginBtn'),
+    regName: document.getElementById('regName'),
+    regEmail: document.getElementById('regEmail'),
+    regPassword: document.getElementById('regPassword'),
+    toggleRegPasswordBtn: document.getElementById('toggleRegPasswordBtn'),
+    regEyeIcon: document.getElementById('regEyeIcon'),
+    regRole: document.getElementById('regRole'),
+    regCity: document.getElementById('regCity'),
+    regBudget: document.getElementById('regBudget'),
+    submitRegisterBtn: document.getElementById('submitRegisterBtn'),
+    quickLoginBudi: document.getElementById('quickLoginBudi'),
+    quickLoginSiti: document.getElementById('quickLoginSiti'),
+    btnLogoutUser: document.getElementById('btnLogoutUser'),
+    menuSetBudgetBtn: document.getElementById('menuSetBudgetBtn'),
+    menuSwitchAccountBtn: document.getElementById('menuSwitchAccountBtn'),
+    menuSoundToggleBtn: document.getElementById('menuSoundToggleBtn'),
+    menuSoundStatus: document.getElementById('menuSoundStatus'),
+    forgotPassBtn: document.getElementById('forgotPassBtn'),
 
     // PWA & Toast
     pwaBanner: document.getElementById('pwaBanner'),
@@ -251,6 +303,7 @@
   // App Initialization
   function initApp() {
     loadData();
+    renderUserProfile();
     renderCategoryChips();
     renderSuggestionsPills();
     renderGroceryList();
@@ -264,6 +317,7 @@
 
   // Load Data from LocalStorage
   function loadData() {
+    state.currentUser = window.SmartData.SmartStorage.getCurrentUser();
     state.activeItems = window.SmartData.SmartStorage.getActiveItems();
     state.budgetLimit = window.SmartData.SmartStorage.getBudgetLimit();
     state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
@@ -308,7 +362,7 @@
     });
   }
 
-  // Render Grocery Cards (Mobile Touch-Friendly)
+  // Render Grocery Cards (Modern Sebaris / Single-Row Ergonomic Layout)
   function renderGroceryList() {
     el.groceryListContainer.innerHTML = '';
 
@@ -319,8 +373,16 @@
       return matchCat && matchSearch;
     });
 
-    // Update list count
+    const checkedCount = state.activeItems.filter(i => i.inCart).length;
+
+    // Update list count labels
     el.listCounterLabel.textContent = `${filtered.length} Barang Belanja`;
+    if (el.listCheckedStatus) {
+      el.listCheckedStatus.textContent = checkedCount > 0 ? `• ${checkedCount} Siap Beli` : '• Belum ada dipilih';
+    }
+    if (el.toggleCheckAllText) {
+      el.toggleCheckAllText.textContent = (checkedCount === state.activeItems.length && state.activeItems.length > 0) ? 'Batal Semua' : 'Pilih Semua';
+    }
     el.navCartCount.textContent = state.activeItems.length;
 
     if (filtered.length === 0) {
@@ -340,64 +402,66 @@
         // Discount tag text
         let discountBadgeHtml = '';
         if (item.discountType === 'percent') {
-          discountBadgeHtml = `<div class="discount-applied-badge"><i data-lucide="tag" style="width: 12px; height: 12px;"></i> Diskon ${item.discountValue}% (Hemat ${formatRp(pricing.totalSavings)})</div>`;
+          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> ${item.discountValue}% Off</span>`;
         } else if (item.discountType === 'amount') {
-          discountBadgeHtml = `<div class="discount-applied-badge"><i data-lucide="tag" style="width: 12px; height: 12px;"></i> Potongan ${formatRp(item.discountValue)} (Hemat ${formatRp(pricing.totalSavings)})</div>`;
+          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> -${formatRp(item.discountValue)}</span>`;
         } else if (item.discountType === 'stacked') {
           const s1 = item.stackedDiscount?.val1 || 0;
           const s2 = item.stackedDiscount?.val2 || 0;
-          discountBadgeHtml = `<div class="discount-applied-badge"><i data-lucide="layers" style="width: 12px; height: 12px;"></i> Bertumpuk ${s1}% + ${s2}% (Hemat ${formatRp(pricing.totalSavings)})</div>`;
+          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="layers" style="width: 10px; height: 10px;"></i> ${s1}%+${s2}%</span>`;
         }
 
         // Price trend badge HTML
         let trendBadgeHtml = '';
         if (trend.status === 'drop') {
-          trendBadgeHtml = `<span class="price-trend-tag drop"><i data-lucide="trending-down" style="width: 11px; height: 11px;"></i> ${trend.label}</span>`;
+          trendBadgeHtml = `<span class="price-trend-tag drop" title="${trend.label}"><i data-lucide="trending-down" style="width: 10px; height: 10px;"></i> Turun</span>`;
         } else if (trend.status === 'up') {
-          trendBadgeHtml = `<span class="price-trend-tag up"><i data-lucide="trending-up" style="width: 11px; height: 11px;"></i> ${trend.label}</span>`;
-        } else if (trend.status === 'stable') {
-          trendBadgeHtml = `<span class="price-trend-tag stable"><i data-lucide="minus" style="width: 11px; height: 11px;"></i> ${trend.label}</span>`;
-        } else {
-          trendBadgeHtml = `<span class="price-trend-tag new"><i data-lucide="sparkles" style="width: 11px; height: 11px;"></i> Item Baru</span>`;
+          trendBadgeHtml = `<span class="price-trend-tag up" title="${trend.label}"><i data-lucide="trending-up" style="width: 10px; height: 10px;"></i> Naik</span>`;
         }
 
         card.innerHTML = `
-          <div class="card-top-row">
-            <button class="cart-check-btn ${item.inCart ? 'checked' : ''}" data-action="toggle-cart" title="Tandai di troli">
-              <i data-lucide="check" style="width: 18px; height: 18px;"></i>
-            </button>
-            <div class="item-details">
-              <div class="item-badge-row">
-                <span class="category-tag">${catObj.name}</span>
-                ${trendBadgeHtml}
-              </div>
-              <div class="item-name">${escapeHtml(item.name)}</div>
-              <div class="item-subtext">
-                <span>@ ${formatRp(pricing.finalUnitPrice)} / ${item.unit || 'pcs'}</span>
-                ${item.note ? `<span>• <em>${escapeHtml(item.note)}</em></span>` : ''}
-              </div>
+          <!-- 1. Tombol Centang Beli (Left) -->
+          <button class="cart-check-btn ${item.inCart ? 'checked' : ''}" data-action="toggle-cart" title="${item.inCart ? 'Dicentang untuk dibeli (Klik untuk batalkan)' : 'Klik centang saat ingin beli barang ini'}" aria-label="Tandai Beli">
+            <i data-lucide="check" style="width: 17px; height: 17px;"></i>
+          </button>
+          
+          <!-- 2. Informasi Barang Tengah (Sebaris & Padat) -->
+          <div class="card-center-info">
+            <div class="card-name-row">
+              <span class="item-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+              ${item.inCart ? '<span class="pill-in-cart"><i data-lucide="shopping-bag" style="width: 9px; height: 9px;"></i> Siap Beli</span>' : ''}
+            </div>
+            <div class="card-sub-row">
+              <span class="item-price-at">@ ${formatRp(pricing.finalUnitPrice)}/${item.unit || 'pcs'}</span>
+              <span class="sub-sep">•</span>
+              <span class="category-tag-mini">${catObj.name}</span>
+              ${trendBadgeHtml}
               ${discountBadgeHtml}
             </div>
-            <div class="card-more-actions">
-              <button class="mini-action-btn" data-action="edit" title="Edit Barang">
-                <i data-lucide="edit-3" style="width: 16px; height: 16px;"></i>
-              </button>
-              <button class="mini-action-btn" data-action="delete" title="Hapus Barang" style="color: #F43F5E;">
-                <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
-              </button>
-            </div>
+            ${item.note ? `<div class="item-note-inline"><em>Catatan: ${escapeHtml(item.note)}</em></div>` : ''}
           </div>
 
-          <div class="card-bottom-row">
-            <div class="stepper-control">
-              <button class="stepper-btn" data-action="qty-minus" aria-label="Kurangi Jumlah">−</button>
-              <span class="stepper-value">${item.qty}</span>
-              <button class="stepper-btn" data-action="qty-plus" aria-label="Tambah Jumlah">+</button>
+          <!-- 3. Stepper & Subtotal Kanan (Sebaris) -->
+          <div class="card-right-group">
+            <div class="stepper-control-compact">
+              <button class="stepper-btn-compact" data-action="qty-minus" aria-label="Kurangi Jumlah">−</button>
+              <span class="stepper-value-compact">${item.qty}</span>
+              <button class="stepper-btn-compact" data-action="qty-plus" aria-label="Tambah Jumlah">+</button>
             </div>
-            <div class="card-price-block">
+            <div class="card-price-stack">
               ${pricing.totalSavings > 0 ? `<div class="card-original-price">${formatRp(pricing.normalTotal)}</div>` : ''}
               <div class="card-final-subtotal">${formatRp(pricing.finalSubtotal)}</div>
             </div>
+          </div>
+
+          <!-- 4. Quick Mini Actions (Edit & Hapus) -->
+          <div class="card-mini-actions-row">
+            <button class="card-action-icon-btn" data-action="edit" title="Edit Barang" aria-label="Edit">
+              <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+            </button>
+            <button class="card-action-icon-btn delete" data-action="delete" title="Hapus Barang" aria-label="Hapus">
+              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+            </button>
           </div>
         `;
 
@@ -411,6 +475,9 @@
             item.inCart = !item.inCart;
             saveAndRefresh();
             if (window.soundCtrl) window.soundCtrl.playPop();
+            if (item.inCart) {
+              showToast(`"${item.name}" dicentang siap beli!`, 'success');
+            }
           } else if (action === 'qty-plus') {
             item.qty = (Number(item.qty) || 1) + 1;
             saveAndRefresh();
@@ -442,6 +509,22 @@
     if (window.lucide) window.lucide.createIcons({ root: el.groceryListContainer });
   }
 
+  // Toggle Check All items (Pilih Semua / Batal Semua)
+  function toggleCheckAll() {
+    if (state.activeItems.length === 0) {
+      showToast('Daftar belanja masih kosong!', 'warning');
+      return;
+    }
+    const allChecked = state.activeItems.every(i => i.inCart);
+    const newStatus = !allChecked;
+    state.activeItems.forEach(i => {
+      i.inCart = newStatus;
+    });
+    saveAndRefresh();
+    if (window.soundCtrl) window.soundCtrl.playPop();
+    showToast(newStatus ? 'Semua barang dicentang siap beli!' : 'Semua centang dibatalkan', 'info');
+  }
+
   // Delete Item helper
   function deleteItem(itemId) {
     state.activeItems = state.activeItems.filter(i => i.id !== itemId);
@@ -452,24 +535,32 @@
 
   // Update Budget Safety Tracker & Sticky Summary Bar
   function updateBudgetSafetyMeter() {
-    let totalSpent = 0;
-    let totalSavings = 0;
-    let checkedItemsCount = 0;
+    let totalPlanSpent = 0;
+    let totalPlanSavings = 0;
+    let checkedCount = 0;
+    let checkedSpent = 0;
+    let checkedSavings = 0;
 
     state.activeItems.forEach(item => {
       const p = calculateItemPricing(item);
-      totalSpent += p.finalSubtotal;
-      totalSavings += p.totalSavings;
-      if (item.inCart) checkedItemsCount++;
+      totalPlanSpent += p.finalSubtotal;
+      totalPlanSavings += p.totalSavings;
+      if (item.inCart) {
+        checkedCount++;
+        checkedSpent += p.finalSubtotal;
+        checkedSavings += p.totalSavings;
+      }
     });
 
     const limit = state.budgetLimit || 450000;
-    const ratio = totalSpent / limit;
+    // Current spending evaluates the items selected to be bought in trolley!
+    const activeSpent = checkedCount > 0 ? checkedSpent : totalPlanSpent;
+    const ratio = activeSpent / limit;
     const percent = Math.round(ratio * 100);
-    const remainder = limit - totalSpent;
+    const remainder = limit - activeSpent;
 
     // Header Display
-    el.headerSpentText.textContent = formatRp(totalSpent);
+    el.headerSpentText.textContent = formatRp(activeSpent);
     el.headerLimitText.textContent = ` / ${formatRp(limit)}`;
 
     // Progress Bar Width & Color
@@ -483,7 +574,7 @@
       el.budgetStatusPill.className = 'budget-status-pill status-safe';
       el.budgetStatusPill.innerHTML = `<i data-lucide="check-circle" style="width: 12px; height: 12px;"></i><span>Aman (${percent}%)</span>`;
       el.headerRemainingText.style.color = 'var(--safe-green)';
-      el.headerRemainingText.textContent = `Sisa ${formatRp(remainder)}`;
+      el.headerRemainingText.textContent = checkedCount > 0 ? `Sisa ${formatRp(remainder)} (${checkedCount} dibeli)` : `Sisa ${formatRp(remainder)}`;
       el.budgetWarningBanner.style.display = 'none';
     } else if (ratio <= 1.0) {
       // WARNING (80% - 100%)
@@ -494,7 +585,7 @@
       el.headerRemainingText.textContent = `Tersisa ${formatRp(remainder)}`;
       el.budgetWarningBanner.style.display = 'flex';
       el.budgetWarningBanner.className = 'alert-banner warning';
-      el.budgetWarningText.textContent = `Mendekati limit! Pengeluaran sudah ${percent}% dari anggaran bulanan.`;
+      el.budgetWarningText.textContent = `Mendekati limit! Belanjaan troli sudah ${percent}% dari anggaran bulanan.`;
     } else {
       // DANGER / OVERBUDGET (> 100%)
       el.budgetProgressBar.style.backgroundColor = 'var(--danger-rose)';
@@ -504,13 +595,27 @@
       el.headerRemainingText.textContent = `Lebih ${formatRp(Math.abs(remainder))}!`;
       el.budgetWarningBanner.style.display = 'flex';
       el.budgetWarningBanner.className = 'alert-banner danger';
-      el.budgetWarningText.textContent = `🚨 OVERBUDGET! Belanjaan melebihi batas anggaran sebesar ${formatRp(Math.abs(remainder))}.`;
+      el.budgetWarningText.textContent = `🚨 OVERBUDGET! Belanjaan troli melebihi batas anggaran sebesar ${formatRp(Math.abs(remainder))}.`;
     }
 
-    // Sticky Summary Cart Bar
-    el.summaryCartBadge.textContent = `${checkedItemsCount}/${state.activeItems.length} di Troli`;
-    el.summaryTotalAmount.textContent = formatRp(totalSpent);
-    el.summarySavingsBadge.textContent = totalSavings > 0 ? `Hemat ${formatRp(totalSavings)}` : 'Harga Normal';
+    // Sticky Summary Cart Bar (Above Bottom Navigation)
+    if (checkedCount > 0) {
+      el.summaryCartBadge.textContent = `${checkedCount}/${state.activeItems.length} Siap Beli`;
+      el.summaryTotalAmount.textContent = formatRp(checkedSpent);
+      el.summarySavingsBadge.textContent = checkedSavings > 0 ? `Hemat ${formatRp(checkedSavings)}` : 'Harga Normal';
+    } else {
+      el.summaryCartBadge.textContent = `0/${state.activeItems.length} Belum Dicentang`;
+      el.summaryTotalAmount.textContent = 'Rp 0';
+      el.summarySavingsBadge.textContent = 'Centang barang untuk dibeli';
+    }
+
+    // List header counter & status
+    if (el.listCheckedStatus) {
+      el.listCheckedStatus.textContent = checkedCount > 0 ? `• ${checkedCount} Siap Beli` : '• Belum ada dipilih';
+    }
+    if (el.toggleCheckAllText) {
+      el.toggleCheckAllText.textContent = (checkedCount === state.activeItems.length && state.activeItems.length > 0) ? 'Batal Semua' : 'Pilih Semua';
+    }
 
     if (window.lucide) {
       window.lucide.createIcons({ root: el.budgetStatusPill });
@@ -777,9 +882,21 @@
       return;
     }
 
+    const checkedItems = state.activeItems.filter(i => i.inCart);
+    if (checkedItems.length === 0) {
+      if (confirm('Belum ada barang yang dicentang. Apakah kamu ingin mencentang dan membeli SEMUA barang sekarang?')) {
+        state.activeItems.forEach(i => i.inCart = true);
+        saveAndRefresh();
+        openCheckoutModal();
+      } else {
+        showToast('Centang tombol ✓ pada barang yang ingin kamu beli!', 'warning');
+      }
+      return;
+    }
+
     let totalSpent = 0;
     let totalSaved = 0;
-    state.activeItems.forEach(item => {
+    checkedItems.forEach(item => {
       const p = calculateItemPricing(item);
       totalSpent += p.finalSubtotal;
       totalSaved += p.totalSavings;
@@ -789,7 +906,7 @@
     const now = new Date();
     const dateFormatted = `${now.getDate()} ${['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'][now.getMonth()]} ${now.getFullYear()}`;
 
-    el.checkoutTotalAmount.textContent = formatRp(totalSpent);
+    el.checkoutTotalAmount.textContent = `${formatRp(totalSpent)} (${checkedItems.length} barang)`;
     el.checkoutBudgetLimit.textContent = formatRp(limit);
     el.checkoutTotalSaved.textContent = totalSaved > 0 ? formatRp(totalSaved) : 'Rp 0';
     el.checkoutTripTitle.value = `Belanja Bulanan Supermarket - ${dateFormatted}`;
@@ -808,13 +925,19 @@
   }
 
   function confirmCheckout() {
+    const checkedItems = state.activeItems.filter(i => i.inCart);
+    if (checkedItems.length === 0) {
+      showToast('Tidak ada barang yang dicentang untuk dibeli!', 'warning');
+      return;
+    }
+
     const title = el.checkoutTripTitle.value.trim() || 'Belanja Supermarket Rantau';
     const now = new Date();
     const dateStr = now.toISOString().split('T')[0];
 
     let totalSpent = 0;
     let totalSaved = 0;
-    const tripItems = state.activeItems.map(item => {
+    const tripItems = checkedItems.map(item => {
       const p = calculateItemPricing(item);
       totalSpent += p.finalSubtotal;
       totalSaved += p.totalSavings;
@@ -844,7 +967,7 @@
       totalSpent,
       totalBudget: state.budgetLimit,
       totalSaved,
-      itemsCount: state.activeItems.length,
+      itemsCount: checkedItems.length,
       items: tripItems
     };
 
@@ -855,17 +978,18 @@
     // Refresh benchmarks state
     state.benchmarks = window.SmartData.SmartStorage.getBenchmarks();
 
-    // Reset current trolley
-    state.activeItems = [];
+    // Remove ONLY checked items, keep unchecked items in active trolley
+    state.activeItems = state.activeItems.filter(i => !i.inCart);
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
 
     el.checkoutModal.classList.remove('open');
     saveAndRefresh();
     renderHistoryScreen();
+    renderUserProfile();
 
     // Celebrate checkout completion
     if (window.soundCtrl) window.soundCtrl.playSuccess();
-    showToast('Belanjaan berhasil disimpan ke riwayat!', 'success');
+    showToast(`${checkedItems.length} barang belanjaan berhasil disimpan ke riwayat!`, 'success');
 
     // Switch to Riwayat tab to view saved trip
     switchTab('viewRiwayat');
@@ -1064,6 +1188,212 @@
   }
 
   // ==========================================
+  // SCREEN 4: USER AUTHENTICATION & PROFILE
+  // ==========================================
+
+  function renderUserProfile() {
+    const user = state.currentUser;
+
+    if (user) {
+      // Logged in state
+      if (el.authLoggedInView) el.authLoggedInView.style.display = 'block';
+      if (el.authLoggedOutView) el.authLoggedOutView.style.display = 'none';
+
+      // Header button updates
+      if (el.headerUserAvatar) el.headerUserAvatar.textContent = user.avatar || '👨‍🎓';
+      if (el.headerUserName) el.headerUserName.textContent = (user.name || '').split(' ')[0];
+
+      // Profile hero card updates
+      if (el.profileBigAvatar) el.profileBigAvatar.textContent = user.avatar || '👨‍🎓';
+      if (el.profileFullName) el.profileFullName.textContent = user.name;
+      if (el.profileRoleBadge) el.profileRoleBadge.textContent = user.role || 'Mahasiswa Rantau';
+      if (el.profileEmail) el.profileEmail.textContent = user.email;
+      if (el.profileLocation) el.profileLocation.textContent = `📍 Kost di ${user.city || 'Yogyakarta'}`;
+      if (el.profileBudgetLimit) el.profileBudgetLimit.textContent = formatRp(state.budgetLimit);
+
+      // Mini stats
+      let grandSpent = 0;
+      state.historyTrips.forEach(t => {
+        grandSpent += Number(t.totalSpent) || 0;
+      });
+      if (el.profileTripCount) el.profileTripCount.textContent = `${state.historyTrips.length} Kali`;
+      if (el.profileTotalSpent) el.profileTotalSpent.textContent = formatRp(grandSpent);
+
+      // Render Quick Switch account chips
+      renderQuickSwitchChips();
+    } else {
+      // Logged out state
+      if (el.authLoggedInView) el.authLoggedInView.style.display = 'none';
+      if (el.authLoggedOutView) el.authLoggedOutView.style.display = 'block';
+
+      if (el.headerUserAvatar) el.headerUserAvatar.textContent = '👤';
+      if (el.headerUserName) el.headerUserName.textContent = 'Masuk';
+
+      switchAuthTab(state.authTab || 'login');
+    }
+
+    if (window.lucide) {
+      if (el.viewAkun) window.lucide.createIcons({ root: el.viewAkun });
+    }
+  }
+
+  function renderQuickSwitchChips() {
+    if (!el.quickSwitchChips) return;
+    el.quickSwitchChips.innerHTML = '';
+    const users = window.SmartData.SmartStorage.getUsers();
+
+    users.forEach(u => {
+      const isCurrent = state.currentUser && state.currentUser.id === u.id;
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = `quick-user-pill ${isCurrent ? 'active' : ''}`;
+      chip.innerHTML = `<span>${u.avatar || '👤'}</span> <span>${escapeHtml(u.name)}</span>`;
+      chip.addEventListener('click', () => {
+        if (!isCurrent) {
+          window.SmartData.SmartStorage.setCurrentUser(u);
+          state.currentUser = u;
+          if (u.budget) {
+            state.budgetLimit = u.budget;
+            window.SmartData.SmartStorage.saveBudgetLimit(u.budget);
+            updateBudgetSafetyMeter();
+            renderAnggaranScreen();
+          }
+          renderUserProfile();
+          showToast(`Beralih ke akun ${u.name}!`, 'success');
+          if (window.soundCtrl) window.soundCtrl.playPop();
+        }
+      });
+      el.quickSwitchChips.appendChild(chip);
+    });
+  }
+
+  function switchAuthTab(tab) {
+    state.authTab = tab;
+    if (tab === 'login') {
+      if (el.tabBtnLogin) el.tabBtnLogin.classList.add('active');
+      if (el.tabBtnRegister) el.tabBtnRegister.classList.remove('active');
+      if (el.loginForm) el.loginForm.style.display = 'flex';
+      if (el.registerForm) el.registerForm.style.display = 'none';
+    } else {
+      if (el.tabBtnRegister) el.tabBtnRegister.classList.add('active');
+      if (el.tabBtnLogin) el.tabBtnLogin.classList.remove('active');
+      if (el.registerForm) el.registerForm.style.display = 'flex';
+      if (el.loginForm) el.loginForm.style.display = 'none';
+    }
+    if (window.lucide && el.viewAkun) {
+      window.lucide.createIcons({ root: el.viewAkun });
+    }
+  }
+
+  function handleLoginSubmit(e) {
+    e.preventDefault();
+    const email = el.loginEmail.value.trim();
+    const pass = el.loginPassword.value.trim();
+
+    if (!email || !pass) {
+      showToast('Harap masukkan email/nama dan password!', 'warning');
+      return;
+    }
+
+    const res = window.SmartData.SmartStorage.loginUser(email, pass);
+    if (res.success) {
+      state.currentUser = res.user;
+      if (res.user.budget) {
+        state.budgetLimit = res.user.budget;
+        window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+        updateBudgetSafetyMeter();
+        renderAnggaranScreen();
+      }
+      renderUserProfile();
+      showToast(`Selamat datang kembali, ${res.user.name}! 👋`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playSuccess();
+      switchTab('viewBelanja');
+    } else {
+      showToast(res.message, 'danger');
+      if (window.soundCtrl) window.soundCtrl.playTick();
+    }
+  }
+
+  function handleRegisterSubmit(e) {
+    e.preventDefault();
+    const name = el.regName.value.trim();
+    const email = el.regEmail.value.trim();
+    const password = el.regPassword.value.trim();
+    const role = el.regRole.value;
+    const city = el.regCity.value.trim();
+    const budget = Number(el.regBudget.value) || 450000;
+
+    const res = window.SmartData.SmartStorage.registerUser({
+      name,
+      email,
+      password,
+      role,
+      city,
+      budget,
+      avatar: role.includes('Mahasiswa') ? '👨‍🎓' : role.includes('Hemat') ? '👩‍💻' : '🎒'
+    });
+
+    if (res.success) {
+      state.currentUser = res.user;
+      state.budgetLimit = budget;
+      window.SmartData.SmartStorage.saveBudgetLimit(budget);
+      renderUserProfile();
+      updateBudgetSafetyMeter();
+      renderAnggaranScreen();
+      showToast(`Akun berhasil dibuat! Halo ${res.user.name} 🎉`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playSuccess();
+      switchTab('viewBelanja');
+    } else {
+      showToast(res.message, 'danger');
+      if (window.soundCtrl) window.soundCtrl.playTick();
+    }
+  }
+
+  function quickLogin(email, password) {
+    const res = window.SmartData.SmartStorage.loginUser(email, password);
+    if (res.success) {
+      state.currentUser = res.user;
+      if (res.user.budget) {
+        state.budgetLimit = res.user.budget;
+        window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+        updateBudgetSafetyMeter();
+        renderAnggaranScreen();
+      }
+      renderUserProfile();
+      showToast(`Masuk sebagai ${res.user.name}!`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playSuccess();
+      switchTab('viewBelanja');
+    } else {
+      showToast(res.message, 'danger');
+    }
+  }
+
+  function handleLogout() {
+    if (confirm('Apakah kamu yakin ingin keluar dari akun?')) {
+      window.SmartData.SmartStorage.logoutUser();
+      state.currentUser = null;
+      renderUserProfile();
+      showToast('Kamu telah keluar dari akun.', 'info');
+      if (window.soundCtrl) window.soundCtrl.playTick();
+    }
+  }
+
+  function togglePassword(inputId, iconId) {
+    const inp = document.getElementById(inputId);
+    const icon = document.getElementById(iconId);
+    if (!inp || !icon) return;
+
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      icon.setAttribute('data-lucide', 'eye-off');
+    } else {
+      inp.type = 'password';
+      icon.setAttribute('data-lucide', 'eye');
+    }
+    if (window.lucide) window.lucide.createIcons({ root: icon.parentElement });
+  }
+
+  // ==========================================
   // PWA SUPPORT & EVENTS BINDING
   // ==========================================
 
@@ -1106,6 +1436,74 @@
         switchTab(tabBtn.dataset.tab);
       }
     });
+
+    // Header user profile button tap
+    if (el.headerUserBtn) {
+      el.headerUserBtn.addEventListener('click', () => {
+        switchTab('viewAkun');
+      });
+    }
+
+    // Quick toggle check/uncheck all items
+    if (el.toggleCheckAllBtn) {
+      el.toggleCheckAllBtn.addEventListener('click', toggleCheckAll);
+    }
+
+    // Auth tabs switching
+    if (el.tabBtnLogin) {
+      el.tabBtnLogin.addEventListener('click', () => switchAuthTab('login'));
+    }
+    if (el.tabBtnRegister) {
+      el.tabBtnRegister.addEventListener('click', () => switchAuthTab('register'));
+    }
+
+    // Auth forms submit
+    if (el.loginForm) {
+      el.loginForm.addEventListener('submit', handleLoginSubmit);
+    }
+    if (el.registerForm) {
+      el.registerForm.addEventListener('submit', handleRegisterSubmit);
+    }
+
+    // Password visibility toggles
+    if (el.toggleLoginPasswordBtn) {
+      el.toggleLoginPasswordBtn.addEventListener('click', () => togglePassword('loginPassword', 'loginEyeIcon'));
+    }
+    if (el.toggleRegPasswordBtn) {
+      el.toggleRegPasswordBtn.addEventListener('click', () => togglePassword('regPassword', 'regEyeIcon'));
+    }
+
+    // Quick demo login accounts
+    if (el.quickLoginBudi) {
+      el.quickLoginBudi.addEventListener('click', () => quickLogin('budi@rantau.id', '123'));
+    }
+    if (el.quickLoginSiti) {
+      el.quickLoginSiti.addEventListener('click', () => quickLogin('siti@rantau.id', '123'));
+    }
+
+    // Profile menu actions
+    if (el.btnLogoutUser) {
+      el.btnLogoutUser.addEventListener('click', handleLogout);
+    }
+    if (el.menuSetBudgetBtn) {
+      el.menuSetBudgetBtn.addEventListener('click', () => switchTab('viewAnggaran'));
+    }
+    if (el.menuSwitchAccountBtn) {
+      el.menuSwitchAccountBtn.addEventListener('click', () => {
+        window.SmartData.SmartStorage.logoutUser();
+        state.currentUser = null;
+        renderUserProfile();
+        showToast('Silakan pilih akun demo atau login.', 'info');
+      });
+    }
+    if (el.menuSoundToggleBtn) {
+      el.menuSoundToggleBtn.addEventListener('click', () => el.soundToggleBtn.click());
+    }
+    if (el.forgotPassBtn) {
+      el.forgotPassBtn.addEventListener('click', () => {
+        alert('Petunjuk pemulihan kata sandi telah dikirim ke email kos kamu (Password akun demo: 123).');
+      });
+    }
 
     // Header budget card tap opens Anggaran settings
     el.budgetCardClickable.addEventListener('click', () => {

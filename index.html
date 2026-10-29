@@ -54,6 +54,10 @@
             </div>
           </div>
           <div class="header-actions">
+            <button class="user-header-pill" id="headerUserBtn" title="Profil Akun Pengguna" aria-label="Akun Pengguna">
+              <span class="user-header-avatar" id="headerUserAvatar">👨‍🎓</span>
+              <span class="user-header-name" id="headerUserName">Budi</span>
+            </button>
             <button class="icon-btn" id="soundToggleBtn" title="Efek Suara Aktif/Nonaktif" aria-label="Toggle Sound">
               <i data-lucide="volume-2" style="width: 18px; height: 18px;" id="soundIcon"></i>
             </button>
@@ -134,11 +138,20 @@
 
           <!-- List Actions & Counter Row -->
           <div class="list-actions-row">
-            <span class="list-counter-label" id="listCounterLabel">5 Barang Belanja</span>
-            <button type="button" class="add-item-trigger-btn" id="openAddItemBtn" onclick="if(window.openAddItemModal) window.openAddItemModal();">
-              <i data-lucide="plus" style="width: 16px; height: 16px;"></i>
-              <span>Tambah Barang</span>
-            </button>
+            <div class="list-count-wrapper">
+              <span class="list-counter-label" id="listCounterLabel">5 Barang Belanja</span>
+              <span class="list-checked-status" id="listCheckedStatus">• 3 Siap Beli</span>
+            </div>
+            <div class="list-quick-actions">
+              <button type="button" class="btn-check-toggle" id="toggleCheckAllBtn" title="Centang / Batal Semua">
+                <i data-lucide="check-square" style="width: 14px; height: 14px;"></i>
+                <span id="toggleCheckAllText">Pilih Semua</span>
+              </button>
+              <button type="button" class="add-item-trigger-btn" id="openAddItemBtn">
+                <i data-lucide="plus" style="width: 15px; height: 15px;"></i>
+                <span>Tambah</span>
+              </button>
+            </div>
           </div>
 
           <!-- Dynamic Grocery Items List Container -->
@@ -307,6 +320,230 @@
 
         </section>
 
+        <!-- ==========================================
+             SCREEN 4: AKUN & LOGIN (User Authentication)
+             ========================================== -->
+        <section class="screen-view" id="viewAkun">
+          
+          <!-- State A: Saat Pengguna Sudah Login -->
+          <div id="authLoggedInView">
+            <div class="user-profile-hero-card">
+              <div class="user-profile-header">
+                <div class="user-big-avatar" id="profileBigAvatar">👨‍🎓</div>
+                <div class="user-hero-info">
+                  <div class="user-hero-name-row">
+                    <h3 id="profileFullName">Budi Santoso</h3>
+                    <span class="user-role-badge" id="profileRoleBadge">Mahasiswa Rantau</span>
+                  </div>
+                  <div class="user-hero-email" id="profileEmail">budi@rantau.id</div>
+                  <div class="user-hero-location" id="profileLocation">📍 Kost Sleman, Yogyakarta</div>
+                </div>
+              </div>
+
+              <!-- Mini stats inside profile -->
+              <div class="profile-stats-grid">
+                <div class="profile-stat-box">
+                  <span class="profile-stat-num" id="profileBudgetLimit">Rp 450.000</span>
+                  <span class="profile-stat-lbl">Pagu Bulanan</span>
+                </div>
+                <div class="profile-stat-box">
+                  <span class="profile-stat-num" id="profileTripCount">2 Kali</span>
+                  <span class="profile-stat-lbl">Riwayat Belanja</span>
+                </div>
+                <div class="profile-stat-box">
+                  <span class="profile-stat-num" id="profileTotalSpent">Rp 811.400</span>
+                  <span class="profile-stat-lbl">Total Belanja</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Profile Menu Options -->
+            <div class="account-menu-card">
+              <h4 class="account-section-title">Aksi & Pengaturan</h4>
+              
+              <button class="account-menu-item" id="menuSetBudgetBtn" type="button">
+                <div class="menu-item-left">
+                  <i data-lucide="wallet" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                  <span>Atur Batas Anggaran Bulanan</span>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-soft);"></i>
+              </button>
+
+              <button class="account-menu-item" id="menuSwitchAccountBtn" type="button">
+                <div class="menu-item-left">
+                  <i data-lucide="users" style="width: 18px; height: 18px; color: #3B82F6;"></i>
+                  <span>Ganti / Masuk Akun Lain</span>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-soft);"></i>
+              </button>
+
+              <button class="account-menu-item" id="menuSoundToggleBtn" type="button">
+                <div class="menu-item-left">
+                  <i data-lucide="volume-2" style="width: 18px; height: 18px; color: #10B981;"></i>
+                  <span>Efek Suara Belanja</span>
+                </div>
+                <span class="menu-status-badge" id="menuSoundStatus">Aktif</span>
+              </button>
+
+              <button class="account-menu-item danger" id="btnLogoutUser" type="button">
+                <div class="menu-item-left">
+                  <i data-lucide="log-out" style="width: 18px; height: 18px; color: var(--danger-rose);"></i>
+                  <span style="color: var(--danger-rose); font-weight: 700;">Keluar dari Akun (Logout)</span>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--danger-rose);"></i>
+              </button>
+            </div>
+
+            <!-- Quick Switch Account Pills -->
+            <div class="quick-switch-box">
+              <div class="quick-switch-title">Pilih Cepat Akun Rantau:</div>
+              <div class="quick-switch-chips" id="quickSwitchChips">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- State B: Saat Pengguna Belum Login (Form Login & Register) -->
+          <div id="authLoggedOutView" style="display: none;">
+            <div class="auth-welcome-banner">
+              <div class="auth-icon-badge">
+                <i data-lucide="shopping-bag" style="width: 24px; height: 24px; color: var(--primary);"></i>
+              </div>
+              <h3>Masuk ke Smart Grocery</h3>
+              <p>Simpan daftar belanja, amankan pagu bulanan kos, dan rekam riwayat belanja rantau kamu.</p>
+            </div>
+
+            <!-- Auth Tabs (Masuk vs Daftar) -->
+            <div class="auth-tab-switcher">
+              <button class="auth-tab-btn active" id="tabBtnLogin" type="button">Masuk (Login)</button>
+              <button class="auth-tab-btn" id="tabBtnRegister" type="button">Daftar Akun Baru</button>
+            </div>
+
+            <!-- Form LOGIN -->
+            <form class="auth-form-card" id="loginForm">
+              <div class="form-group">
+                <label class="form-label" for="loginEmail">Email atau Nama Akun</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+                  <input type="text" class="form-input" id="loginEmail" placeholder="Contoh: budi@rantau.id" autocomplete="username" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="loginPassword">Password</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
+                  <input type="password" class="form-input" id="loginPassword" placeholder="Masukkan password (demo: 123)..." autocomplete="current-password" required>
+                  <button type="button" class="toggle-password-btn" id="toggleLoginPasswordBtn" aria-label="Lihat Password">
+                    <i data-lucide="eye" style="width: 16px; height: 16px;" id="loginEyeIcon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="auth-helper-row">
+                <label class="remember-checkbox-label">
+                  <input type="checkbox" id="rememberMeCheckbox" checked>
+                  <span>Ingat saya di perangkat ini</span>
+                </label>
+                <button type="button" class="forgot-pass-link" id="forgotPassBtn">Lupa password?</button>
+              </div>
+
+              <button type="submit" class="btn-primary auth-submit-btn" id="submitLoginBtn">
+                <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+                <span>Masuk Sekarang</span>
+              </button>
+            </form>
+
+            <!-- Form REGISTER -->
+            <form class="auth-form-card" id="registerForm" style="display: none;">
+              <div class="form-group">
+                <label class="form-label" for="regName">Nama Lengkap</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                  <input type="text" class="form-input" id="regName" placeholder="Contoh: Budi Pratama" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="regEmail">Alamat Email</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+                  <input type="email" class="form-input" id="regEmail" placeholder="Contoh: budi@rantau.id" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="regPassword">Password (Minimal 3 Karakter)</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
+                  <input type="password" class="form-input" id="regPassword" placeholder="Buat password akun..." required minlength="3">
+                  <button type="button" class="toggle-password-btn" id="toggleRegPasswordBtn" aria-label="Lihat Password">
+                    <i data-lucide="eye" style="width: 16px; height: 16px;" id="regEyeIcon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="regRole">Status Rantau</label>
+                  <select class="form-select" id="regRole">
+                    <option value="Mahasiswa Rantau">Mahasiswa Rantau</option>
+                    <option value="Anak Kos Hemat">Anak Kos Hemat</option>
+                    <option value="Pekerja Rantau">Pekerja Rantau</option>
+                    <option value="Pelajar Kos">Pelajar Kos</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="regCity">Kota Rantau</label>
+                  <input type="text" class="form-input" id="regCity" placeholder="Contoh: Yogyakarta" value="Yogyakarta">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="regBudget">Pagu Anggaran Bulanan (Rp)</label>
+                <div class="currency-input-box">
+                  <span class="currency-prefix">Rp</span>
+                  <input type="number" class="form-input currency-input" id="regBudget" value="450000" step="10000">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary auth-submit-btn" id="submitRegisterBtn">
+                <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                <span>Daftar Akun Baru</span>
+              </button>
+            </form>
+
+            <!-- Quick Demo Accounts (1-Tap Login) -->
+            <div class="demo-accounts-card">
+              <div class="demo-card-title">
+                <i data-lucide="zap" style="width: 15px; height: 15px; color: #F59E0B;"></i>
+                <span>Masuk Cepat dengan Akun Demo (1-Klik):</span>
+              </div>
+              <div class="demo-users-list">
+                <div class="demo-user-box" id="quickLoginBudi">
+                  <div class="demo-avatar">👨‍🎓</div>
+                  <div class="demo-info">
+                    <div class="demo-name">Budi Santoso</div>
+                    <div class="demo-meta">Mahasiswa Rantau • UGM Yogyakarta</div>
+                  </div>
+                  <button type="button" class="btn-demo-login">Pilih</button>
+                </div>
+
+                <div class="demo-user-box" id="quickLoginSiti">
+                  <div class="demo-avatar">👩‍💻</div>
+                  <div class="demo-info">
+                    <div class="demo-name">Siti Rahma</div>
+                    <div class="demo-meta">Anak Kos Hemat • ITB Bandung</div>
+                  </div>
+                  <button type="button" class="btn-demo-login">Pilih</button>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </section>
+
       </div>
 
       <!-- Sticky Trolley Summary Cart Bar (Above Bottom Navigation on Belanja screen) -->
@@ -345,6 +582,12 @@
             <i data-lucide="pie-chart" style="width: 20px; height: 20px;"></i>
           </div>
           <span>Anggaran</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="viewAkun" id="navAkun">
+          <div class="nav-icon-wrapper">
+            <i data-lucide="user" style="width: 20px; height: 20px;"></i>
+          </div>
+          <span id="navAkunLabel">Akun</span>
         </button>
       </nav>
 
