@@ -9,9 +9,12 @@
     budgetLimit: 450000,
     historyTrips: [],
     benchmarks: {},
-    currentTab: 'viewBelanja',
+    currentTab: 'viewKatalog',
     selectedCategory: 'all',
     searchQuery: '',
+    selectedKatalogCategory: 'all',
+    katalogSearchQuery: '',
+    wasOverbudget: false,
     historySubTab: 'trips',
     deferredPrompt: null,
     editingItemId: null,
@@ -36,12 +39,42 @@
     openAddItemBtn: document.getElementById('openAddItemBtn'),
     emptyAddBtn: document.getElementById('emptyAddBtn'),
 
-    // User Header Pill
+    // Gatekeeper Full-Page Login Elements
+    authGateScreen: document.getElementById('authGateScreen'),
+    mainAppContainer: document.getElementById('mainAppContainer'),
+    gateTabLogin: document.getElementById('gateTabLogin'),
+    gateTabRegister: document.getElementById('gateTabRegister'),
+    gateLoginForm: document.getElementById('gateLoginForm'),
+    gateRegisterForm: document.getElementById('gateRegisterForm'),
+    gateLoginEmail: document.getElementById('gateLoginEmail'),
+    gateLoginPassword: document.getElementById('gateLoginPassword'),
+    gateToggleLoginPassBtn: document.getElementById('gateToggleLoginPassBtn'),
+    gateLoginEyeIcon: document.getElementById('gateLoginEyeIcon'),
+    gateRegName: document.getElementById('gateRegName'),
+    gateRegEmail: document.getElementById('gateRegEmail'),
+    gateRegPassword: document.getElementById('gateRegPassword'),
+    gateRegRole: document.getElementById('gateRegRole'),
+    gateRegCity: document.getElementById('gateRegCity'),
+    gateRegBudget: document.getElementById('gateRegBudget'),
+    gateToggleRegPassBtn: document.getElementById('gateToggleRegPassBtn'),
+    gateRegEyeIcon: document.getElementById('gateRegEyeIcon'),
+    gateQuickLoginBudi: document.getElementById('gateQuickLoginBudi'),
+    gateQuickLoginSiti: document.getElementById('gateQuickLoginSiti'),
+    gateRememberMe: document.getElementById('gateRememberMe'),
+    gateForgotPassBtn: document.getElementById('gateForgotPassBtn'),
+    gateSubmitLoginBtn: document.getElementById('gateSubmitLoginBtn'),
+    closeAuthGateBtn: document.getElementById('closeAuthGateBtn'),
+    menuOpenLoginBtn: document.getElementById('menuOpenLoginBtn'),
+
+    // User Header Pill & Cart Pill
     headerUserBtn: document.getElementById('headerUserBtn'),
     headerUserAvatar: document.getElementById('headerUserAvatar'),
     headerUserName: document.getElementById('headerUserName'),
+    headerCartBtn: document.getElementById('headerCartBtn'),
+    headerCartBadge: document.getElementById('headerCartBadge'),
 
-    // Budget Header Elements
+    // Floating Budget Safety Bar
+    floatingBudgetBar: document.getElementById('floatingBudgetBar'),
     headerSpentText: document.getElementById('headerSpentText'),
     headerLimitText: document.getElementById('headerLimitText'),
     headerRemainingText: document.getElementById('headerRemainingText'),
@@ -50,7 +83,27 @@
     budgetStatusText: document.getElementById('budgetStatusText'),
     budgetWarningBanner: document.getElementById('budgetWarningBanner'),
     budgetWarningText: document.getElementById('budgetWarningText'),
-    budgetCardClickable: document.getElementById('budgetCardClickable'),
+    budgetCardClickable: document.getElementById('floatingBudgetBar'),
+
+    // Shopee Display Catalog Screen (viewKatalog)
+    viewKatalog: document.getElementById('viewKatalog'),
+    katalogSearchInput: document.getElementById('katalogSearchInput'),
+    katalogSearchClearBtn: document.getElementById('katalogSearchClearBtn'),
+    katalogCategoryChips: document.getElementById('katalogCategoryChips'),
+    shopeeProductGrid: document.getElementById('shopeeProductGrid'),
+    shopeeProductCount: document.getElementById('shopeeProductCount'),
+    shopeeLocationText: document.getElementById('shopeeLocationText'),
+    navKatalog: document.getElementById('navKatalog'),
+
+    // Overbudget Animated Pop-Up Warning Modal
+    budgetExceededModal: document.getElementById('budgetExceededModal'),
+    closeBudgetWarningModalBtn: document.getElementById('closeBudgetWarningModalBtn'),
+    warnLimitAmount: document.getElementById('warnLimitAmount'),
+    warnSpentAmount: document.getElementById('warnSpentAmount'),
+    warnOverAmount: document.getElementById('warnOverAmount'),
+    btnWarnReviewCart: document.getElementById('btnWarnReviewCart'),
+    btnWarnAdjustBudget: document.getElementById('btnWarnAdjustBudget'),
+    btnWarnDismiss: document.getElementById('btnWarnDismiss'),
 
     // Trolley Summary Bar
     trolleySummaryBar: document.getElementById('trolleySummaryBar'),
@@ -303,6 +356,9 @@
   // App Initialization
   function initApp() {
     loadData();
+    checkAuthGate();
+    renderKatalogCategoryChips();
+    renderShopeeCatalog();
     renderUserProfile();
     renderCategoryChips();
     renderSuggestionsPills();
@@ -313,6 +369,364 @@
     bindEvents();
     initPWA();
     if (window.lucide) window.lucide.createIcons();
+  }
+
+  // ==========================================
+  // GATEKEEPER FULL-PAGE LOGIN CONTROLLER
+  // ==========================================
+
+  function showAuthGate() {
+    if (el.authGateScreen) {
+      el.authGateScreen.style.display = 'flex';
+      if (el.closeAuthGateBtn) {
+        el.closeAuthGateBtn.style.display = state.currentUser ? 'flex' : 'none';
+      }
+    }
+    switchGateTab('login');
+    if (window.lucide && el.authGateScreen) {
+      window.lucide.createIcons({ root: el.authGateScreen });
+    }
+  }
+
+  function hideAuthGate() {
+    if (el.authGateScreen) {
+      el.authGateScreen.style.display = 'none';
+    }
+    if (el.mainAppContainer) {
+      el.mainAppContainer.style.display = 'flex';
+    }
+  }
+
+  function checkAuthGate() {
+    const user = state.currentUser;
+    if (!user) {
+      showAuthGate();
+      if (el.mainAppContainer) el.mainAppContainer.style.display = 'none';
+      if (el.closeAuthGateBtn) el.closeAuthGateBtn.style.display = 'none';
+    } else {
+      hideAuthGate();
+      renderUserProfile();
+      if (el.shopeeLocationText && user.city) {
+        el.shopeeLocationText.textContent = `Kost ${user.name.split(' ')[0]} • ${user.city}`;
+      }
+    }
+    if (window.lucide) window.lucide.createIcons();
+  }
+
+  function switchGateTab(tab) {
+    if (tab === 'login') {
+      if (el.gateTabLogin) el.gateTabLogin.classList.add('active');
+      if (el.gateTabRegister) el.gateTabRegister.classList.remove('active');
+      if (el.gateLoginForm) el.gateLoginForm.style.display = 'flex';
+      if (el.gateRegisterForm) el.gateRegisterForm.style.display = 'none';
+    } else {
+      if (el.gateTabRegister) el.gateTabRegister.classList.add('active');
+      if (el.gateTabLogin) el.gateTabLogin.classList.remove('active');
+      if (el.gateRegisterForm) el.gateRegisterForm.style.display = 'flex';
+      if (el.gateLoginForm) el.gateLoginForm.style.display = 'none';
+    }
+    if (window.lucide && el.authGateScreen) {
+      window.lucide.createIcons({ root: el.authGateScreen });
+    }
+  }
+
+  function handleGateLoginSubmit(e) {
+    e.preventDefault();
+    const email = el.gateLoginEmail.value.trim();
+    const pass = el.gateLoginPassword.value.trim();
+
+    if (!email || !pass) {
+      showToast('Harap masukkan email/nama dan password!', 'warning');
+      return;
+    }
+
+    const res = window.SmartData.SmartStorage.loginUser(email, pass);
+    if (res.success) {
+      state.currentUser = res.user;
+      if (res.user.budget) {
+        state.budgetLimit = res.user.budget;
+        window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+      }
+      checkAuthGate();
+      updateBudgetSafetyMeter();
+      renderShopeeCatalog();
+      renderAnggaranScreen();
+      switchTab('viewKatalog');
+      showToast(`Selamat datang kembali, ${res.user.name}! 👋`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playSuccess();
+    } else {
+      showToast(res.message, 'danger');
+      if (window.soundCtrl) window.soundCtrl.playTick();
+    }
+  }
+
+  function handleGateRegisterSubmit(e) {
+    e.preventDefault();
+    const name = el.gateRegName.value.trim();
+    const email = el.gateRegEmail.value.trim();
+    const password = el.gateRegPassword.value.trim();
+    const role = el.gateRegRole.value;
+    const city = el.gateRegCity.value.trim();
+    const budget = Number(el.gateRegBudget.value) || 450000;
+
+    const res = window.SmartData.SmartStorage.registerUser({
+      name,
+      email,
+      password,
+      role,
+      city,
+      budget,
+      avatar: role.includes('Mahasiswa') ? '👨‍🎓' : role.includes('Hemat') ? '👩‍💻' : '🎒'
+    });
+
+    if (res.success) {
+      state.currentUser = res.user;
+      state.budgetLimit = budget;
+      window.SmartData.SmartStorage.saveBudgetLimit(budget);
+      checkAuthGate();
+      updateBudgetSafetyMeter();
+      renderShopeeCatalog();
+      renderAnggaranScreen();
+      switchTab('viewKatalog');
+      showToast(`Akun berhasil dibuat! Halo ${res.user.name} 🎉`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playSuccess();
+    } else {
+      showToast(res.message, 'danger');
+      if (window.soundCtrl) window.soundCtrl.playTick();
+    }
+  }
+
+  function gateQuickLogin(email, password) {
+    const res = window.SmartData.SmartStorage.loginUser(email, password);
+    if (res.success) {
+      state.currentUser = res.user;
+      if (res.user.budget) {
+        state.budgetLimit = res.user.budget;
+        window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+      }
+      checkAuthGate();
+      updateBudgetSafetyMeter();
+      renderShopeeCatalog();
+      renderAnggaranScreen();
+      switchTab('viewKatalog');
+      showToast(`Masuk sebagai ${res.user.name}! 👋`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playSuccess();
+    } else {
+      showToast(res.message, 'danger');
+    }
+  }
+
+  // ==========================================
+  // SHOPEE PRODUCT DISPLAY ETALASE CONTROLLER
+  // ==========================================
+
+  function renderKatalogCategoryChips() {
+    if (!el.katalogCategoryChips) return;
+    el.katalogCategoryChips.innerHTML = '';
+    window.SmartData.CATEGORIES.forEach(cat => {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = `category-chip ${state.selectedKatalogCategory === cat.id ? 'active' : ''}`;
+      chip.innerHTML = `<span>${cat.name}</span>`;
+      chip.addEventListener('click', () => {
+        state.selectedKatalogCategory = cat.id;
+        renderKatalogCategoryChips();
+        renderShopeeCatalog();
+        if (window.soundCtrl) window.soundCtrl.playTick();
+      });
+      el.katalogCategoryChips.appendChild(chip);
+    });
+  }
+
+  function renderShopeeCatalog() {
+    if (!el.shopeeProductGrid) return;
+    el.shopeeProductGrid.innerHTML = '';
+
+    const products = window.SmartData.SHOPEE_PRODUCTS || [];
+    const query = (state.katalogSearchQuery || '').toLowerCase().trim();
+    const category = state.selectedKatalogCategory || 'all';
+
+    const filtered = products.filter(p => {
+      const matchCat = category === 'all' || p.category === category;
+      const matchQuery = !query || p.name.toLowerCase().includes(query) || (p.description && p.description.toLowerCase().includes(query));
+      return matchCat && matchQuery;
+    });
+
+    if (el.shopeeProductCount) {
+      el.shopeeProductCount.textContent = `${filtered.length} Barang Tersedia`;
+    }
+
+    if (filtered.length === 0) {
+      el.shopeeProductGrid.innerHTML = `
+        <div style="grid-column: 1 / -1; text-align: center; padding: 32px 16px; color: var(--text-muted);">
+          <div style="font-size: 32px; margin-bottom: 8px;">🔍</div>
+          <div style="font-weight: 700; color: var(--text-main);">Barang Tidak Ditemukan</div>
+          <p style="font-size: 12px; margin-top: 4px;">Coba gunakan kata kunci lain di pencarian etalase.</p>
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(prod => {
+      const existingInCart = state.activeItems.find(i => i.name.toLowerCase() === prod.name.toLowerCase());
+      const qtyInCart = existingInCart ? Number(existingInCart.qty) || 0 : 0;
+
+      const card = document.createElement('div');
+      card.className = 'shopee-card';
+      card.innerHTML = `
+        <div class="shopee-card-img-box">
+          <span class="shopee-card-emoji">${prod.emoji || '🛍️'}</span>
+          ${prod.badge ? `<span class="shopee-ribbon">${escapeHtml(prod.badge)}</span>` : ''}
+        </div>
+        <div class="shopee-card-body">
+          <div class="shopee-card-tag">${formatCategory(prod.category)}</div>
+          <div class="shopee-card-title" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</div>
+          <div class="shopee-card-prices">
+            <span class="shopee-price-main">${formatRp(prod.price)}</span>
+            ${prod.originalPrice ? `<span class="shopee-price-original">${formatRp(prod.originalPrice)}</span>` : ''}
+          </div>
+          <div class="shopee-card-meta">
+            <span class="shopee-rating">⭐ ${prod.rating || '4.9'}</span>
+            <span class="shopee-sold">${prod.soldCount || '1.2rb'} terjual</span>
+          </div>
+          <div class="shopee-card-action">
+            ${qtyInCart > 0 ? `
+              <div class="shopee-qty-stepper">
+                <button type="button" class="shopee-stepper-btn btn-minus" aria-label="Kurang">-</button>
+                <span class="shopee-stepper-val">${qtyInCart} di Troli</span>
+                <button type="button" class="shopee-stepper-btn btn-plus" aria-label="Tambah">+</button>
+              </div>
+            ` : `
+              <button type="button" class="btn-shopee-add">
+                <i data-lucide="shopping-bag" style="width: 13px; height: 13px;"></i>
+                <span>+ Keranjang</span>
+              </button>
+            `}
+          </div>
+        </div>
+      `;
+
+      const addBtn = card.querySelector('.btn-shopee-add');
+      if (addBtn) {
+        addBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          addToCartFromCatalog(prod);
+        });
+      }
+
+      const minusBtn = card.querySelector('.btn-minus');
+      if (minusBtn) {
+        minusBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          decreaseCartFromCatalog(prod);
+        });
+      }
+
+      const plusBtn = card.querySelector('.btn-plus');
+      if (plusBtn) {
+        plusBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          addToCartFromCatalog(prod);
+        });
+      }
+
+      el.shopeeProductGrid.appendChild(card);
+    });
+
+    if (window.lucide) {
+      window.lucide.createIcons({ root: el.shopeeProductGrid });
+    }
+  }
+
+  function addToCartFromCatalog(prod) {
+    const existing = state.activeItems.find(i => i.name.toLowerCase() === prod.name.toLowerCase());
+    if (existing) {
+      existing.qty = (Number(existing.qty) || 0) + 1;
+      existing.inCart = true;
+    } else {
+      state.activeItems.push({
+        id: 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        name: prod.name,
+        category: prod.category,
+        unit: prod.unit,
+        qty: 1,
+        unitPrice: prod.price,
+        discountType: 'none',
+        discountValue: 0,
+        stackedDiscount: { enabled: false, type: 'percent', value: 0 },
+        inCart: true,
+        note: prod.badge || ''
+      });
+    }
+
+    window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
+    renderShopeeCatalog();
+    renderGroceryList();
+    updateBudgetSafetyMeter();
+
+    if (el.headerCartBadge) {
+      el.headerCartBadge.classList.add('pop');
+      setTimeout(() => el.headerCartBadge.classList.remove('pop'), 250);
+    }
+
+    showToast(`${prod.name} dimasukkan ke keranjang!`, 'success');
+    if (window.soundCtrl) window.soundCtrl.playPop();
+
+    checkBudgetThresholdAndWarn();
+  }
+
+  function decreaseCartFromCatalog(prod) {
+    const idx = state.activeItems.findIndex(i => i.name.toLowerCase() === prod.name.toLowerCase());
+    if (idx !== -1) {
+      if (state.activeItems[idx].qty > 1) {
+        state.activeItems[idx].qty -= 1;
+      } else {
+        state.activeItems.splice(idx, 1);
+      }
+      window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
+      renderShopeeCatalog();
+      renderGroceryList();
+      updateBudgetSafetyMeter();
+      if (window.soundCtrl) window.soundCtrl.playTick();
+    }
+  }
+
+  function checkBudgetThresholdAndWarn() {
+    let activeSpent = 0;
+    let checkedCount = 0;
+    state.activeItems.forEach(item => {
+      const p = calculateItemPricing(item);
+      if (item.inCart) {
+        checkedCount++;
+        activeSpent += p.finalSubtotal;
+      }
+    });
+    if (checkedCount === 0) {
+      state.activeItems.forEach(item => {
+        activeSpent += calculateItemPricing(item).finalSubtotal;
+      });
+    }
+    const limit = state.budgetLimit || 450000;
+    if (activeSpent > limit) {
+      showOverbudgetWarningPopup(activeSpent, limit);
+    }
+  }
+
+  function showOverbudgetWarningPopup(activeSpent, limit) {
+    if (!el.budgetExceededModal) return;
+    const overAmount = activeSpent - limit;
+    if (el.warnLimitAmount) el.warnLimitAmount.textContent = formatRp(limit);
+    if (el.warnSpentAmount) el.warnSpentAmount.textContent = formatRp(activeSpent);
+    if (el.warnOverAmount) el.warnOverAmount.textContent = formatRp(overAmount > 0 ? overAmount : 0);
+    el.budgetExceededModal.style.display = 'flex';
+    if (window.soundCtrl) window.soundCtrl.playWarning();
+    if (window.lucide) window.lucide.createIcons({ root: el.budgetExceededModal });
+  }
+
+  function closeOverbudgetWarningPopup() {
+    if (el.budgetExceededModal) {
+      el.budgetExceededModal.style.display = 'none';
+    }
   }
 
   // Load Data from LocalStorage
@@ -598,6 +1012,23 @@
       el.budgetWarningText.textContent = `🚨 OVERBUDGET! Belanjaan troli melebihi batas anggaran sebesar ${formatRp(Math.abs(remainder))}.`;
     }
 
+    // Overbudget State & Animated Pop-up Trigger
+    if (ratio > 1.0) {
+      if (el.floatingBudgetBar) el.floatingBudgetBar.classList.add('is-overbudget');
+      if (!state.wasOverbudget) {
+        state.wasOverbudget = true;
+        showOverbudgetWarningPopup(activeSpent, limit);
+      }
+    } else {
+      if (el.floatingBudgetBar) el.floatingBudgetBar.classList.remove('is-overbudget');
+      state.wasOverbudget = false;
+    }
+
+    // Sync Cart Count Badges in Top Header and Bottom Nav
+    const totalItemsInCart = state.activeItems.reduce((acc, i) => acc + (Number(i.qty) || 1), 0);
+    if (el.headerCartBadge) el.headerCartBadge.textContent = totalItemsInCart;
+    if (el.navCartCount) el.navCartCount.textContent = totalItemsInCart;
+
     // Sticky Summary Cart Bar (Above Bottom Navigation)
     if (checkedCount > 0) {
       el.summaryCartBadge.textContent = `${checkedCount}/${state.activeItems.length} Siap Beli`;
@@ -626,6 +1057,7 @@
   // Save changes to localStorage and refresh views
   function saveAndRefresh() {
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
+    renderShopeeCatalog();
     renderGroceryList();
     updateBudgetSafetyMeter();
     renderAnggaranScreen();
@@ -1178,6 +1610,13 @@
       btn.classList.toggle('active', btn.dataset.tab === targetViewId);
     });
 
+    // Refresh contents if switching to catalog or cart
+    if (targetViewId === 'viewKatalog') {
+      renderShopeeCatalog();
+    } else if (targetViewId === 'viewBelanja') {
+      renderGroceryList();
+    }
+
     // Trolley summary bar is visible primarily on Belanja view
     el.trolleySummaryBar.style.display = targetViewId === 'viewBelanja' ? 'flex' : 'none';
 
@@ -1372,6 +1811,7 @@
     if (confirm('Apakah kamu yakin ingin keluar dari akun?')) {
       window.SmartData.SmartStorage.logoutUser();
       state.currentUser = null;
+      checkAuthGate();
       renderUserProfile();
       showToast('Kamu telah keluar dari akun.', 'info');
       if (window.soundCtrl) window.soundCtrl.playTick();
@@ -1429,18 +1869,115 @@
 
   // Event Listeners
   function bindEvents() {
-    // Bottom Navigation clicks
-    el.bottomNav.addEventListener('click', (e) => {
-      const tabBtn = e.target.closest('.nav-tab-btn');
-      if (tabBtn && tabBtn.dataset.tab) {
-        switchTab(tabBtn.dataset.tab);
-      }
-    });
+    // Gatekeeper Full-Page Login Events
+    if (el.closeAuthGateBtn) {
+      el.closeAuthGateBtn.addEventListener('click', () => hideAuthGate());
+    }
+    if (el.gateTabLogin) {
+      el.gateTabLogin.addEventListener('click', () => switchGateTab('login'));
+    }
+    if (el.gateTabRegister) {
+      el.gateTabRegister.addEventListener('click', () => switchGateTab('register'));
+    }
+    if (el.gateLoginForm) {
+      el.gateLoginForm.addEventListener('submit', handleGateLoginSubmit);
+    }
+    if (el.gateRegisterForm) {
+      el.gateRegisterForm.addEventListener('submit', handleGateRegisterSubmit);
+    }
+    if (el.gateToggleLoginPassBtn) {
+      el.gateToggleLoginPassBtn.addEventListener('click', () => togglePassword('gateLoginPassword', 'gateLoginEyeIcon'));
+    }
+    if (el.gateToggleRegPassBtn) {
+      el.gateToggleRegPassBtn.addEventListener('click', () => togglePassword('gateRegPassword', 'gateRegEyeIcon'));
+    }
+    if (el.gateQuickLoginBudi) {
+      el.gateQuickLoginBudi.addEventListener('click', (e) => {
+        e.preventDefault();
+        gateQuickLogin('budi@rantau.id', '123');
+      });
+    }
+    if (el.gateQuickLoginSiti) {
+      el.gateQuickLoginSiti.addEventListener('click', (e) => {
+        e.preventDefault();
+        gateQuickLogin('siti@rantau.id', '123');
+      });
+    }
+    if (el.gateForgotPassBtn) {
+      el.gateForgotPassBtn.addEventListener('click', () => {
+        alert('Petunjuk pemulihan kata sandi telah dikirim ke email kos kamu (Password akun demo: 123).');
+      });
+    }
 
-    // Header user profile button tap
+    // Header Cart Pill Button (jump to cart from any tab)
+    if (el.headerCartBtn) {
+      el.headerCartBtn.addEventListener('click', () => switchTab('viewBelanja'));
+    }
+
+    // Header user profile button tap -> Buka halaman login / ganti akun
     if (el.headerUserBtn) {
       el.headerUserBtn.addEventListener('click', () => {
-        switchTab('viewAkun');
+        showAuthGate();
+      });
+    }
+
+    // Floating budget bar tap
+    if (el.floatingBudgetBar) {
+      el.floatingBudgetBar.addEventListener('click', () => {
+        if (el.floatingBudgetBar.classList.contains('is-overbudget')) {
+          checkBudgetThresholdAndWarn();
+        } else {
+          switchTab('viewAnggaran');
+        }
+      });
+    }
+
+    // Shopee Catalog Search
+    if (el.katalogSearchInput) {
+      el.katalogSearchInput.addEventListener('input', (e) => {
+        state.katalogSearchQuery = e.target.value;
+        if (el.katalogSearchClearBtn) {
+          el.katalogSearchClearBtn.style.display = state.katalogSearchQuery ? 'block' : 'none';
+        }
+        renderShopeeCatalog();
+      });
+    }
+    if (el.katalogSearchClearBtn) {
+      el.katalogSearchClearBtn.addEventListener('click', () => {
+        el.katalogSearchInput.value = '';
+        state.katalogSearchQuery = '';
+        el.katalogSearchClearBtn.style.display = 'none';
+        renderShopeeCatalog();
+      });
+    }
+
+    // Overbudget Warning Pop-Up Modal Actions
+    if (el.closeBudgetWarningModalBtn) {
+      el.closeBudgetWarningModalBtn.addEventListener('click', closeOverbudgetWarningPopup);
+    }
+    if (el.btnWarnDismiss) {
+      el.btnWarnDismiss.addEventListener('click', closeOverbudgetWarningPopup);
+    }
+    if (el.btnWarnReviewCart) {
+      el.btnWarnReviewCart.addEventListener('click', () => {
+        closeOverbudgetWarningPopup();
+        switchTab('viewBelanja');
+      });
+    }
+    if (el.btnWarnAdjustBudget) {
+      el.btnWarnAdjustBudget.addEventListener('click', () => {
+        closeOverbudgetWarningPopup();
+        switchTab('viewAnggaran');
+      });
+    }
+
+    // Bottom Navigation clicks
+    if (el.bottomNav) {
+      el.bottomNav.addEventListener('click', (e) => {
+        const tabBtn = e.target.closest('.nav-tab-btn');
+        if (tabBtn && tabBtn.dataset.tab) {
+          switchTab(tabBtn.dataset.tab);
+        }
       });
     }
 
@@ -1473,7 +2010,7 @@
       el.toggleRegPasswordBtn.addEventListener('click', () => togglePassword('regPassword', 'regEyeIcon'));
     }
 
-    // Quick demo login accounts
+    // Quick demo login accounts (on account tab)
     if (el.quickLoginBudi) {
       el.quickLoginBudi.addEventListener('click', () => quickLogin('budi@rantau.id', '123'));
     }
@@ -1488,12 +2025,14 @@
     if (el.menuSetBudgetBtn) {
       el.menuSetBudgetBtn.addEventListener('click', () => switchTab('viewAnggaran'));
     }
+    if (el.menuOpenLoginBtn) {
+      el.menuOpenLoginBtn.addEventListener('click', () => {
+        showAuthGate();
+      });
+    }
     if (el.menuSwitchAccountBtn) {
       el.menuSwitchAccountBtn.addEventListener('click', () => {
-        window.SmartData.SmartStorage.logoutUser();
-        state.currentUser = null;
-        renderUserProfile();
-        showToast('Silakan pilih akun demo atau login.', 'info');
+        showAuthGate();
       });
     }
     if (el.menuSoundToggleBtn) {
@@ -1506,9 +2045,11 @@
     }
 
     // Header budget card tap opens Anggaran settings
-    el.budgetCardClickable.addEventListener('click', () => {
-      switchTab('viewAnggaran');
-    });
+    if (el.budgetCardClickable) {
+      el.budgetCardClickable.addEventListener('click', () => {
+        switchTab('viewAnggaran');
+      });
+    }
 
     // Search bar typing & clear
     el.searchItemInput.addEventListener('input', (e) => {
@@ -1675,6 +2216,10 @@
   window.openAddItemModal = openAddItemModal;
   window.saveItemFromModal = saveItemFromModal;
   window.closeItemModal = closeItemModal;
+  window.showAuthGate = showAuthGate;
+  window.hideAuthGate = hideAuthGate;
+  window.gateQuickLogin = gateQuickLogin;
+  window.switchGateTab = switchGateTab;
 
   // Start app on DOM ready
   if (document.readyState === 'loading') {

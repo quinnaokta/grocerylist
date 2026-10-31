@@ -41,34 +41,206 @@
       <!-- Native Toast Container -->
       <div class="toast-container" id="toastContainer"></div>
 
-      <!-- App Header -->
-      <header class="app-header">
-        <div class="header-top-row">
-          <div class="brand-badge">
-            <div class="brand-icon-box">
-              <i data-lucide="shopping-bag" style="width: 20px; height: 20px;"></i>
+      <!-- ==========================================
+           FULL-PAGE GATEKEEPER LOGIN SCREEN
+           (Harus Login Dulu Sebelum Mengakses Aplikasi)
+           ========================================== -->
+      <div class="auth-gate-screen" id="authGateScreen">
+        
+        <!-- Close Button (Muncul jika user sudah login dan ingin kembali ke aplikasi) -->
+        <button type="button" class="auth-gate-close-btn" id="closeAuthGateBtn" onclick="window.hideAuthGate && window.hideAuthGate()" title="Kembali ke Aplikasi" aria-label="Tutup Halaman Login" style="display: none;">
+          <i data-lucide="x" style="width: 20px; height: 20px;"></i>
+        </button>
+
+        <div class="auth-gate-container">
+          
+          <!-- Hero Brand Header -->
+          <div class="auth-gate-hero">
+            <div class="auth-gate-icon">
+              <i data-lucide="shopping-bag" style="width: 32px; height: 32px; color: #FFFFFF;"></i>
             </div>
-            <div class="brand-title-area">
-              <h1>Smart Grocery</h1>
-              <span>Budget Safety Tracker • Rantau</span>
+            <h2 class="auth-gate-brand">Smart Grocery</h2>
+            <p class="auth-gate-tagline">Budget Safety Tracker • Sahabat Belanja Rantau</p>
+            
+            <div class="auth-safety-badge">
+              <i data-lucide="shield-check" style="width: 14px; height: 14px; color: #10B981;"></i>
+              <span>Sistem Pelindung Kantong & Anti Overbudget</span>
             </div>
           </div>
-          <div class="header-actions">
-            <button class="user-header-pill" id="headerUserBtn" title="Profil Akun Pengguna" aria-label="Akun Pengguna">
-              <span class="user-header-avatar" id="headerUserAvatar">👨‍🎓</span>
-              <span class="user-header-name" id="headerUserName">Budi</span>
-            </button>
-            <button class="icon-btn" id="soundToggleBtn" title="Efek Suara Aktif/Nonaktif" aria-label="Toggle Sound">
-              <i data-lucide="volume-2" style="width: 18px; height: 18px;" id="soundIcon"></i>
-            </button>
-            <button class="icon-btn" id="headerInfoBtn" title="Petunjuk & Bantuan" aria-label="Help">
-              <i data-lucide="help-circle" style="width: 18px; height: 18px;"></i>
-            </button>
+
+          <!-- Auth Card Form & Tabs -->
+          <div class="auth-gate-card">
+            <div class="auth-tab-switcher">
+              <button class="auth-tab-btn active" id="gateTabLogin" type="button" onclick="window.switchGateTab && window.switchGateTab('login')">Masuk (Login)</button>
+              <button class="auth-tab-btn" id="gateTabRegister" type="button" onclick="window.switchGateTab && window.switchGateTab('register')">Daftar Akun Baru</button>
+            </div>
+
+            <!-- Form LOGIN GATE -->
+            <form class="auth-form-card" id="gateLoginForm">
+              <div class="form-group">
+                <label class="form-label" for="gateLoginEmail">Email atau Nama Akun</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+                  <input type="text" class="form-input" id="gateLoginEmail" placeholder="Contoh: budi@rantau.id" autocomplete="username" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gateLoginPassword">Password</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
+                  <input type="password" class="form-input" id="gateLoginPassword" placeholder="Masukkan password (demo: 123)..." autocomplete="current-password" required>
+                  <button type="button" class="toggle-password-btn" id="gateToggleLoginPassBtn" aria-label="Lihat Password">
+                    <i data-lucide="eye" style="width: 16px; height: 16px;" id="gateLoginEyeIcon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="auth-helper-row">
+                <label class="remember-checkbox-label">
+                  <input type="checkbox" id="gateRememberMe" checked>
+                  <span>Ingat saya di perangkat ini</span>
+                </label>
+                <button type="button" class="forgot-pass-link" id="gateForgotPassBtn">Lupa password?</button>
+              </div>
+
+              <button type="submit" class="btn-primary auth-submit-btn" id="gateSubmitLoginBtn">
+                <i data-lucide="log-in" style="width: 18px; height: 18px;"></i>
+                <span>Masuk Sekarang</span>
+              </button>
+            </form>
+
+            <!-- Form REGISTER GATE -->
+            <form class="auth-form-card" id="gateRegisterForm" style="display: none;">
+              <div class="form-group">
+                <label class="form-label" for="gateRegName">Nama Lengkap</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="user" style="width: 16px; height: 16px;"></i>
+                  <input type="text" class="form-input" id="gateRegName" placeholder="Contoh: Budi Pratama" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gateRegEmail">Alamat Email</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="mail" style="width: 16px; height: 16px;"></i>
+                  <input type="email" class="form-input" id="gateRegEmail" placeholder="Contoh: budi@rantau.id" required>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gateRegPassword">Password (Minimal 3 Karakter)</label>
+                <div class="auth-input-wrapper">
+                  <i data-lucide="lock" style="width: 16px; height: 16px;"></i>
+                  <input type="password" class="form-input" id="gateRegPassword" placeholder="Buat password akun..." required minlength="3">
+                  <button type="button" class="toggle-password-btn" id="gateToggleRegPassBtn" aria-label="Lihat Password">
+                    <i data-lucide="eye" style="width: 16px; height: 16px;" id="gateRegEyeIcon"></i>
+                  </button>
+                </div>
+              </div>
+
+              <div class="form-row-2">
+                <div class="form-group">
+                  <label class="form-label" for="gateRegRole">Status Rantau</label>
+                  <select class="form-select" id="gateRegRole">
+                    <option value="Mahasiswa Rantau">Mahasiswa Rantau</option>
+                    <option value="Anak Kos Hemat">Anak Kos Hemat</option>
+                    <option value="Pekerja Rantau">Pekerja Rantau</option>
+                    <option value="Pelajar Kos">Pelajar Kos</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label class="form-label" for="gateRegCity">Kota Rantau</label>
+                  <input type="text" class="form-input" id="gateRegCity" placeholder="Contoh: Yogyakarta" value="Yogyakarta">
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label class="form-label" for="gateRegBudget">Pagu Anggaran Bulanan (Rp)</label>
+                <div class="currency-input-box">
+                  <span class="currency-prefix">Rp</span>
+                  <input type="number" class="form-input currency-input" id="gateRegBudget" value="450000" step="10000">
+                </div>
+              </div>
+
+              <button type="submit" class="btn-primary auth-submit-btn" id="gateSubmitRegBtn">
+                <i data-lucide="user-plus" style="width: 18px; height: 18px;"></i>
+                <span>Daftar Akun & Masuk</span>
+              </button>
+            </form>
+
+            <!-- 1-Tap Quick Demo Logins -->
+            <div class="demo-accounts-card">
+              <div class="demo-card-title">
+                <i data-lucide="zap" style="width: 15px; height: 15px; color: #F59E0B;"></i>
+                <span>Masuk Cepat dengan Akun Demo (1-Klik):</span>
+              </div>
+              <div class="demo-users-list">
+                <div class="demo-user-box" id="gateQuickLoginBudi" onclick="window.gateQuickLogin && window.gateQuickLogin('budi@rantau.id', '123')">
+                  <div class="demo-avatar">👨‍🎓</div>
+                  <div class="demo-info">
+                    <div class="demo-name">Budi Santoso</div>
+                    <div class="demo-meta">Mahasiswa Rantau • UGM Yogyakarta</div>
+                  </div>
+                  <button type="button" class="btn-demo-login">Pilih</button>
+                </div>
+
+                <div class="demo-user-box" id="gateQuickLoginSiti" onclick="window.gateQuickLogin && window.gateQuickLogin('siti@rantau.id', '123')">
+                  <div class="demo-avatar">👩‍💻</div>
+                  <div class="demo-info">
+                    <div class="demo-name">Siti Rahma</div>
+                    <div class="demo-meta">Anak Kos Hemat • ITB Bandung</div>
+                  </div>
+                  <button type="button" class="btn-demo-login">Pilih</button>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
+      </div>
 
-        <!-- Budget Safety Tracker Header Card (Live Gauge) -->
-        <div class="budget-meter-card" id="budgetCardClickable" title="Klik untuk atur batas anggaran">
+      <!-- ==========================================
+           MAIN APP CONTAINER (Tampil Setelah Login)
+           ========================================== -->
+      <div class="main-app-container" id="mainAppContainer">
+
+        <!-- App Header (Compact Top Bar) -->
+        <header class="app-header">
+          <div class="header-top-row">
+            <div class="brand-badge" id="headerBrandBadge">
+              <div class="brand-icon-box">
+                <i data-lucide="shopping-bag" style="width: 19px; height: 19px;"></i>
+              </div>
+              <div class="brand-title-area">
+                <h1>Smart Grocery</h1>
+                <span>Budget Safety • Rantau</span>
+              </div>
+            </div>
+            <div class="header-actions">
+              <button class="icon-btn header-cart-pill" id="headerCartBtn" title="Keranjang Belanja" aria-label="Buka Keranjang">
+                <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
+                <span class="header-cart-badge" id="headerCartBadge">0</span>
+              </button>
+              <button class="user-header-pill" id="headerUserBtn" onclick="window.showAuthGate && window.showAuthGate()" title="Buka Halaman Login / Profil Akun" aria-label="Akun Pengguna">
+                <span class="user-header-avatar" id="headerUserAvatar">👨‍🎓</span>
+                <span class="user-header-name" id="headerUserName">Budi</span>
+              </button>
+              <button class="icon-btn" id="soundToggleBtn" title="Efek Suara Aktif/Nonaktif" aria-label="Toggle Sound">
+                <i data-lucide="volume-2" style="width: 18px; height: 18px;" id="soundIcon"></i>
+              </button>
+              <button class="icon-btn" id="headerInfoBtn" title="Petunjuk & Bantuan" aria-label="Help">
+                <i data-lucide="help-circle" style="width: 18px; height: 18px;"></i>
+              </button>
+            </div>
+          </div>
+        </header>
+
+        <!-- ==========================================
+             FLOATING BUDGET SAFETY BAR
+             (Melayang & Tidak Hilang Saat User Scroll)
+             ========================================== -->
+        <div class="floating-budget-bar" id="floatingBudgetBar" title="Klik untuk atur atau tinjau batas anggaran">
           <div class="budget-meter-header">
             <div class="budget-meter-title">
               <i data-lucide="shield-check" style="width: 15px; height: 15px; color: var(--primary);"></i>
@@ -95,21 +267,81 @@
             </div>
           </div>
 
-          <!-- Dynamic Visual Warning Banner (muncul otomatis saat mendekati atau melebihi limit) -->
+          <!-- Dynamic Visual Warning Banner (muncul saat mendekati atau melebihi limit) -->
           <div class="alert-banner warning" id="budgetWarningBanner" style="display: none;">
             <i data-lucide="alert-triangle" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
             <span id="budgetWarningText">Waspada! Belanjaan mendekati 85% batas bulanan.</span>
           </div>
         </div>
-      </header>
 
-      <!-- App Scrollable Viewport -->
-      <div class="app-viewport" id="viewport">
-        
-        <!-- ==========================================
-             SCREEN 1: BELANJA (Active Grocery Trolley)
-             ========================================== -->
-        <section class="screen-view active" id="viewBelanja">
+        <!-- App Scrollable Viewport -->
+        <div class="app-viewport" id="viewport">
+          
+          <!-- ==========================================
+               SCREEN 0: ETALASE BARANG (ALA SHOPEE)
+               Display produk yang bisa dibeli sebelum masuk keranjang
+               ========================================== -->
+          <section class="screen-view active" id="viewKatalog">
+            
+            <!-- Shopee Store Location Bar -->
+            <div class="shopee-top-bar">
+              <div class="shopee-location-pill">
+                <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
+                <span id="shopeeLocationText">Kost Mahasiswa • Yogyakarta</span>
+              </div>
+              <div class="shopee-tag-fast">
+                <i data-lucide="zap" style="width: 12px; height: 12px; color: #F59E0B;"></i>
+                <span>Super Cepat</span>
+              </div>
+            </div>
+
+            <!-- Shopee Banner Card -->
+            <div class="shopee-banner-card">
+              <div class="shopee-banner-badge">🔥 Promo Tanggal Rantau</div>
+              <h4>Etalase Kebutuhan Pokok & Kos</h4>
+              <p>Pilih barang belanjaanmu, dapatkan harga pasar termurah & pantau budget otomatis sebelum masuk ke keranjang!</p>
+              <div class="shopee-banner-tags">
+                <span class="s-tag"><i data-lucide="check" style="width: 11px; height: 11px;"></i> Harga Pasar</span>
+                <span class="s-tag"><i data-lucide="check" style="width: 11px; height: 11px;"></i> Bebas Ongkir</span>
+                <span class="s-tag"><i data-lucide="check" style="width: 11px; height: 11px;"></i> Anti Overbudget</span>
+              </div>
+            </div>
+
+            <!-- Shopee Search & Category Filter Area -->
+            <div class="shopee-search-bar">
+              <div class="search-input-wrapper">
+                <i data-lucide="search" style="width: 18px; height: 18px;"></i>
+                <input type="text" class="search-input" id="katalogSearchInput" placeholder="Cari di etalase: beras, telur, indomie..." autocomplete="off">
+                <button class="search-clear-btn" id="katalogSearchClearBtn" aria-label="Clear Search">
+                  <i data-lucide="x" style="width: 16px; height: 16px;"></i>
+                </button>
+              </div>
+
+              <!-- Horizontal Category Chips Carousel -->
+              <div class="category-chips-slider" id="katalogCategoryChips">
+                <!-- Rendered dynamically -->
+              </div>
+            </div>
+
+            <!-- Shopee Product Grid Header -->
+            <div class="shopee-grid-header">
+              <div class="shopee-grid-title">
+                <span id="shopeeProductCount">29 Barang Tersedia</span>
+                <small>• Ketuk "+ Keranjang" untuk memilih</small>
+              </div>
+            </div>
+
+            <!-- Shopee 2-Column Product Grid -->
+            <div class="shopee-product-grid" id="shopeeProductGrid">
+              <!-- Rendered via JS -->
+            </div>
+
+          </section>
+
+          <!-- ==========================================
+               SCREEN 1: BELANJA (Active Grocery Trolley)
+               ========================================== -->
+          <section class="screen-view" id="viewBelanja">
           
           <!-- PWA Install Prompt Banner (jika didukung) -->
           <div class="pwa-banner" id="pwaBanner" style="display: none;">
@@ -369,7 +601,15 @@
                 <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-soft);"></i>
               </button>
 
-              <button class="account-menu-item" id="menuSwitchAccountBtn" type="button">
+              <button class="account-menu-item" id="menuOpenLoginBtn" type="button" onclick="window.showAuthGate && window.showAuthGate()">
+                <div class="menu-item-left">
+                  <i data-lucide="log-in" style="width: 18px; height: 18px; color: var(--primary);"></i>
+                  <span>Buka Halaman Login (Pindah Akun)</span>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-soft);"></i>
+              </button>
+
+              <button class="account-menu-item" id="menuSwitchAccountBtn" type="button" onclick="window.showAuthGate && window.showAuthGate()">
                 <div class="menu-item-left">
                   <i data-lucide="users" style="width: 18px; height: 18px; color: #3B82F6;"></i>
                   <span>Ganti / Masuk Akun Lain</span>
@@ -564,12 +804,18 @@
 
       <!-- Floating Bottom Navigation Bar -->
       <nav class="bottom-nav-bar" id="bottomNav">
-        <button class="nav-tab-btn active" data-tab="viewBelanja" id="navBelanja">
+        <button class="nav-tab-btn active" data-tab="viewKatalog" id="navKatalog">
+          <div class="nav-icon-wrapper">
+            <i data-lucide="store" style="width: 20px; height: 20px;"></i>
+          </div>
+          <span>Etalase</span>
+        </button>
+        <button class="nav-tab-btn" data-tab="viewBelanja" id="navBelanja">
           <div class="nav-icon-wrapper">
             <i data-lucide="shopping-cart" style="width: 20px; height: 20px;"></i>
-            <span class="nav-badge-dot" id="navCartCount">5</span>
+            <span class="nav-badge-dot" id="navCartCount">0</span>
           </div>
-          <span>Belanja</span>
+          <span>Keranjang</span>
         </button>
         <button class="nav-tab-btn" data-tab="viewRiwayat" id="navRiwayat">
           <div class="nav-icon-wrapper">
@@ -590,6 +836,8 @@
           <span id="navAkunLabel">Akun</span>
         </button>
       </nav>
+
+    </div> <!-- End of #mainAppContainer -->
 
       <!-- ==========================================
            MODAL 1: ADD / EDIT ITEM BOTTOM SHEET
@@ -869,6 +1117,63 @@
           </div>
           <div class="sheet-footer">
             <button type="button" class="btn-primary" id="closeHelpFooterBtn" style="width: 100%;">Mengerti</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==========================================
+           MODAL 5: ANIMATED OVERBUDGET POP-UP WARNING
+           (Peringatan Melompat dengan Animasi saat Belanja Melebihi Budget)
+           ========================================== -->
+      <div class="modal-overlay warning-overlay" id="budgetExceededModal" style="display: none;">
+        <div class="warning-popup-card">
+          <button class="warning-popup-close-btn" id="closeBudgetWarningModalBtn" aria-label="Tutup Peringatan">
+            <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+          </button>
+
+          <div class="warning-siren-box">
+            <div class="siren-pulse-ring"></div>
+            <div class="siren-icon-wrapper">
+              <i data-lucide="alert-octagon" style="width: 36px; height: 36px; color: #FFFFFF;"></i>
+            </div>
+          </div>
+
+          <h3 class="warning-popup-title">Waspada! Anggaran Terlebihi</h3>
+          <p class="warning-popup-subtitle">Total belanjaan kamu sudah melebihi rencana pagu anggaran bulanan yang telah ditetapkan!</p>
+
+          <div class="warning-breakdown-box">
+            <div class="warning-row">
+              <span>Rencana Anggaran:</span>
+              <strong id="warnLimitAmount">Rp 450.000</strong>
+            </div>
+            <div class="warning-row">
+              <span>Total Belanjaan:</span>
+              <strong class="text-danger" id="warnSpentAmount">Rp 485.000</strong>
+            </div>
+            <div class="warning-divider"></div>
+            <div class="warning-over-pill">
+              <i data-lucide="trending-up" style="width: 15px; height: 15px;"></i>
+              <span>Overbudget: <strong id="warnOverAmount">Rp 35.000</strong></span>
+            </div>
+          </div>
+
+          <div class="warning-advice-box">
+            <i data-lucide="alert-triangle" style="width: 16px; height: 16px; flex-shrink: 0; color: #D97706;"></i>
+            <span><strong>Tips Hemat Rantau:</strong> Tinjau keranjang belanja atau kurangi barang yang belum mendesak agar sisa tabungan kos tetap aman.</span>
+          </div>
+
+          <div class="warning-popup-actions">
+            <button type="button" class="btn-warning-action primary" id="btnWarnReviewCart">
+              <i data-lucide="shopping-cart" style="width: 16px; height: 16px;"></i>
+              <span>Tinjau Keranjang Belanja</span>
+            </button>
+            <button type="button" class="btn-warning-action outline" id="btnWarnAdjustBudget">
+              <i data-lucide="pie-chart" style="width: 16px; height: 16px;"></i>
+              <span>Atur / Naikkan Anggaran</span>
+            </button>
+            <button type="button" class="btn-warning-action text" id="btnWarnDismiss">
+              <span>Tetap Lanjutkan Belanja</span>
+            </button>
           </div>
         </div>
       </div>
