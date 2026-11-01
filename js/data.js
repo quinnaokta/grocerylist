@@ -803,6 +803,7 @@ class FirestoreRealtimeSync {
     this.sessionDocRef = null;
     this.unsubscribeListener = null;
     this.sessionId = 'active_shared_session'; // Default shared session for instant multi-device sync
+    this.deviceId = 'dev-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 6);
     this.isReady = false;
     this.isApplyingCloudUpdate = false;
     this.statusListeners = [];
@@ -820,15 +821,6 @@ class FirestoreRealtimeSync {
         firebase.initializeApp(FIREBASE_CONFIG);
       }
       this.db = firebase.firestore();
-
-      // Enable offline persistence for multi-tab synchronization and offline queue
-      this.db.enablePersistence({ synchronizeTabs: true }).catch(err => {
-        if (err.code === 'failed-precondition') {
-          console.warn('Firestore multi-tab persistence: synchronizeTabs active');
-        } else if (err.code === 'unimplemented') {
-          console.warn('Firestore offline persistence tidak didukung browser ini');
-        }
-      });
 
       this.sessionDocRef = this.db.collection('shopping_sessions').doc(this.sessionId);
       this.isReady = true;
@@ -859,16 +851,16 @@ class FirestoreRealtimeSync {
     }
 
     if (this.unsubscribeListener) {
-      this.unsubscribeListener();
+      try { this.unsubscribeListener(); } catch (e) {}
     }
 
     this.notifyStatus('syncing');
 
+    // Live real-time stream via onSnapshot() - fires on every cloud mutation instantly
     this.unsubscribeListener = this.sessionDocRef.onSnapshot(
-      { includeMetadataChanges: false },
       (docSnapshot) => {
         this.notifyStatus('connected');
-        if (docSnapshot.exists) {
+        if (docSnapshot && docSnapshot.exists) {
           const cloudData = docSnapshot.data();
           this.isApplyingCloudUpdate = true;
           try {
@@ -878,7 +870,7 @@ class FirestoreRealtimeSync {
           } finally {
             setTimeout(() => {
               this.isApplyingCloudUpdate = false;
-            }, 120);
+            }, 60);
           }
         }
       },
@@ -907,13 +899,14 @@ class FirestoreRealtimeSync {
         totalSavings: Number(sessionData.totalSavings) || 0,
         checkedCount: Number(sessionData.checkedCount) || 0,
         updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
-        updatedBy: sessionData.updatedBy || 'Smart Grocery User'
+        updatedBy: sessionData.updatedBy || 'Smart Grocery User',
+        updateDeviceId: this.deviceId
       };
 
       await this.sessionDocRef.set(payload, { merge: true });
       this.notifyStatus('connected');
     } catch (e) {
-      console.warn('Gagal push ke Firestore (masuk offline queue Firestore):', e);
+      console.warn('Gagal push ke Firestore:', e);
       this.notifyStatus('offline');
     }
   }

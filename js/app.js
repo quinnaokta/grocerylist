@@ -1358,11 +1358,12 @@
     syncMgr.listenToSession(cloudData => {
       if (!cloudData) return;
 
+      const isFromOtherDevice = cloudData.updateDeviceId && cloudData.updateDeviceId !== syncMgr.deviceId;
       let hasChanged = false;
 
       // 1. Items array from Firestore
       if (Array.isArray(cloudData.items)) {
-        state.activeItems = groupActiveItems(cloudData.items);
+        state.activeItems = cloudData.items;
         window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
         hasChanged = true;
       }
@@ -1399,6 +1400,12 @@
         updateBudgetSafetyMeter();
         renderAnggaranScreen();
         syncCartBadges();
+
+        // If change was made on another device, notify user with audio & visual toast
+        if (isFromOtherDevice) {
+          showToast(`⚡ Sinkron Realtime: Belanjaan diperbarui dari ${cloudData.updatedBy || 'perangkat lain'}!`, 'info');
+          if (window.soundCtrl) window.soundCtrl.playPop();
+        }
       }
     });
 
@@ -1413,11 +1420,6 @@
       updateCloudSyncUI('offline');
       showToast('Koneksi internet terputus. Mode offline aktif (LocalStorage aman).', 'warning');
     });
-
-    // Seed cloud state if not populated
-    setTimeout(() => {
-      pushToFirestore();
-    }, 600);
   }
 
   // Escape HTML string
