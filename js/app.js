@@ -263,6 +263,116 @@
     return catId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
   }
 
+  // Centralized Cart Badge Synchronizer for Top Header and Bottom Nav
+  function syncCartBadges() {
+    const totalCount = state.activeItems.reduce((acc, i) => acc + (Number(i.qty) || 1), 0);
+    if (el.headerCartBadge) {
+      el.headerCartBadge.textContent = totalCount;
+      el.headerCartBadge.style.display = totalCount > 0 ? 'inline-flex' : 'none';
+    }
+    if (el.navCartCount) {
+      el.navCartCount.textContent = totalCount;
+      el.navCartCount.style.display = totalCount > 0 ? 'inline-block' : 'none';
+    }
+  }
+
+  // Helper: Normalize & clean grocery item name for fuzzy/smart grouping
+  function cleanItemNameForMatch(n) {
+    if (!n) return '';
+    let s = String(n).toLowerCase();
+    s = s.replace(/\b1\s*l(iter)?\b/gi, '1 liter');
+    s = s.replace(/\b2\s*l(iter)?\b/gi, '2 liter');
+    s = s.replace(/\b5\s*kg\b/gi, '5 kg');
+    s = s.replace(/\b1\s*kg\b/gi, '1 kg');
+    s = s.replace(/\b500\s*g(ram)?\b/gi, '500 gram');
+    s = s.replace(/\b250\s*g(ram)?\b/gi, '250 gram');
+    s = s.replace(/\b(super|original|fresh|pilihan|premium|spesial|special|refil|refill|cair)\b/gi, '');
+    s = s.replace(/[^\w\s]/g, ' ');
+    return s.trim().replace(/\s+/g, ' ');
+  }
+
+  // Find matching Shopee product catalog entry
+  function findMatchingShopeeProduct(item) {
+    if (!item || !window.SmartData || !Array.isArray(window.SmartData.SHOPEE_PRODUCTS)) return null;
+    const products = window.SmartData.SHOPEE_PRODUCTS;
+    if (item.productId) {
+      const found = products.find(p => p.id === item.productId);
+      if (found) return found;
+    }
+    const name = (item.name || '').trim().toLowerCase();
+    if (!name) return null;
+    let found = products.find(p => p.name.trim().toLowerCase() === name);
+    if (found) return found;
+
+    const ca = cleanItemNameForMatch(name);
+    if (ca) {
+      found = products.find(p => {
+        const cb = cleanItemNameForMatch(p.name);
+        return ca === cb || (ca.length >= 8 && cb.length >= 8 && (ca.includes(cb) || cb.includes(ca)));
+      });
+      if (found) return found;
+    }
+    return null;
+  }
+
+  // Smart Item Matcher (identifies if two items refer to the same grocery good)
+  function isSameGroceryItem(a, b) {
+    if (!a || !b) return false;
+    const idA = a.productId || a.id;
+    const idB = b.productId || b.id;
+    if (idA && idB && (idA === idB || a.productId === b.id || b.productId === a.id)) return true;
+
+    const nameA = (typeof a === 'string' ? a : (a.name || '')).trim().toLowerCase();
+    const nameB = (typeof b === 'string' ? b : (b.name || '')).trim().toLowerCase();
+    if (!nameA || !nameB) return false;
+    if (nameA === nameB) return true;
+
+    const ca = cleanItemNameForMatch(nameA);
+    const cb = cleanItemNameForMatch(nameB);
+    if (ca && cb) {
+      if (ca === cb) return true;
+      if (ca.length >= 7 && cb.length >= 7 && (ca.includes(cb) || cb.includes(ca))) {
+        // Guard against distinct Indomie flavors or sizes
+        if (ca.includes('kuah') !== cb.includes('kuah')) return false;
+        if (ca.includes('goreng') !== cb.includes('goreng')) return false;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Group identical items into a single entry with combined quantity
+  function groupActiveItems(items) {
+    if (!Array.isArray(items)) return [];
+    const grouped = [];
+    items.forEach(item => {
+      if (!item) return;
+      // Link productId if catalog product found
+      if (!item.productId) {
+        const match = findMatchingShopeeProduct(item);
+        if (match) {
+          item.productId = match.id;
+        }
+      }
+
+      const existing = grouped.find(g => isSameGroceryItem(g, item));
+      if (existing) {
+        existing.qty = (Number(existing.qty) || 0) + (Number(item.qty) || 1);
+        if (item.inCart) existing.inCart = true;
+        if (item.productId && !existing.productId) existing.productId = item.productId;
+        if (item.unitPrice && (!existing.unitPrice || existing.unitPrice === 0)) existing.unitPrice = item.unitPrice;
+        if (!existing.note && item.note) existing.note = item.note;
+        if (!existing.unit && item.unit) existing.unit = item.unit;
+      } else {
+        grouped.push({
+          ...item,
+          qty: Math.max(1, Number(item.qty) || 1)
+        });
+      }
+    });
+    return grouped;
+  }
+
   // Helper: Calculate Item Pricing & Discounts
   function calculateItemPricing(item) {
     const qty = Math.max(1, Number(item.qty) || 1);
@@ -374,6 +484,7 @@
     try { renderSuggestionsPills(); } catch (e) { console.error('renderSuggestionsPills error:', e); }
     try { renderGroceryList(); } catch (e) { console.error('renderGroceryList error:', e); }
     try { updateBudgetSafetyMeter(); } catch (e) { console.error('updateBudgetSafetyMeter error:', e); }
+    try { syncCartBadges(); } catch (e) { console.error('syncCartBadges error:', e); }
     try { renderHistoryScreen(); } catch (e) { console.error('renderHistoryScreen error:', e); }
     try { renderAnggaranScreen(); } catch (e) { console.error('renderAnggaranScreen error:', e); }
     try { bindEvents(); } catch (e) { console.error('bindEvents error:', e); }
@@ -609,37 +720,42 @@
     }
 
     filtered.forEach(prod => {
-      const existingInCart = state.activeItems.find(i => i.name.toLowerCase() === prod.name.toLowerCase());
+      const existingInCart = state.activeItems.find(i => isSameGroceryItem(i, prod));
       const qtyInCart = existingInCart ? Number(existingInCart.qty) || 0 : 0;
 
       const card = document.createElement('div');
-      card.className = 'shopee-card';
+      card.className = `shopee-card ${qtyInCart > 0 ? 'has-in-cart' : ''}`;
       card.innerHTML = `
-        <div class="shopee-card-img-box">
+        <div class="shopee-card-img-box" title="Klik untuk atur / perbarui barang ini">
           <span class="shopee-card-emoji">${prod.emoji || '🛍️'}</span>
-          ${prod.badge ? `<span class="shopee-ribbon">${escapeHtml(prod.badge)}</span>` : ''}
+          ${qtyInCart > 0 ? `<span class="shopee-in-cart-indicator">${qtyInCart} di Troli</span>` : ''}
         </div>
         <div class="shopee-card-body">
-          <div class="shopee-card-tag">${formatCategory(prod.category)}</div>
+          <div class="shopee-card-tag">${formatCategory(prod.category)} • ${prod.unit || 'pcs'}</div>
           <div class="shopee-card-title" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</div>
           <div class="shopee-card-prices">
             <span class="shopee-price-main">${formatRp(prod.price)}</span>
-            ${prod.originalPrice ? `<span class="shopee-price-original">${formatRp(prod.originalPrice)}</span>` : ''}
-          </div>
-          <div class="shopee-card-meta">
-            <span class="shopee-rating">⭐ ${prod.rating || '4.9'}</span>
-            <span class="shopee-sold">${prod.soldCount || '1.2rb'} terjual</span>
+            ${prod.originalPrice && prod.originalPrice > prod.price ? `<span class="shopee-price-original">${formatRp(prod.originalPrice)}</span>` : ''}
           </div>
           <div class="shopee-card-action">
             ${qtyInCart > 0 ? `
-              <div class="shopee-qty-stepper">
-                <button type="button" class="shopee-stepper-btn btn-minus" aria-label="Kurang">-</button>
-                <span class="shopee-stepper-val">${qtyInCart} di Troli</span>
-                <button type="button" class="shopee-stepper-btn btn-plus" aria-label="Tambah">+</button>
+              <div class="shopee-stepper-row">
+                <div class="shopee-qty-stepper">
+                  <button type="button" class="shopee-stepper-btn btn-minus" aria-label="Kurang">−</button>
+                  <span class="shopee-stepper-val">${qtyInCart}</span>
+                  <button type="button" class="shopee-stepper-btn btn-plus" aria-label="Tambah">+</button>
+                </div>
+                <button type="button" class="btn-shopee-edit-item" title="Update / Detail Barang">
+                  <i data-lucide="edit-3" style="width: 13px; height: 13px;"></i>
+                </button>
               </div>
+              <button type="button" class="btn-shopee-check-toggle ${existingInCart && existingInCart.inCart ? 'is-checked' : ''}" title="Centang untuk hitung ke anggaran">
+                <i data-lucide="${existingInCart && existingInCart.inCart ? 'check-circle' : 'circle'}" style="width: 13px; height: 13px;"></i>
+                <span>${existingInCart && existingInCart.inCart ? 'Siap Beli (Dihitung)' : 'Centang Beli'}</span>
+              </button>
             ` : `
               <button type="button" class="btn-shopee-add">
-                <i data-lucide="shopping-bag" style="width: 13px; height: 13px;"></i>
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
                 <span>+ Keranjang</span>
               </button>
             `}
@@ -671,6 +787,38 @@
         });
       }
 
+      const editBtn = card.querySelector('.btn-shopee-edit-item');
+      if (editBtn && existingInCart) {
+        editBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openEditItemModal(existingInCart);
+        });
+      }
+
+      const checkToggleBtn = card.querySelector('.btn-shopee-check-toggle');
+      if (checkToggleBtn && existingInCart) {
+        checkToggleBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          existingInCart.inCart = !existingInCart.inCart;
+          saveAndRefresh();
+          if (window.soundCtrl) window.soundCtrl.playPop();
+          showToast(existingInCart.inCart ? `"${existingInCart.name}" siap dibeli (masuk anggaran)!` : `"${existingInCart.name}" hanya disimpan di troli`, 'info');
+        });
+      }
+
+      // Klik foto / emoji barang untuk cepat update detail barang jika ada di troli
+      const imgBox = card.querySelector('.shopee-card-img-box');
+      if (imgBox) {
+        imgBox.style.cursor = 'pointer';
+        imgBox.addEventListener('click', () => {
+          if (existingInCart) {
+            openEditItemModal(existingInCart);
+          } else {
+            addToCartFromCatalog(prod);
+          }
+        });
+      }
+
       el.shopeeProductGrid.appendChild(card);
     });
 
@@ -680,75 +828,74 @@
   }
 
   function addToCartFromCatalog(prod) {
-    const existing = state.activeItems.find(i => i.name.toLowerCase() === prod.name.toLowerCase());
+    const existing = state.activeItems.find(i => isSameGroceryItem(i, prod));
     if (existing) {
       existing.qty = (Number(existing.qty) || 0) + 1;
-      existing.inCart = true;
+      if (!existing.productId) existing.productId = prod.id;
     } else {
       state.activeItems.push({
         id: 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
+        productId: prod.id,
         name: prod.name,
         category: prod.category,
-        unit: prod.unit,
+        unit: prod.unit || 'pcs',
         qty: 1,
         unitPrice: prod.price,
-        discountType: 'none',
-        discountValue: 0,
+        discountType: prod.discountPercent ? 'percent' : 'none',
+        discountValue: prod.discountPercent || 0,
         stackedDiscount: { enabled: false, type: 'percent', value: 0 },
-        inCart: true,
-        note: prod.badge || ''
+        inCart: false, // Default: masuk troli tapi belum dichecklist untuk dibeli
+        note: ''
       });
     }
 
-    window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
-    renderShopeeCatalog();
-    renderGroceryList();
-    updateBudgetSafetyMeter();
+    state.activeItems = groupActiveItems(state.activeItems);
+    saveAndRefresh();
 
     if (el.headerCartBadge) {
       el.headerCartBadge.classList.add('pop');
       setTimeout(() => el.headerCartBadge.classList.remove('pop'), 250);
     }
+    if (el.navCartCount) {
+      el.navCartCount.classList.add('pop');
+      setTimeout(() => el.navCartCount.classList.remove('pop'), 250);
+    }
 
-    showToast(`${prod.name} dimasukkan ke keranjang!`, 'success');
+    showToast(`${prod.name} dimasukkan ke troli!`, 'success');
     if (window.soundCtrl) window.soundCtrl.playPop();
 
     checkBudgetThresholdAndWarn();
   }
 
   function decreaseCartFromCatalog(prod) {
-    const idx = state.activeItems.findIndex(i => i.name.toLowerCase() === prod.name.toLowerCase());
+    const idx = state.activeItems.findIndex(i => isSameGroceryItem(i, prod));
     if (idx !== -1) {
       if (state.activeItems[idx].qty > 1) {
         state.activeItems[idx].qty -= 1;
       } else {
         state.activeItems.splice(idx, 1);
       }
-      window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
-      renderShopeeCatalog();
-      renderGroceryList();
-      updateBudgetSafetyMeter();
+      state.activeItems = groupActiveItems(state.activeItems);
+      saveAndRefresh();
       if (window.soundCtrl) window.soundCtrl.playTick();
     }
   }
 
   function checkBudgetThresholdAndWarn() {
-    let activeSpent = 0;
+    let checkedSpent = 0;
     let checkedCount = 0;
     state.activeItems.forEach(item => {
       const p = calculateItemPricing(item);
       if (item.inCart) {
         checkedCount++;
-        activeSpent += p.finalSubtotal;
+        checkedSpent += p.finalSubtotal;
       }
     });
-    if (checkedCount === 0) {
-      state.activeItems.forEach(item => {
-        activeSpent += calculateItemPricing(item).finalSubtotal;
-      });
-    }
+
+    // Analisis belanja hanya mempertimbangkan barang yang dichecklist (siap beli)
+    const activeSpent = checkedSpent;
     const limit = state.budgetLimit || 450000;
-    if (activeSpent > limit) {
+    if (checkedCount > 0 && activeSpent > limit) {
       showOverbudgetWarningPopup(activeSpent, limit);
     }
   }
@@ -773,7 +920,9 @@
   // Load Data from LocalStorage
   function loadData() {
     state.currentUser = window.SmartData.SmartStorage.getCurrentUser();
-    state.activeItems = window.SmartData.SmartStorage.getActiveItems();
+    const rawItems = window.SmartData.SmartStorage.getActiveItems();
+    state.activeItems = groupActiveItems(rawItems);
+    window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
     state.budgetLimit = window.SmartData.SmartStorage.getBudgetLimit();
     state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
     state.benchmarks = window.SmartData.SmartStorage.getBenchmarks();
@@ -838,7 +987,7 @@
     if (el.toggleCheckAllText) {
       el.toggleCheckAllText.textContent = (checkedCount === state.activeItems.length && state.activeItems.length > 0) ? 'Batal Semua' : 'Pilih Semua';
     }
-    el.navCartCount.textContent = state.activeItems.length;
+    syncCartBadges();
 
     if (filtered.length === 0) {
       el.emptyState.style.display = 'block';
@@ -884,7 +1033,9 @@
           <div class="card-center-info">
             <div class="card-name-row">
               <span class="item-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
-              ${item.inCart ? '<span class="pill-in-cart"><i data-lucide="shopping-bag" style="width: 9px; height: 9px;"></i> Siap Beli</span>' : ''}
+              ${item.inCart 
+                ? '<span class="pill-in-cart"><i data-lucide="check" style="width: 9px; height: 9px;"></i> Siap Beli</span>' 
+                : ''}
             </div>
             <div class="card-sub-row">
               <span class="item-price-at">@ ${formatRp(pricing.finalUnitPrice)}/${item.unit || 'pcs'}</span>
@@ -1008,9 +1159,11 @@
     });
 
     const limit = state.budgetLimit || 450000;
-    // Current spending evaluates the items selected to be bought in trolley!
-    const activeSpent = checkedCount > 0 ? checkedSpent : totalPlanSpent;
-    const ratio = activeSpent / limit;
+    // Evaluasi pengeluaran & analisis belanja:
+    // HANYA hitung barang yang sudah dichecklist (siap beli).
+    // Barang yang belum dichecklist tidak dihitung karena belum tentu dibeli.
+    const activeSpent = checkedSpent;
+    const ratio = limit > 0 ? (activeSpent / limit) : 0;
     const percent = Math.round(ratio * 100);
     const remainder = limit - activeSpent;
 
@@ -1029,7 +1182,7 @@
       el.budgetStatusPill.className = 'budget-status-pill status-safe';
       el.budgetStatusPill.innerHTML = `<i data-lucide="check-circle" style="width: 12px; height: 12px;"></i><span>Aman (${percent}%)</span>`;
       el.headerRemainingText.style.color = 'var(--safe-green)';
-      el.headerRemainingText.textContent = checkedCount > 0 ? `Sisa ${formatRp(remainder)} (${checkedCount} dibeli)` : `Sisa ${formatRp(remainder)}`;
+      el.headerRemainingText.textContent = checkedCount > 0 ? `Sisa ${formatRp(remainder)} (${checkedCount} checklist)` : `Sisa ${formatRp(remainder)} (0 checklist)`;
       el.budgetWarningBanner.style.display = 'none';
     } else if (ratio <= 1.0) {
       // WARNING (80% - 100%)
@@ -1037,10 +1190,10 @@
       el.budgetStatusPill.className = 'budget-status-pill status-warning';
       el.budgetStatusPill.innerHTML = `<i data-lucide="alert-triangle" style="width: 12px; height: 12px;"></i><span>Waspada (${percent}%)</span>`;
       el.headerRemainingText.style.color = 'var(--warn-amber)';
-      el.headerRemainingText.textContent = `Tersisa ${formatRp(remainder)}`;
+      el.headerRemainingText.textContent = `Tersisa ${formatRp(remainder)} (${checkedCount} checklist)`;
       el.budgetWarningBanner.style.display = 'flex';
       el.budgetWarningBanner.className = 'alert-banner warning';
-      el.budgetWarningText.textContent = `Mendekati limit! Belanjaan troli sudah ${percent}% dari anggaran bulanan.`;
+      el.budgetWarningText.textContent = `Mendekati limit! Belanjaan checklist sudah ${percent}% dari anggaran bulanan.`;
     } else {
       // DANGER / OVERBUDGET (> 100%)
       el.budgetProgressBar.style.backgroundColor = 'var(--danger-rose)';
@@ -1050,11 +1203,11 @@
       el.headerRemainingText.textContent = `Lebih ${formatRp(Math.abs(remainder))}!`;
       el.budgetWarningBanner.style.display = 'flex';
       el.budgetWarningBanner.className = 'alert-banner danger';
-      el.budgetWarningText.textContent = `🚨 OVERBUDGET! Belanjaan troli melebihi batas anggaran sebesar ${formatRp(Math.abs(remainder))}.`;
+      el.budgetWarningText.textContent = `🚨 OVERBUDGET! Barang checklist melebihi batas anggaran sebesar ${formatRp(Math.abs(remainder))}.`;
     }
 
-    // Overbudget State & Animated Pop-up Trigger
-    if (ratio > 1.0) {
+    // Overbudget State & Animated Pop-up Trigger (Hanya jika ada checklist yang melebihi limit)
+    if (ratio > 1.0 && checkedCount > 0) {
       if (el.floatingBudgetBar) el.floatingBudgetBar.classList.add('is-overbudget');
       if (!state.wasOverbudget) {
         state.wasOverbudget = true;
@@ -1066,9 +1219,7 @@
     }
 
     // Sync Cart Count Badges in Top Header and Bottom Nav
-    const totalItemsInCart = state.activeItems.reduce((acc, i) => acc + (Number(i.qty) || 1), 0);
-    if (el.headerCartBadge) el.headerCartBadge.textContent = totalItemsInCart;
-    if (el.navCartCount) el.navCartCount.textContent = totalItemsInCart;
+    syncCartBadges();
 
     // Sticky Summary Cart Bar (Above Bottom Navigation)
     if (checkedCount > 0) {
@@ -1097,11 +1248,13 @@
 
   // Save changes to localStorage and refresh views
   function saveAndRefresh() {
+    state.activeItems = groupActiveItems(state.activeItems);
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
     renderShopeeCatalog();
     renderGroceryList();
     updateBudgetSafetyMeter();
     renderAnggaranScreen();
+    syncCartBadges();
   }
 
   // Escape HTML string
@@ -1322,25 +1475,42 @@
         showToast(`"${name}" berhasil diperbarui!`, 'success');
       }
     } else {
-      // Add new
-      const newItem = {
-        id: 'item-' + Date.now(),
-        name,
-        category,
-        unit,
-        qty,
-        unitPrice,
-        discountType,
-        discountValue,
-        stackedDiscount,
-        inCart: false,
-        note
-      };
-      state.activeItems.unshift(newItem);
-      showToast(`"${name}" masuk ke daftar belanja!`, 'success');
-      if (window.soundCtrl) window.soundCtrl.playSuccess();
+      // Add new: check if same item already exists in cart, group if so!
+      const existing = state.activeItems.find(i => isSameGroceryItem(i, { name, category, unit }));
+      if (existing) {
+        existing.qty = (Number(existing.qty) || 0) + qty;
+        if (unitPrice > 0) existing.unitPrice = unitPrice;
+        if (discountType !== 'none') {
+          existing.discountType = discountType;
+          existing.discountValue = discountValue;
+          existing.stackedDiscount = stackedDiscount;
+        }
+        if (note) {
+          existing.note = existing.note ? `${existing.note} • ${note}` : note;
+        }
+        showToast(`"${existing.name}" sudah ada di troli, jumlah digabungkan jadi ${existing.qty} ${existing.unit || 'pcs'}!`, 'success');
+        if (window.soundCtrl) window.soundCtrl.playSuccess();
+      } else {
+        const newItem = {
+          id: 'item-' + Date.now(),
+          name,
+          category,
+          unit,
+          qty,
+          unitPrice,
+          discountType,
+          discountValue,
+          stackedDiscount,
+          inCart: false,
+          note
+        };
+        state.activeItems.unshift(newItem);
+        showToast(`"${name}" masuk ke daftar belanja!`, 'success');
+        if (window.soundCtrl) window.soundCtrl.playSuccess();
+      }
     }
 
+    state.activeItems = groupActiveItems(state.activeItems);
     closeItemModal();
     saveAndRefresh();
   }
@@ -1604,19 +1774,25 @@
     el.budgetLimitInput.value = state.budgetLimit;
     el.budgetCardLimit.textContent = formatRp(state.budgetLimit);
 
-    let totalSpent = 0;
+    // Hitung pengeluaran hanya dari barang yang sudah dichecklist
+    let checkedSpent = 0;
+    let checkedCount = 0;
     state.activeItems.forEach(item => {
-      const p = calculateItemPricing(item);
-      totalSpent += p.finalSubtotal;
+      if (item.inCart) {
+        checkedCount++;
+        const p = calculateItemPricing(item);
+        checkedSpent += p.finalSubtotal;
+      }
     });
 
+    const totalSpent = checkedSpent;
     const remainder = state.budgetLimit - totalSpent;
-    const pct = Math.round((totalSpent / state.budgetLimit) * 100);
+    const pct = state.budgetLimit > 0 ? Math.round((totalSpent / state.budgetLimit) * 100) : 0;
 
     el.budgetCardCurrent.textContent = formatRp(totalSpent);
     el.budgetCardRemainder.textContent = remainder >= 0 ? formatRp(remainder) : `Lebih ${formatRp(Math.abs(remainder))}`;
     el.budgetCardRemainder.style.color = remainder >= 0 ? 'var(--safe-green)' : 'var(--danger-rose)';
-    el.budgetCardPercent.textContent = `${pct}%`;
+    el.budgetCardPercent.textContent = `${pct}% (${checkedCount} checklist)`;
   }
 
   function saveBudgetLimit() {
@@ -2273,6 +2449,7 @@
   window.hideAuthGate = hideAuthGate;
   window.gateQuickLogin = gateQuickLogin;
   window.switchGateTab = switchGateTab;
+  window.switchAuthTab = switchAuthTab;
   window.enterAsGuest = enterAsGuest;
   window.handleFloatingBudgetClick = handleFloatingBudgetClick;
   window.checkBudgetThresholdAndWarn = checkBudgetThresholdAndWarn;

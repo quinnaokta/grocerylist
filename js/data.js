@@ -42,7 +42,8 @@ const INITIAL_BENCHMARK_PRICES = {
 const INITIAL_ACTIVE_ITEMS = [
   {
     id: 'item-1',
-    name: 'Beras Ramos 5kg',
+    productId: 'sp-1',
+    name: 'Beras Ramos Super 5kg',
     category: 'bahan_pokok',
     unit: 'pack',
     qty: 1,
@@ -55,11 +56,12 @@ const INITIAL_ACTIVE_ITEMS = [
   },
   {
     id: 'item-2',
+    productId: 'sp-2',
     name: 'Telur Ayam Negeri 1kg',
     category: 'bahan_pokok',
     unit: 'kg',
     qty: 1,
-    unitPrice: 30500, // Benchmark 29.000 -> More expensive by 1.500
+    unitPrice: 29500,
     discountType: 'none',
     discountValue: 0,
     stackedDiscount: { enabled: false, type: 'percent', value: 0 },
@@ -68,7 +70,8 @@ const INITIAL_ACTIVE_ITEMS = [
   },
   {
     id: 'item-3',
-    name: 'Indomie Goreng',
+    productId: 'sp-3',
+    name: 'Indomie Goreng Original 85g',
     category: 'bahan_pokok',
     unit: 'pcs',
     qty: 10,
@@ -81,11 +84,12 @@ const INITIAL_ACTIVE_ITEMS = [
   },
   {
     id: 'item-4',
-    name: 'Sabun Mandi Cair Refil 450ml',
+    productId: 'sp-10',
+    name: 'Sabun Mandi Biore Guard 450ml',
     category: 'mandi_cuci',
     unit: 'pack',
     qty: 1,
-    unitPrice: 22000,
+    unitPrice: 21500,
     discountType: 'amount', // Potongan langsung Rp 3.000
     discountValue: 3000,
     stackedDiscount: { enabled: false, type: 'percent', value: 0 },
@@ -94,7 +98,8 @@ const INITIAL_ACTIVE_ITEMS = [
   },
   {
     id: 'item-5',
-    name: 'Susu UHT 1 Liter',
+    productId: 'sp-16',
+    name: 'Ultra Milk Susu UHT Full Cream 1L',
     category: 'camilan_minum',
     unit: 'box',
     qty: 2,
