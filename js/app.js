@@ -253,6 +253,16 @@
     return 'Rp ' + val.toLocaleString('id-ID');
   }
 
+  // Helper: Format Category Name
+  function formatCategory(catId) {
+    if (!catId) return 'Umum';
+    if (window.SmartData && Array.isArray(window.SmartData.CATEGORIES)) {
+      const found = window.SmartData.CATEGORIES.find(c => c.id === catId);
+      if (found) return found.name;
+    }
+    return catId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  }
+
   // Helper: Calculate Item Pricing & Discounts
   function calculateItemPricing(item) {
     const qty = Math.max(1, Number(item.qty) || 1);
@@ -355,20 +365,20 @@
 
   // App Initialization
   function initApp() {
-    loadData();
-    checkAuthGate();
-    renderKatalogCategoryChips();
-    renderShopeeCatalog();
-    renderUserProfile();
-    renderCategoryChips();
-    renderSuggestionsPills();
-    renderGroceryList();
-    updateBudgetSafetyMeter();
-    renderHistoryScreen();
-    renderAnggaranScreen();
-    bindEvents();
-    initPWA();
-    if (window.lucide) window.lucide.createIcons();
+    try { loadData(); } catch (e) { console.error('loadData error:', e); }
+    try { checkAuthGate(); } catch (e) { console.error('checkAuthGate error:', e); }
+    try { renderKatalogCategoryChips(); } catch (e) { console.error('renderKatalogCategoryChips error:', e); }
+    try { renderShopeeCatalog(); } catch (e) { console.error('renderShopeeCatalog error:', e); }
+    try { renderUserProfile(); } catch (e) { console.error('renderUserProfile error:', e); }
+    try { renderCategoryChips(); } catch (e) { console.error('renderCategoryChips error:', e); }
+    try { renderSuggestionsPills(); } catch (e) { console.error('renderSuggestionsPills error:', e); }
+    try { renderGroceryList(); } catch (e) { console.error('renderGroceryList error:', e); }
+    try { updateBudgetSafetyMeter(); } catch (e) { console.error('updateBudgetSafetyMeter error:', e); }
+    try { renderHistoryScreen(); } catch (e) { console.error('renderHistoryScreen error:', e); }
+    try { renderAnggaranScreen(); } catch (e) { console.error('renderAnggaranScreen error:', e); }
+    try { bindEvents(); } catch (e) { console.error('bindEvents error:', e); }
+    try { initPWA(); } catch (e) { console.error('initPWA error:', e); }
+    try { if (window.lucide) window.lucide.createIcons(); } catch (e) { console.error('lucide error:', e); }
   }
 
   // ==========================================
@@ -379,7 +389,7 @@
     if (el.authGateScreen) {
       el.authGateScreen.style.display = 'flex';
       if (el.closeAuthGateBtn) {
-        el.closeAuthGateBtn.style.display = state.currentUser ? 'flex' : 'none';
+        el.closeAuthGateBtn.style.display = 'flex';
       }
     }
     switchGateTab('login');
@@ -395,6 +405,37 @@
     if (el.mainAppContainer) {
       el.mainAppContainer.style.display = 'flex';
     }
+    if (window.lucide && el.mainAppContainer) {
+      window.lucide.createIcons();
+    }
+  }
+
+  function enterAsGuest() {
+    if (!state.currentUser) {
+      state.currentUser = {
+        name: 'Tamu Rantau',
+        email: 'tamu@rantau.id',
+        role: 'Penjelajah Belanja',
+        city: 'Semua Kota',
+        budget: 450000,
+        avatar: '🎒'
+      };
+      window.SmartData.SmartStorage.setCurrentUser(state.currentUser);
+    }
+    hideAuthGate();
+    renderUserProfile();
+    renderShopeeCatalog();
+    updateBudgetSafetyMeter();
+    switchTab('viewKatalog');
+    showToast('Masuk sebagai Tamu! Silakan jelajahi etalase & belanja.', 'info');
+  }
+
+  function handleFloatingBudgetClick() {
+    if (el.floatingBudgetBar && el.floatingBudgetBar.classList.contains('is-overbudget')) {
+      checkBudgetThresholdAndWarn();
+    } else {
+      switchTab('viewAnggaran');
+    }
   }
 
   function checkAuthGate() {
@@ -402,7 +443,7 @@
     if (!user) {
       showAuthGate();
       if (el.mainAppContainer) el.mainAppContainer.style.display = 'none';
-      if (el.closeAuthGateBtn) el.closeAuthGateBtn.style.display = 'none';
+      if (el.closeAuthGateBtn) el.closeAuthGateBtn.style.display = 'flex';
     } else {
       hideAuthGate();
       renderUserProfile();
@@ -1615,15 +1656,26 @@
       renderShopeeCatalog();
     } else if (targetViewId === 'viewBelanja') {
       renderGroceryList();
+    } else if (targetViewId === 'viewRiwayat') {
+      renderHistoryScreen();
+    } else if (targetViewId === 'viewAnggaran') {
+      renderAnggaranScreen();
+    } else if (targetViewId === 'viewAkun') {
+      renderUserProfile();
     }
 
     // Trolley summary bar is visible primarily on Belanja view
-    el.trolleySummaryBar.style.display = targetViewId === 'viewBelanja' ? 'flex' : 'none';
+    if (el.trolleySummaryBar) {
+      el.trolleySummaryBar.style.display = targetViewId === 'viewBelanja' ? 'flex' : 'none';
+    }
 
     // Scroll to top
-    el.viewport.scrollTop = 0;
+    if (el.viewport) {
+      el.viewport.scrollTop = 0;
+    }
 
     if (window.soundCtrl) window.soundCtrl.playTick();
+    if (window.lucide) window.lucide.createIcons();
   }
 
   // ==========================================
@@ -2213,6 +2265,7 @@
   }
 
   // Expose helpful functions to window for resilience
+  window.switchTab = switchTab;
   window.openAddItemModal = openAddItemModal;
   window.saveItemFromModal = saveItemFromModal;
   window.closeItemModal = closeItemModal;
@@ -2220,6 +2273,13 @@
   window.hideAuthGate = hideAuthGate;
   window.gateQuickLogin = gateQuickLogin;
   window.switchGateTab = switchGateTab;
+  window.enterAsGuest = enterAsGuest;
+  window.handleFloatingBudgetClick = handleFloatingBudgetClick;
+  window.checkBudgetThresholdAndWarn = checkBudgetThresholdAndWarn;
+  window.closeOverbudgetWarningPopup = closeOverbudgetWarningPopup;
+  window.formatCategory = formatCategory;
+  window.formatRp = formatRp;
+  window.renderShopeeCatalog = renderShopeeCatalog;
 
   // Start app on DOM ready
   if (document.readyState === 'loading') {

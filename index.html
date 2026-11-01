@@ -47,8 +47,8 @@
            ========================================== -->
       <div class="auth-gate-screen" id="authGateScreen">
         
-        <!-- Close Button (Muncul jika user sudah login dan ingin kembali ke aplikasi) -->
-        <button type="button" class="auth-gate-close-btn" id="closeAuthGateBtn" onclick="window.hideAuthGate && window.hideAuthGate()" title="Kembali ke Aplikasi" aria-label="Tutup Halaman Login" style="display: none;">
+        <!-- Close Button (Kembali / masuk ke aplikasi langsung) -->
+        <button type="button" class="auth-gate-close-btn" id="closeAuthGateBtn" onclick="window.hideAuthGate && window.hideAuthGate()" title="Kembali ke Aplikasi" aria-label="Tutup Halaman Login">
           <i data-lucide="x" style="width: 20px; height: 20px;"></i>
         </button>
 
@@ -194,6 +194,14 @@
                   <button type="button" class="btn-demo-login">Pilih</button>
                 </div>
               </div>
+            </div>
+
+            <!-- Opsi Lewati / Masuk Tamu -->
+            <div class="guest-enter-wrapper" style="text-align: center; margin-top: 14px;">
+              <button type="button" class="btn-guest-enter" id="gateGuestBtn" onclick="window.enterAsGuest && window.enterAsGuest()">
+                <i data-lucide="compass" style="width: 15px; height: 15px;"></i>
+                <span>Lewati & Masuk sebagai Tamu (Eksplor Belanja)</span>
+              </button>
             </div>
 
           </div>
@@ -804,32 +812,32 @@
 
       <!-- Floating Bottom Navigation Bar -->
       <nav class="bottom-nav-bar" id="bottomNav">
-        <button class="nav-tab-btn active" data-tab="viewKatalog" id="navKatalog">
+        <button class="nav-tab-btn active" data-tab="viewKatalog" id="navKatalog" onclick="window.switchTab && window.switchTab('viewKatalog')">
           <div class="nav-icon-wrapper">
             <i data-lucide="store" style="width: 20px; height: 20px;"></i>
           </div>
           <span>Etalase</span>
         </button>
-        <button class="nav-tab-btn" data-tab="viewBelanja" id="navBelanja">
+        <button class="nav-tab-btn" data-tab="viewBelanja" id="navBelanja" onclick="window.switchTab && window.switchTab('viewBelanja')">
           <div class="nav-icon-wrapper">
             <i data-lucide="shopping-cart" style="width: 20px; height: 20px;"></i>
             <span class="nav-badge-dot" id="navCartCount">0</span>
           </div>
           <span>Keranjang</span>
         </button>
-        <button class="nav-tab-btn" data-tab="viewRiwayat" id="navRiwayat">
+        <button class="nav-tab-btn" data-tab="viewRiwayat" id="navRiwayat" onclick="window.switchTab && window.switchTab('viewRiwayat')">
           <div class="nav-icon-wrapper">
             <i data-lucide="clock" style="width: 20px; height: 20px;"></i>
           </div>
           <span>Riwayat</span>
         </button>
-        <button class="nav-tab-btn" data-tab="viewAnggaran" id="navAnggaran">
+        <button class="nav-tab-btn" data-tab="viewAnggaran" id="navAnggaran" onclick="window.switchTab && window.switchTab('viewAnggaran')">
           <div class="nav-icon-wrapper">
             <i data-lucide="pie-chart" style="width: 20px; height: 20px;"></i>
           </div>
           <span>Anggaran</span>
         </button>
-        <button class="nav-tab-btn" data-tab="viewAkun" id="navAkun">
+        <button class="nav-tab-btn" data-tab="viewAkun" id="navAkun" onclick="window.switchTab && window.switchTab('viewAkun')">
           <div class="nav-icon-wrapper">
             <i data-lucide="user" style="width: 20px; height: 20px;"></i>
           </div>

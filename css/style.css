@@ -999,6 +999,12 @@ body {
   font-size: 11px;
   font-weight: 700;
   letter-spacing: 0.2px;
+  pointer-events: none;
+}
+
+.nav-icon-wrapper,
+.nav-icon-wrapper * {
+  pointer-events: none;
 }
 
 /* Modal Bottom Sheet */
@@ -1981,6 +1987,31 @@ body {
 .btn-demo-login:hover {
   background: #F59E0B;
   color: #FFFFFF;
+}
+
+.btn-guest-enter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: transparent;
+  border: 1px dashed var(--text-muted);
+  color: var(--text-muted);
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-guest-enter:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: var(--primary-soft);
+}
+
+.btn-guest-enter:active {
+  transform: scale(0.97);
 }
 
 /* ==========================================================================
