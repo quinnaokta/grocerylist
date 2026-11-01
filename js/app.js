@@ -21,7 +21,10 @@
     currentDiscountType: 'none', // 'none' | 'regular' | 'stacked'
     currentUser: null,
     authTab: 'login', // 'login' | 'register'
-    soundEnabled: true
+    soundEnabled: true,
+    storeLocation: 'Superindo Kaliurang',
+    shoppingDate: new Date().toISOString().split('T')[0],
+    cloudSyncStatus: 'connecting' // 'connected' | 'offline' | 'syncing'
   };
 
   // DOM Elements Cache
@@ -38,6 +41,15 @@
     toggleCheckAllText: document.getElementById('toggleCheckAllText'),
     openAddItemBtn: document.getElementById('openAddItemBtn'),
     emptyAddBtn: document.getElementById('emptyAddBtn'),
+
+    // Cloud Firestore Multi-Device Indicators & Session Strip
+    headerLiveSyncPill: document.getElementById('headerLiveSyncPill'),
+    headerLiveSyncText: document.getElementById('headerLiveSyncText'),
+    sessionMetaStrip: document.getElementById('sessionMetaStrip'),
+    sessionStoreLocation: document.getElementById('sessionStoreLocation'),
+    sessionShoppingDate: document.getElementById('sessionShoppingDate'),
+    sessionCloudBadge: document.getElementById('sessionCloudBadge'),
+    sessionCloudText: document.getElementById('sessionCloudText'),
 
     // Gatekeeper Full-Page Login Elements
     authGateScreen: document.getElementById('authGateScreen'),
@@ -488,6 +500,7 @@
     try { renderHistoryScreen(); } catch (e) { console.error('renderHistoryScreen error:', e); }
     try { renderAnggaranScreen(); } catch (e) { console.error('renderAnggaranScreen error:', e); }
     try { bindEvents(); } catch (e) { console.error('bindEvents error:', e); }
+    try { initFirestoreRealtime(); } catch (e) { console.error('initFirestoreRealtime error:', e); }
     try { initPWA(); } catch (e) { console.error('initPWA error:', e); }
     try { if (window.lucide) window.lucide.createIcons(); } catch (e) { console.error('lucide error:', e); }
   }
@@ -917,15 +930,20 @@
     }
   }
 
-  // Load Data from LocalStorage
+  // Load Data from LocalStorage (0ms Synchronous Fallback for Offline / F5 Reload)
   function loadData() {
     state.currentUser = window.SmartData.SmartStorage.getCurrentUser();
     const rawItems = window.SmartData.SmartStorage.getActiveItems();
     state.activeItems = groupActiveItems(rawItems);
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
     state.budgetLimit = window.SmartData.SmartStorage.getBudgetLimit();
+    state.storeLocation = window.SmartData.SmartStorage.getStoreLocation();
+    state.shoppingDate = window.SmartData.SmartStorage.getShoppingDate();
     state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
     state.benchmarks = window.SmartData.SmartStorage.getBenchmarks();
+
+    if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
+    if (el.sessionShoppingDate) el.sessionShoppingDate.value = state.shoppingDate;
   }
 
   // Render Horizontal Category Chips Carousel
@@ -1246,7 +1264,7 @@
     }
   }
 
-  // Save changes to localStorage and refresh views
+  // Save changes to localStorage (synchronous fallback) and push to Firestore Realtime
   function saveAndRefresh() {
     state.activeItems = groupActiveItems(state.activeItems);
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
@@ -1255,6 +1273,151 @@
     updateBudgetSafetyMeter();
     renderAnggaranScreen();
     syncCartBadges();
+
+    // Push mutation to Firestore Realtime (instant sync to other open devices)
+    pushToFirestore();
+  }
+
+  // ==========================================
+  // CLOUD FIRESTORE MULTI-DEVICE REALTIME SYNC
+  // ==========================================
+
+  function updateCloudSyncUI(status) {
+    state.cloudSyncStatus = status;
+    const isLive = status === 'connected';
+    const isSyncing = status === 'syncing';
+
+    if (el.headerLiveSyncPill) {
+      el.headerLiveSyncPill.className = `header-live-pill ${isLive ? '' : isSyncing ? 'syncing' : 'offline'}`;
+      if (el.headerLiveSyncText) {
+        el.headerLiveSyncText.textContent = isLive ? 'Live' : isSyncing ? 'Sync...' : 'Offline';
+      }
+    }
+
+    if (el.sessionCloudBadge) {
+      el.sessionCloudBadge.className = `session-cloud-badge ${isLive ? '' : isSyncing ? 'syncing' : 'offline'}`;
+      if (el.sessionCloudText) {
+        el.sessionCloudText.textContent = isLive ? 'Realtime Multi-Device' : isSyncing ? 'Menyinkronkan...' : 'Mode Offline (LocalStorage)';
+      }
+    }
+  }
+
+  function pushToFirestore() {
+    const syncMgr = window.SmartData && window.SmartData.FirestoreRealtimeSync;
+    if (!syncMgr || !syncMgr.isReady) return;
+
+    let checkedSpent = 0;
+    let checkedSavings = 0;
+    let checkedCount = 0;
+
+    state.activeItems.forEach(item => {
+      const p = calculateItemPricing(item);
+      if (item.inCart) {
+        checkedCount++;
+        checkedSpent += p.finalSubtotal;
+        checkedSavings += p.totalSavings;
+      }
+    });
+
+    const isMobile = window.innerWidth <= 768;
+    const deviceLabel = isMobile ? 'HP' : 'PC';
+    const userLabel = state.currentUser ? `${state.currentUser.name} (${deviceLabel})` : `Tamu (${deviceLabel})`;
+
+    const sessionPayload = {
+      storeLocation: state.storeLocation || 'Superindo Kaliurang',
+      shoppingDate: state.shoppingDate || new Date().toISOString().split('T')[0],
+      walletLimit: Number(state.budgetLimit) || 450000,
+      items: state.activeItems,
+      totalSpent: checkedSpent,
+      totalSavings: checkedSavings,
+      checkedCount: checkedCount,
+      updatedBy: userLabel
+    };
+
+    syncMgr.pushSession(sessionPayload);
+  }
+
+  function initFirestoreRealtime() {
+    const syncMgr = window.SmartData && window.SmartData.FirestoreRealtimeSync;
+    if (!syncMgr) {
+      updateCloudSyncUI('offline');
+      return;
+    }
+
+    syncMgr.onStatusChange(status => {
+      updateCloudSyncUI(status);
+    });
+
+    const ok = syncMgr.init();
+    if (!ok) {
+      updateCloudSyncUI('offline');
+      return;
+    }
+
+    // Subscribe to REALTIME listener onSnapshot() - NO getDoc() / getDocs()
+    syncMgr.listenToSession(cloudData => {
+      if (!cloudData) return;
+
+      let hasChanged = false;
+
+      // 1. Items array from Firestore
+      if (Array.isArray(cloudData.items)) {
+        state.activeItems = groupActiveItems(cloudData.items);
+        window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
+        hasChanged = true;
+      }
+
+      // 2. Wallet limit from Firestore
+      if (typeof cloudData.walletLimit === 'number' && cloudData.walletLimit > 0) {
+        if (state.budgetLimit !== cloudData.walletLimit) {
+          state.budgetLimit = cloudData.walletLimit;
+          window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
+          hasChanged = true;
+        }
+      }
+
+      // 3. Store location from Firestore
+      if (cloudData.storeLocation && cloudData.storeLocation !== state.storeLocation) {
+        state.storeLocation = cloudData.storeLocation;
+        window.SmartData.SmartStorage.saveStoreLocation(state.storeLocation);
+        if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
+        hasChanged = true;
+      }
+
+      // 4. Shopping date from Firestore
+      if (cloudData.shoppingDate && cloudData.shoppingDate !== state.shoppingDate) {
+        state.shoppingDate = cloudData.shoppingDate;
+        window.SmartData.SmartStorage.saveShoppingDate(state.shoppingDate);
+        if (el.sessionShoppingDate) el.sessionShoppingDate.value = state.shoppingDate;
+        hasChanged = true;
+      }
+
+      // If cloud update received, re-render UI instantaneously without writing back
+      if (hasChanged) {
+        renderShopeeCatalog();
+        renderGroceryList();
+        updateBudgetSafetyMeter();
+        renderAnggaranScreen();
+        syncCartBadges();
+      }
+    });
+
+    // Handle online / offline events
+    window.addEventListener('online', () => {
+      updateCloudSyncUI('connected');
+      pushToFirestore();
+      showToast('Koneksi internet kembali! Cloud Realtime tersambung.', 'success');
+    });
+
+    window.addEventListener('offline', () => {
+      updateCloudSyncUI('offline');
+      showToast('Koneksi internet terputus. Mode offline aktif (LocalStorage aman).', 'warning');
+    });
+
+    // Seed cloud state if not populated
+    setTimeout(() => {
+      pushToFirestore();
+    }, 600);
   }
 
   // Escape HTML string
@@ -1806,6 +1969,7 @@
     window.SmartData.SmartStorage.saveBudgetLimit(val);
     updateBudgetSafetyMeter();
     renderAnggaranScreen();
+    pushToFirestore();
     showToast(`Batas anggaran diubah menjadi ${formatRp(val)}`, 'success');
     if (window.soundCtrl) window.soundCtrl.playSuccess();
   }
@@ -2140,6 +2304,25 @@
     // Header Cart Pill Button (jump to cart from any tab)
     if (el.headerCartBtn) {
       el.headerCartBtn.addEventListener('click', () => switchTab('viewBelanja'));
+    }
+
+    // Realtime Multi-Device Session Strip: Store Location & Shopping Date
+    if (el.sessionStoreLocation) {
+      el.sessionStoreLocation.addEventListener('change', (e) => {
+        state.storeLocation = e.target.value.trim() || 'Superindo Kaliurang';
+        window.SmartData.SmartStorage.saveStoreLocation(state.storeLocation);
+        pushToFirestore();
+        showToast(`Lokasi toko diset: ${state.storeLocation} (tersinkron ke PC/HP)`, 'info');
+      });
+    }
+
+    if (el.sessionShoppingDate) {
+      el.sessionShoppingDate.addEventListener('change', (e) => {
+        state.shoppingDate = e.target.value;
+        window.SmartData.SmartStorage.saveShoppingDate(state.shoppingDate);
+        pushToFirestore();
+        showToast('Tanggal belanja diperbarui & disinkronkan!', 'info');
+      });
     }
 
     // Header user profile button tap -> Buka halaman login / ganti akun

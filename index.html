@@ -245,6 +245,10 @@
                 <h1>Smart Grocery</h1>
                 <span>Budget Safety • Rantau</span>
               </div>
+              <div class="header-live-pill" id="headerLiveSyncPill" title="Multi-Device Realtime Cloud Firestore Aktif (HP & PC Sinkron)">
+                <span class="live-pulse-dot"></span>
+                <span id="headerLiveSyncText">Live</span>
+              </div>
             </div>
             <div class="header-actions">
               <button class="icon-btn header-cart-pill" id="headerCartBtn" title="Keranjang Belanja" aria-label="Buka Keranjang">
@@ -369,6 +373,22 @@
               Buka cepat langsung dari layar utama HP kamu!
             </div>
             <button class="pwa-install-btn" id="pwaInstallBtn">Pasang</button>
+          </div>
+
+          <!-- Realtime Shopping Session Strip (Lokasi Toko, Tanggal, Multi-Device Cloud Sync) -->
+          <div class="session-meta-strip" id="sessionMetaStrip">
+            <div class="session-meta-item">
+              <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
+              <input type="text" id="sessionStoreLocation" class="session-meta-input" placeholder="Superindo Kaliurang" value="Superindo Kaliurang" title="Ubah lokasi supermarket belanja">
+            </div>
+            <div class="session-meta-item date-item">
+              <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--primary);"></i>
+              <input type="date" id="sessionShoppingDate" class="session-meta-date" title="Tanggal sesi belanja">
+            </div>
+            <div class="session-cloud-badge" id="sessionCloudBadge" title="Multi-Device Realtime Cloud Firestore (HP & PC Terhubung)">
+              <span class="session-cloud-dot"></span>
+              <span id="sessionCloudText">Realtime Multi-Device</span>
+            </div>
           </div>
 
           <!-- Search & Filter Area -->
@@ -1214,6 +1234,10 @@
 
     </main>
   </div>
+
+  <!-- Firebase SDK (Compat Version for Multi-Device Realtime Cloud Firestore) -->
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <!-- Scripts -->
   <script src="js/sound.js"></script>

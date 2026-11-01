@@ -1,4 +1,4 @@
-const CACHE_NAME = 'smart-grocery-v2';
+const CACHE_NAME = 'smart-grocery-v3';
 const ASSETS_TO_CACHE = [
   './',
   './index.html',
@@ -35,6 +35,11 @@ self.addEventListener('activate', (event) => {
 });
 
 self.addEventListener('fetch', (event) => {
+  // Pass through cross-origin requests (Firebase, Firestore streams, Lucide) and non-GET requests
+  if (!event.request.url.startsWith(self.location.origin) || event.request.method !== 'GET') {
+    return;
+  }
+
   // Navigation & assets cache-first with network fallback
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {

@@ -224,6 +224,25 @@ class SmartStorage {
     this.set('budget_limit', Number(amount) || 450000);
   }
 
+  // Store Location
+  static getStoreLocation() {
+    return this.get('store_location', 'Superindo Kaliurang');
+  }
+
+  static saveStoreLocation(loc) {
+    this.set('store_location', loc || 'Superindo Kaliurang');
+  }
+
+  // Shopping Date
+  static getShoppingDate() {
+    const today = new Date().toISOString().split('T')[0];
+    return this.get('shopping_date', today);
+  }
+
+  static saveShoppingDate(date) {
+    this.set('shopping_date', date);
+  }
+
   // Historical Shopping Trips
   static getHistoryTrips() {
     return this.get('history_trips', INITIAL_HISTORY_TRIPS);
@@ -768,12 +787,146 @@ const SHOPEE_PRODUCTS = [
   }
 ];
 
+// Firebase Configuration for Multi-Device Realtime Cloud Firestore
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA4-z4Tb4q9kOe7Rywf9YV2Xv-8-K5B3BE",
+  authDomain: "smartgrocery-app-65895.firebaseapp.com",
+  projectId: "smartgrocery-app-65895",
+  storageBucket: "smartgrocery-app-65895.firebasestorage.app",
+  messagingSenderId: "159154578335",
+  appId: "1:159154578335:web:a43e9f13eddcb8e785d3aa"
+};
+
+class FirestoreRealtimeSync {
+  constructor() {
+    this.db = null;
+    this.sessionDocRef = null;
+    this.unsubscribeListener = null;
+    this.sessionId = 'active_shared_session'; // Default shared session for instant multi-device sync
+    this.isReady = false;
+    this.isApplyingCloudUpdate = false;
+    this.statusListeners = [];
+  }
+
+  init() {
+    if (typeof firebase === 'undefined') {
+      console.warn('Firebase SDK belum termuat atau offline. Menggunakan LocalStorage fallback.');
+      this.notifyStatus('offline');
+      return false;
+    }
+
+    try {
+      if (!firebase.apps || !firebase.apps.length) {
+        firebase.initializeApp(FIREBASE_CONFIG);
+      }
+      this.db = firebase.firestore();
+
+      // Enable offline persistence for multi-tab synchronization and offline queue
+      this.db.enablePersistence({ synchronizeTabs: true }).catch(err => {
+        if (err.code === 'failed-precondition') {
+          console.warn('Firestore multi-tab persistence: synchronizeTabs active');
+        } else if (err.code === 'unimplemented') {
+          console.warn('Firestore offline persistence tidak didukung browser ini');
+        }
+      });
+
+      this.sessionDocRef = this.db.collection('shopping_sessions').doc(this.sessionId);
+      this.isReady = true;
+      this.notifyStatus('connected');
+      return true;
+    } catch (e) {
+      console.error('Firebase init error:', e);
+      this.notifyStatus('offline');
+      return false;
+    }
+  }
+
+  onStatusChange(fn) {
+    if (typeof fn === 'function') this.statusListeners.push(fn);
+  }
+
+  notifyStatus(status) {
+    this.statusListeners.forEach(fn => {
+      try { fn(status); } catch (e) { console.error(e); }
+    });
+  }
+
+  // Realtime multi-device listener via onSnapshot() - NO getDoc() / getDocs()
+  listenToSession(onCloudDataCallback) {
+    if (!this.isReady || !this.sessionDocRef) {
+      this.notifyStatus('offline');
+      return null;
+    }
+
+    if (this.unsubscribeListener) {
+      this.unsubscribeListener();
+    }
+
+    this.notifyStatus('syncing');
+
+    this.unsubscribeListener = this.sessionDocRef.onSnapshot(
+      { includeMetadataChanges: false },
+      (docSnapshot) => {
+        this.notifyStatus('connected');
+        if (docSnapshot.exists) {
+          const cloudData = docSnapshot.data();
+          this.isApplyingCloudUpdate = true;
+          try {
+            if (typeof onCloudDataCallback === 'function') {
+              onCloudDataCallback(cloudData);
+            }
+          } finally {
+            setTimeout(() => {
+              this.isApplyingCloudUpdate = false;
+            }, 120);
+          }
+        }
+      },
+      (error) => {
+        console.warn('Firestore onSnapshot error (offline / network):', error);
+        this.notifyStatus('offline');
+      }
+    );
+
+    return this.unsubscribeListener;
+  }
+
+  // Push local mutation to Firestore
+  async pushSession(sessionData) {
+    if (this.isApplyingCloudUpdate) return; // Prevent echo feedback loop
+    if (!this.isReady || !this.sessionDocRef) return;
+
+    try {
+      this.notifyStatus('syncing');
+      const payload = {
+        storeLocation: sessionData.storeLocation || 'Superindo Kaliurang',
+        shoppingDate: sessionData.shoppingDate || new Date().toISOString().split('T')[0],
+        walletLimit: Number(sessionData.walletLimit) || 450000,
+        items: sessionData.items || [],
+        totalSpent: Number(sessionData.totalSpent) || 0,
+        totalSavings: Number(sessionData.totalSavings) || 0,
+        checkedCount: Number(sessionData.checkedCount) || 0,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp(),
+        updatedBy: sessionData.updatedBy || 'Smart Grocery User'
+      };
+
+      await this.sessionDocRef.set(payload, { merge: true });
+      this.notifyStatus('connected');
+    } catch (e) {
+      console.warn('Gagal push ke Firestore (masuk offline queue Firestore):', e);
+      this.notifyStatus('offline');
+    }
+  }
+}
+
 window.SmartData = {
   CATEGORIES,
   UNITS,
   GROCERY_SUGGESTIONS,
   SHOPEE_PRODUCTS,
   DEFAULT_USERS,
-  SmartStorage
+  SmartStorage,
+  FIREBASE_CONFIG,
+  FirestoreRealtimeSync: new FirestoreRealtimeSync()
 };
 
