@@ -738,11 +738,20 @@
     if (res.success) {
       state.currentUser = res.user;
       state.budgetLimit = budget;
+      state.activeItems = []; // Keranjang belanja bersih 0 item untuk akun baru
+      state.historyTrips = []; // Riwayat belanja bersih 0 kali untuk akun baru
       window.SmartData.SmartStorage.saveBudgetLimit(budget);
+      window.SmartData.SmartStorage.saveActiveItems([]);
+      window.SmartData.SmartStorage.saveHistoryTrips([]);
       checkAuthGate();
       updateBudgetSafetyMeter();
       renderShopeeCatalog();
+      renderGroceryList();
+      renderHistoryScreen();
+      renderUserProfile();
       renderAnggaranScreen();
+      syncCartBadges();
+      pushToFirestore();
       switchTab('viewKatalog');
       showToast(`Akun berhasil dibuat! Halo ${res.user.name} 🎉`, 'success');
       if (window.soundCtrl) window.soundCtrl.playSuccess();
@@ -757,13 +766,20 @@
     if (res.success) {
       state.currentUser = res.user;
       if (res.user.budget) {
-        state.budgetLimit = res.user.budget;
-        window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+        state.budgetLimit = Number(res.user.budget);
+        window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
       }
+      state.activeItems = window.SmartData.SmartStorage.getActiveItems();
+      state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
       checkAuthGate();
       updateBudgetSafetyMeter();
       renderShopeeCatalog();
+      renderGroceryList();
+      renderHistoryScreen();
+      renderUserProfile();
       renderAnggaranScreen();
+      syncCartBadges();
+      pushToFirestore();
       switchTab('viewKatalog');
       showToast(`Masuk sebagai ${res.user.name}! 👋`, 'success');
       if (window.soundCtrl) window.soundCtrl.playSuccess();
@@ -1039,6 +1055,7 @@
     state.storeLocation = window.SmartData.SmartStorage.getStoreLocation();
     state.shoppingDate = window.SmartData.SmartStorage.getShoppingDate();
     state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
+    window.SmartData.SmartStorage.saveHistoryTrips(state.historyTrips);
     state.benchmarks = window.SmartData.SmartStorage.getBenchmarks();
 
     if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
@@ -2274,9 +2291,16 @@
           if (u.budget) {
             state.budgetLimit = u.budget;
             window.SmartData.SmartStorage.saveBudgetLimit(u.budget);
-            updateBudgetSafetyMeter();
-            renderAnggaranScreen();
           }
+          state.activeItems = window.SmartData.SmartStorage.getActiveItems();
+          state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
+          updateBudgetSafetyMeter();
+          renderAnggaranScreen();
+          renderGroceryList();
+          renderShopeeCatalog();
+          renderHistoryScreen();
+          syncCartBadges();
+          pushToFirestore();
           renderUserProfile();
           showToast(`Beralih ke akun ${u.name}!`, 'success');
           if (window.soundCtrl) window.soundCtrl.playPop();
@@ -2320,13 +2344,20 @@
       if (res.user.budget) {
         state.budgetLimit = res.user.budget;
         window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
-        updateBudgetSafetyMeter();
-        renderAnggaranScreen();
       }
+      state.activeItems = window.SmartData.SmartStorage.getActiveItems();
+      state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
+      updateBudgetSafetyMeter();
+      renderAnggaranScreen();
+      renderGroceryList();
+      renderShopeeCatalog();
+      renderHistoryScreen();
       renderUserProfile();
+      syncCartBadges();
+      pushToFirestore();
       showToast(`Selamat datang kembali, ${res.user.name}! 👋`, 'success');
       if (window.soundCtrl) window.soundCtrl.playSuccess();
-      switchTab('viewBelanja');
+      switchTab('viewKatalog');
     } else {
       showToast(res.message, 'danger');
       if (window.soundCtrl) window.soundCtrl.playTick();
@@ -2355,13 +2386,22 @@
     if (res.success) {
       state.currentUser = res.user;
       state.budgetLimit = budget;
+      state.activeItems = []; // Bersih untuk akun baru
+      state.historyTrips = []; // Bersih untuk akun baru
       window.SmartData.SmartStorage.saveBudgetLimit(budget);
+      window.SmartData.SmartStorage.saveActiveItems([]);
+      window.SmartData.SmartStorage.saveHistoryTrips([]);
       renderUserProfile();
       updateBudgetSafetyMeter();
+      renderGroceryList();
+      renderShopeeCatalog();
+      renderHistoryScreen();
       renderAnggaranScreen();
+      syncCartBadges();
+      pushToFirestore();
       showToast(`Akun berhasil dibuat! Halo ${res.user.name} 🎉`, 'success');
       if (window.soundCtrl) window.soundCtrl.playSuccess();
-      switchTab('viewBelanja');
+      switchTab('viewKatalog');
     } else {
       showToast(res.message, 'danger');
       if (window.soundCtrl) window.soundCtrl.playTick();
@@ -2375,13 +2415,20 @@
       if (res.user.budget) {
         state.budgetLimit = res.user.budget;
         window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
-        updateBudgetSafetyMeter();
-        renderAnggaranScreen();
       }
+      state.activeItems = window.SmartData.SmartStorage.getActiveItems();
+      state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
+      updateBudgetSafetyMeter();
+      renderAnggaranScreen();
+      renderGroceryList();
+      renderShopeeCatalog();
+      renderHistoryScreen();
       renderUserProfile();
+      syncCartBadges();
+      pushToFirestore();
       showToast(`Masuk sebagai ${res.user.name}!`, 'success');
       if (window.soundCtrl) window.soundCtrl.playSuccess();
-      switchTab('viewBelanja');
+      switchTab('viewKatalog');
     } else {
       showToast(res.message, 'danger');
     }

@@ -99,121 +99,11 @@ const INITIAL_BENCHMARK_PRICES = {
   'tisu gulung 4 roll': { lastPrice: 16000, previousMonth: 'September 2026', unit: 'pack', category: 'kebutuhan_kos' }
 };
 
-// Initial active grocery list demonstrating features:
-// - normal items
-// - regular discount item
-// - stacked discount item (Diskon 10% + Promo Member 5%)
-// - price dropped item (cheaper than benchmark)
-// - price increased item (more expensive than benchmark)
-const INITIAL_ACTIVE_ITEMS = [
-  {
-    id: 'item-1',
-    productId: 'sp-1',
-    name: 'Beras Ramos Super 5kg',
-    category: 'bahan_pokok',
-    unit: 'pack',
-    qty: 1,
-    unitPrice: 72000, // Benchmark 74.500 -> Cheaper by 2.500!
-    discountType: 'none',
-    discountValue: 0,
-    stackedDiscount: { enabled: false, type: 'percent', value: 0 },
-    inCart: true,
-    note: 'Promo toko akhir pekan'
-  },
-  {
-    id: 'item-2',
-    productId: 'sp-2',
-    name: 'Telur Ayam Negeri 1kg',
-    category: 'bahan_pokok',
-    unit: 'kg',
-    qty: 1,
-    unitPrice: 29500,
-    discountType: 'none',
-    discountValue: 0,
-    stackedDiscount: { enabled: false, type: 'percent', value: 0 },
-    inCart: true,
-    note: 'Cari yang cangkang mulus'
-  },
-  {
-    id: 'item-3',
-    productId: 'sp-3',
-    name: 'Indomie Goreng Original 85g',
-    category: 'bahan_pokok',
-    unit: 'pcs',
-    qty: 10,
-    unitPrice: 3100, // Benchmark 3.100 -> Stabil
-    discountType: 'percent', // 10% discount
-    discountValue: 10,
-    stackedDiscount: { enabled: true, type: 'percent', value: 5 }, // Stacked 5% Member card!
-    inCart: false,
-    note: 'Stok darurat akhir bulan'
-  },
-  {
-    id: 'item-4',
-    productId: 'sp-10',
-    name: 'Sabun Mandi Biore Guard 450ml',
-    category: 'mandi_cuci',
-    unit: 'pack',
-    qty: 1,
-    unitPrice: 21500,
-    discountType: 'amount', // Potongan langsung Rp 3.000
-    discountValue: 3000,
-    stackedDiscount: { enabled: false, type: 'percent', value: 0 },
-    inCart: true,
-    note: 'Varian Sakura'
-  },
-  {
-    id: 'item-5',
-    productId: 'sp-16',
-    name: 'Ultra Milk Susu UHT Full Cream 1L',
-    category: 'camilan_minum',
-    unit: 'box',
-    qty: 2,
-    unitPrice: 19800,
-    discountType: 'none',
-    discountValue: 0,
-    stackedDiscount: { enabled: false, type: 'percent', value: 0 },
-    inCart: false,
-    note: 'Full Cream'
-  }
-];
+// Initial active grocery list (Kosong saat pertama kali log on / buat akun baru)
+const INITIAL_ACTIVE_ITEMS = [];
 
-// Initial historical trips
-const INITIAL_HISTORY_TRIPS = [
-  {
-    id: 'trip-sep-2026',
-    date: '2026-09-15',
-    title: 'Belanja Tengah Bulan September',
-    totalSpent: 382400,
-    totalBudget: 450000,
-    totalSaved: 36200,
-    itemsCount: 14,
-    items: [
-      { name: 'Beras Ramos 5kg', qty: 1, unit: 'pack', finalPrice: 74500, category: 'bahan_pokok' },
-      { name: 'Minyak Goreng 2L', qty: 1, unit: 'botol', finalPrice: 34500, category: 'bahan_pokok' },
-      { name: 'Telur Ayam Negeri 1kg', qty: 1, unit: 'kg', finalPrice: 29000, category: 'bahan_pokok' },
-      { name: 'Deterjen Bubuk 800g', qty: 1, unit: 'pack', finalPrice: 19500, category: 'mandi_cuci' },
-      { name: 'Sabun Cuci Piring 750ml', qty: 1, unit: 'pack', finalPrice: 13500, category: 'mandi_cuci' },
-      { name: 'Kopi Sachet isi 10', qty: 2, unit: 'pack', finalPrice: 28000, category: 'camilan_minum' },
-      { name: 'Indomie Goreng', qty: 15, unit: 'pcs', finalPrice: 46500, category: 'bahan_pokok' }
-    ]
-  },
-  {
-    id: 'trip-aug-2026',
-    date: '2026-08-18',
-    title: 'Belanja Awal Semester Kost',
-    totalSpent: 429000,
-    totalBudget: 450000,
-    totalSaved: 41500,
-    itemsCount: 18,
-    items: [
-      { name: 'Beras Ramos 5kg', qty: 1, unit: 'pack', finalPrice: 75000, category: 'bahan_pokok' },
-      { name: 'Peralatan Mandi Lengkap', qty: 1, unit: 'pack', finalPrice: 65000, category: 'mandi_cuci' },
-      { name: 'Tisu Gulung 4 roll', qty: 2, unit: 'pack', finalPrice: 32000, category: 'kebutuhan_kos' },
-      { name: 'Minyak Goreng 2L', qty: 1, unit: 'botol', finalPrice: 35000, category: 'bahan_pokok' }
-    ]
-  }
-];
+// Initial historical trips (Kosong untuk akun baru agar tidak ada riwayat belanja palsu)
+const INITIAL_HISTORY_TRIPS = [];
 
 // Autocomplete suggestion catalog for Anak Rantau
 const GROCERY_SUGGESTIONS = [
@@ -276,13 +166,30 @@ class SmartStorage {
     }
   }
 
-  // Active Grocery Cart Items
+  // Active Grocery Cart Items (Bersih saat pertama kali log on / buat akun baru)
   static getActiveItems() {
-    return this.get('active_items', INITIAL_ACTIVE_ITEMS);
+    const user = this.getCurrentUser();
+    const userKey = user && user.id ? `active_items_${user.id}` : null;
+    let items = userKey ? this.get(userKey, null) : null;
+    if (items === null) {
+      items = this.get('active_items', []);
+    }
+    // Filter item demo statis bawaan agar tidak langsung muncul di keranjang pengguna baru
+    if (Array.isArray(items)) {
+      items = items.filter(i => !['item-1', 'item-2', 'item-3', 'item-4', 'item-5'].includes(i.id));
+    } else {
+      items = [];
+    }
+    return items;
   }
 
   static saveActiveItems(items) {
-    this.set('active_items', items);
+    const cleanItems = Array.isArray(items) ? items : [];
+    this.set('active_items', cleanItems);
+    const user = this.getCurrentUser();
+    if (user && user.id) {
+      this.set(`active_items_${user.id}`, cleanItems);
+    }
   }
 
   // Budget Limit
@@ -313,13 +220,30 @@ class SmartStorage {
     this.set('shopping_date', date);
   }
 
-  // Historical Shopping Trips
+  // Historical Shopping Trips (Bersih untuk akun baru, tanpa trip palsu)
   static getHistoryTrips() {
-    return this.get('history_trips', INITIAL_HISTORY_TRIPS);
+    const user = this.getCurrentUser();
+    const userKey = user && user.id ? `history_trips_${user.id}` : null;
+    let trips = userKey ? this.get(userKey, null) : null;
+    if (trips === null) {
+      trips = this.get('history_trips', []);
+    }
+    // Bersihkan trip demo statis lama (trip-sep-2026, trip-aug-2026) agar riwayat akun baru tidak otomatis terisi
+    if (Array.isArray(trips)) {
+      trips = trips.filter(t => t && t.id !== 'trip-sep-2026' && t.id !== 'trip-aug-2026');
+    } else {
+      trips = [];
+    }
+    return trips;
   }
 
   static saveHistoryTrips(trips) {
-    this.set('history_trips', trips);
+    const cleanTrips = Array.isArray(trips) ? trips : [];
+    this.set('history_trips', cleanTrips);
+    const user = this.getCurrentUser();
+    if (user && user.id) {
+      this.set(`history_trips_${user.id}`, cleanTrips);
+    }
   }
 
   // Price Benchmark Catalog
@@ -433,6 +357,13 @@ class SmartStorage {
     users.push(newUser);
     this.saveUsers(users);
     this.setCurrentUser(newUser);
+
+    // Akun Baru: Keranjang belanja & riwayat belanja akun baru dijamin bersih 100%
+    this.set(`active_items_${newUser.id}`, []);
+    this.set(`history_trips_${newUser.id}`, []);
+    this.set('active_items', []);
+    this.set('history_trips', []);
+
     return { success: true, user: newUser };
   }
 
