@@ -354,7 +354,14 @@
           <div class="session-meta-strip" id="sessionMetaStrip">
             <div class="session-meta-item">
               <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
-              <input type="text" id="sessionStoreLocation" class="session-meta-input" placeholder="Lotte Mart Grocery - Puri Indah" value="Lotte Mart Grocery - Puri Indah" title="Ubah lokasi supermarket belanja">
+              <input type="text" id="sessionStoreLocation" class="session-meta-input" list="storeLocationsList" placeholder="Lotte Mart Grocery - Puri Indah" value="Lotte Mart Grocery - Puri Indah" title="Ubah lokasi supermarket belanja">
+              <datalist id="storeLocationsList">
+                <option value="Lotte Mart Grocery - Puri Indah">Supermarket Grosir Langganan (Puri Indah)</option>
+                <option value="Indomaret - Puri Kencana">Minimarket (Puri Kencana)</option>
+                <option value="Alfamart - Meruya Ilir">Minimarket (Meruya Ilir)</option>
+                <option value="Superindo - Intercon Kebon Jeruk">Supermarket (Kebon Jeruk)</option>
+                <option value="Hypermart - Puri Indah Mall">Hypermarket (Puri Indah Mall)</option>
+              </datalist>
             </div>
             <div class="session-meta-item date-item">
               <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--primary);"></i>
@@ -364,6 +371,35 @@
               <span class="session-cloud-dot"></span>
               <span id="sessionCloudText">Realtime Multi-Device</span>
             </div>
+          </div>
+
+          <!-- Quick Store Selector Chips (Pilih Lokasi untuk Komparasi Fluktuasi Harga) -->
+          <div class="store-quick-slider" id="storeQuickSlider" title="Pilih supermarket/minimarket untuk komparasi harga">
+            <button type="button" class="store-chip-btn active" data-store="Lotte Mart Grocery - Puri Indah">
+              <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
+              <span>Lotte Mart (Puri Indah)</span>
+              <span class="store-badge-tag">Grosir</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Indomaret - Puri Kencana">
+              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
+              <span>Indomaret (Puri Kencana)</span>
+              <span class="store-badge-tag">Minimarket</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Alfamart - Meruya Ilir">
+              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
+              <span>Alfamart (Meruya Ilir)</span>
+              <span class="store-badge-tag">Minimarket</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Superindo - Intercon Kebon Jeruk">
+              <i data-lucide="shopping-cart" style="width: 12px; height: 12px;"></i>
+              <span>Superindo (Kebon Jeruk)</span>
+              <span class="store-badge-tag">Supermarket</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Hypermart - Puri Indah Mall">
+              <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i>
+              <span>Hypermart (Puri Mall)</span>
+              <span class="store-badge-tag">Hypermarket</span>
+            </button>
           </div>
 
           <!-- Search & Filter Area -->

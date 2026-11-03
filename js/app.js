@@ -419,25 +419,55 @@
     };
   }
 
-  // Price Trend Detector vs Historical Benchmarks
-  function detectPriceTrend(itemName, currentUnitPrice) {
+  // Price Trend Detector vs Historical Benchmarks (Membandingkan histori harga pada toko yang sama)
+  function detectPriceTrend(itemName, currentUnitPrice, customStore) {
     const raw = (itemName || '').trim().toLowerCase();
-    let benchmark = state.benchmarks[raw];
+    const activeStore = customStore || state.storeLocation || 'Lotte Mart Grocery - Puri Indah';
+
+    let benchmark = null;
+
+    // 1. Prioritaskan pencarian pada katalog histori toko yang aktif
+    if (window.SmartData && window.SmartData.STORE_BENCHMARK_PRICES) {
+      const storeMapKeys = Object.keys(window.SmartData.STORE_BENCHMARK_PRICES);
+      const matchedStoreKey = storeMapKeys.find(s => 
+        s.toLowerCase() === activeStore.toLowerCase() || 
+        activeStore.toLowerCase().includes(s.toLowerCase()) || 
+        s.toLowerCase().includes(activeStore.toLowerCase())
+      );
+
+      if (matchedStoreKey) {
+        const storeMap = window.SmartData.STORE_BENCHMARK_PRICES[matchedStoreKey];
+        benchmark = storeMap[raw];
+        if (!benchmark) {
+          const clean = raw.replace(/\s+/g, ' ');
+          benchmark = storeMap[clean];
+          if (!benchmark) {
+            const foundKey = Object.keys(storeMap).find(k => k === clean || clean.includes(k) || k.includes(clean));
+            if (foundKey) benchmark = storeMap[foundKey];
+          }
+        }
+      }
+    }
+
+    // 2. Fallback ke state.benchmarks
     if (!benchmark) {
-      const clean = raw.replace(/\s+/g, ' ');
-      benchmark = state.benchmarks[clean];
+      benchmark = state.benchmarks[raw];
       if (!benchmark) {
-        const foundKey = Object.keys(state.benchmarks).find(k => {
-          return k === clean || clean.includes(k) || k.includes(clean);
-        });
-        if (foundKey) {
-          benchmark = state.benchmarks[foundKey];
+        const clean = raw.replace(/\s+/g, ' ');
+        benchmark = state.benchmarks[clean];
+        if (!benchmark) {
+          const foundKey = Object.keys(state.benchmarks).find(k => {
+            return k === clean || clean.includes(k) || k.includes(clean);
+          });
+          if (foundKey) {
+            benchmark = state.benchmarks[foundKey];
+          }
         }
       }
     }
 
     if (!benchmark || !benchmark.lastPrice) {
-      return { status: 'new', label: 'Item Baru', diff: 0, percent: 0 };
+      return { status: 'new', label: 'Item Baru', diff: 0, percent: 0, store: activeStore };
     }
 
     const pastPrice = Number(benchmark.lastPrice);
@@ -450,7 +480,8 @@
         diff: 0,
         percent: 0,
         pastPrice,
-        period: benchmark.previousMonth
+        period: benchmark.previousMonth,
+        store: benchmark.store || activeStore
       };
     } else if (diff < 0) {
       const pct = Math.abs(Math.round((diff / pastPrice) * 100));
@@ -460,7 +491,8 @@
         diff,
         percent: pct,
         pastPrice,
-        period: benchmark.previousMonth
+        period: benchmark.previousMonth,
+        store: benchmark.store || activeStore
       };
     } else {
       const pct = Math.abs(Math.round((diff / pastPrice) * 100));
@@ -470,9 +502,55 @@
         diff,
         percent: pct,
         pastPrice,
-        period: benchmark.previousMonth
+        period: benchmark.previousMonth,
+        store: benchmark.store || activeStore
       };
     }
+  }
+
+  // Cross-Store Benchmark Helper (Membandingkan harga barang antar toko/supermarket berbeda)
+  function getCrossStoreBenchmarks(itemName, currentPrice) {
+    const raw = (itemName || '').trim().toLowerCase();
+    const clean = raw.replace(/\s+/g, ' ');
+    const results = [];
+
+    if (window.SmartData && window.SmartData.STORE_BENCHMARK_PRICES) {
+      const storeLocations = window.SmartData.STORE_LOCATIONS || [];
+      Object.keys(window.SmartData.STORE_BENCHMARK_PRICES).forEach(storeName => {
+        const storeMap = window.SmartData.STORE_BENCHMARK_PRICES[storeName];
+        let found = storeMap[raw] || storeMap[clean];
+        if (!found) {
+          const k = Object.keys(storeMap).find(x => x === clean || clean.includes(x) || x.includes(clean));
+          if (k) found = storeMap[k];
+        }
+
+        if (found) {
+          const storeMeta = storeLocations.find(l => l.name === storeName) || {};
+          const isCurrent = (state.storeLocation || '').toLowerCase().includes(storeName.toLowerCase()) || 
+                            storeName.toLowerCase().includes((state.storeLocation || '').toLowerCase());
+          const diff = currentPrice > 0 ? (currentPrice - found.lastPrice) : 0;
+          results.push({
+            storeName,
+            icon: storeMeta.icon || '🏪',
+            badge: storeMeta.badge || storeMeta.type || 'Toko',
+            price: found.lastPrice,
+            period: found.previousMonth || 'September 2026',
+            unit: found.unit || 'pcs',
+            isCurrent,
+            diff
+          });
+        }
+      });
+    }
+
+    if (results.length > 0) {
+      const minPrice = Math.min(...results.map(r => r.price));
+      results.forEach(r => {
+        r.isCheapest = (r.price === minPrice);
+      });
+    }
+
+    return results;
   }
 
   // Native-style Toast Notifications
@@ -966,6 +1044,16 @@
     if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
     if (el.sessionShoppingDate) el.sessionShoppingDate.value = state.shoppingDate;
     if (el.budgetLimitInput) el.budgetLimitInput.value = state.budgetLimit;
+    syncStoreChips(state.storeLocation);
+  }
+
+  function syncStoreChips(activeStore) {
+    const loc = (activeStore || state.storeLocation || '').toLowerCase();
+    document.querySelectorAll('.store-chip-btn').forEach(btn => {
+      const btnStore = (btn.dataset.store || '').toLowerCase();
+      const isMatch = loc.includes(btnStore) || btnStore.includes(loc);
+      btn.classList.toggle('active', isMatch);
+    });
   }
 
   // Render Horizontal Category Chips Carousel
@@ -1564,7 +1652,7 @@
     }
   }
 
-  // Real-time Price Comparison Insight inside Modal
+  // Real-time Price Comparison Insight inside Modal (Histori Toko Sama & Komparasi Antartoko)
   function checkModalPriceComparison() {
     const name = el.inputItemName.value;
     const price = Number(el.inputUnitPrice.value) || 0;
@@ -1574,38 +1662,87 @@
     }
 
     const trend = detectPriceTrend(name, price);
+    const crossStores = getCrossStoreBenchmarks(name, price);
     el.priceComparisonNotice.style.display = 'block';
 
+    const activeStoreShort = (state.storeLocation || 'Lotte Mart').split('-')[0].trim();
+    let noticeHtml = '';
+
     if (trend.status === 'drop') {
-      el.priceComparisonNotice.innerHTML = `
-        <div style="padding: 8px 12px; background: #E8F7F0; border-radius: 12px; font-size: 11.5px; color: #059669; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="trending-down" style="width: 16px; height: 16px;"></i>
-          <span><strong>Kabar Baik!</strong> Harga lebih murah ${formatRp(Math.abs(trend.diff))} (${trend.percent}%) dibanding bulan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
+      noticeHtml = `
+        <div style="padding: 9px 12px; background: #E8F7F0; border-radius: 12px; font-size: 11.5px; color: #059669; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="arrow-down" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+          <span><strong>Kabar Baik di ${escapeHtml(activeStoreShort)}!</strong> Lebih hemat ${formatRp(Math.abs(trend.diff))} (${trend.percent}%) dibanding bulan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
         </div>
       `;
     } else if (trend.status === 'up') {
-      el.priceComparisonNotice.innerHTML = `
-        <div style="padding: 8px 12px; background: #FFE8ED; border-radius: 12px; font-size: 11.5px; color: #E11D48; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="trending-up" style="width: 16px; height: 16px;"></i>
-          <span><strong>Perhatian:</strong> Harga naik ${formatRp(trend.diff)} (+${trend.percent}%) dibanding bulan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
+      noticeHtml = `
+        <div style="padding: 9px 12px; background: #FFE8ED; border-radius: 12px; font-size: 11.5px; color: #E11D48; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="arrow-up" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+          <span><strong>Harga Naik di ${escapeHtml(activeStoreShort)}:</strong> Naik ${formatRp(trend.diff)} (+${trend.percent}%) dibanding catatan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
         </div>
       `;
     } else if (trend.status === 'stable') {
-      el.priceComparisonNotice.innerHTML = `
-        <div style="padding: 8px 12px; background: #F3F4F6; border-radius: 12px; font-size: 11.5px; color: #4B5563; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="check" style="width: 16px; height: 16px;"></i>
-          <span>Harga sama persis dengan catatan belanja bulan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
+      noticeHtml = `
+        <div style="padding: 9px 12px; background: #F3F4F6; border-radius: 12px; font-size: 11.5px; color: #4B5563; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="equal" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+          <span><strong>Harga Stabil di ${escapeHtml(activeStoreShort)}:</strong> Sama dengan catatan belanja bulan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
         </div>
       `;
     } else {
-      el.priceComparisonNotice.innerHTML = `
-        <div style="padding: 8px 12px; background: #EFF6FF; border-radius: 12px; font-size: 11.5px; color: #2563EB; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="info" style="width: 16px; height: 16px;"></i>
-          <span>Item baru! Harga ini akan menjadi acuan perbandingan untuk belanja berikutnya.</span>
+      noticeHtml = `
+        <div style="padding: 9px 12px; background: #EFF6FF; border-radius: 12px; font-size: 11.5px; color: #2563EB; display: flex; align-items: center; gap: 6px;">
+          <i data-lucide="info" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
+          <span>Item baru di ${escapeHtml(activeStoreShort)}! Acuan untuk belanja berikutnya.</span>
         </div>
       `;
     }
 
+    // Komparasi harga antar toko (Lotte Mart, Indomaret, Alfamart, Superindo, dll)
+    if (crossStores && crossStores.length > 0) {
+      noticeHtml += `
+        <div class="cross-store-box">
+          <div class="cross-store-title">
+            <i data-lucide="store" style="width: 14px; height: 14px; color: var(--primary);"></i>
+            <span>Perbandingan Harga di Lokasi Toko Lain:</span>
+          </div>
+          <div class="cross-store-grid">
+      `;
+
+      crossStores.forEach(cs => {
+        let tagHtml = '';
+        if (cs.isCheapest) {
+          tagHtml = `<span class="cross-store-tag cheapest">⭐ Termurah</span>`;
+        } else if (cs.isCurrent) {
+          tagHtml = `<span class="cross-store-tag current">📍 Toko Anda</span>`;
+        } else if (cs.diff < 0) {
+          tagHtml = `<span class="cross-store-tag diff-up">+${formatRp(Math.abs(cs.diff))}</span>`;
+        } else if (cs.diff > 0) {
+          tagHtml = `<span class="cross-store-tag diff-down">-${formatRp(cs.diff)}</span>`;
+        }
+
+        noticeHtml += `
+          <div class="cross-store-row ${cs.isCurrent ? 'is-current' : ''} ${cs.isCheapest ? 'is-cheapest' : ''}">
+            <div class="cross-store-name">
+              <span>${cs.icon}</span>
+              <span>${escapeHtml(cs.storeName.split('-')[0].trim())}</span>
+              <small style="color: var(--text-soft); font-size: 9px;">(${escapeHtml(cs.badge)})</small>
+            </div>
+            <div class="cross-store-price-area">
+              <span class="cross-store-price">${formatRp(cs.price)}</span>
+              ${tagHtml}
+            </div>
+          </div>
+        `;
+      });
+
+      noticeHtml += `
+          </div>
+        </div>
+      `;
+    }
+
+    el.priceComparisonNotice.innerHTML = noticeHtml;
     if (window.lucide) window.lucide.createIcons({ root: el.priceComparisonNotice });
   }
 
@@ -2350,10 +2487,32 @@
       el.sessionStoreLocation.addEventListener('change', (e) => {
         state.storeLocation = e.target.value.trim() || 'Lotte Mart Grocery - Puri Indah';
         window.SmartData.SmartStorage.saveStoreLocation(state.storeLocation);
+        syncStoreChips(state.storeLocation);
+        renderGroceryList();
         pushToFirestore();
         showToast(`Lokasi toko diset: ${state.storeLocation} (tersinkron ke PC/HP)`, 'info');
       });
     }
+
+    // Quick store selector chips (Lotte Mart, Indomaret, Alfamart, Superindo, dll)
+    const storeChips = document.querySelectorAll('.store-chip-btn');
+    storeChips.forEach(btn => {
+      btn.addEventListener('click', () => {
+        const storeName = btn.dataset.store;
+        if (!storeName) return;
+
+        state.storeLocation = storeName;
+        window.SmartData.SmartStorage.saveStoreLocation(storeName);
+        if (el.sessionStoreLocation) el.sessionStoreLocation.value = storeName;
+        syncStoreChips(storeName);
+
+        // Render grocery list with the selected store's price comparison
+        renderGroceryList();
+        pushToFirestore();
+        showToast(`📍 Lokasi toko: ${storeName} (Komparasi harga disesuaikan)`, 'info');
+        if (window.soundCtrl) window.soundCtrl.playPop();
+      });
+    });
 
     if (el.sessionShoppingDate) {
       el.sessionShoppingDate.addEventListener('change', (e) => {

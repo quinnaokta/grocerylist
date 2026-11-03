@@ -3308,6 +3308,161 @@ body {
   white-space: nowrap;
 }
 
+/* Store Quick Selector Chips */
+.store-quick-slider {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 0 0 10px 0;
+  margin-top: -4px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.store-quick-slider::-webkit-scrollbar {
+  display: none;
+}
+
+.store-chip-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #FFFFFF;
+  border: 1.5px solid #E2E8F0;
+  border-radius: var(--radius-full);
+  padding: 5px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.03);
+}
+
+.store-chip-btn:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background: #FFF5F7;
+}
+
+.store-chip-btn.active {
+  background: #FFF0F4;
+  border-color: var(--primary);
+  color: var(--primary);
+  font-weight: 800;
+  box-shadow: 0 2px 7px rgba(224, 90, 126, 0.18);
+  transform: translateY(-1px);
+}
+
+.store-badge-tag {
+  font-size: 8.5px;
+  font-weight: 800;
+  padding: 1px 6px;
+  border-radius: var(--radius-full);
+  background: #F1F5F9;
+  color: #64748B;
+  text-transform: uppercase;
+}
+
+.store-chip-btn.active .store-badge-tag {
+  background: rgba(224, 90, 126, 0.15);
+  color: var(--primary);
+}
+
+/* Cross-Store Price Comparison inside Modal */
+.cross-store-box {
+  margin-top: 10px;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-md);
+  padding: 10px 12px;
+}
+
+.cross-store-title {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.cross-store-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cross-store-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: var(--radius-sm);
+  padding: 6px 10px;
+  font-size: 11px;
+}
+
+.cross-store-row.is-current {
+  border-color: var(--primary);
+  background: #FFF9FB;
+}
+
+.cross-store-row.is-cheapest {
+  border-color: #10B981;
+  background: #F0FDF4;
+}
+
+.cross-store-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+.cross-store-price-area {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cross-store-price {
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.cross-store-tag {
+  font-size: 9px;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: var(--radius-full);
+}
+
+.cross-store-tag.cheapest {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
+.cross-store-tag.current {
+  background: #FFE4EC;
+  color: var(--primary);
+}
+
+.cross-store-tag.diff-up {
+  background: #FEE2E2;
+  color: #B91C1C;
+}
+
+.cross-store-tag.diff-down {
+  background: #DCFCE7;
+  color: #15803D;
+}
+
 .session-cloud-badge.offline {
   background: #FFFBEB;
   color: #D97706;
