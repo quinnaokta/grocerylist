@@ -11,15 +11,22 @@ const CATEGORIES = [
 ];
 
 const UNITS = [
-  'pcs', 'kg', 'pack', 'liter', 'botol', 'sachet', 'box', 'roll', 'renceng', 'ikat', 'kaleng'
+  'pcs', 'kg', 'pack', 'liter', 'botol', 'sachet', 'box', 'roll', 'renceng', 'ikat', 'kaleng', 'karung', 'karung/5kg'
 ];
 
-// Pre-seeded Benchmark Prices from previous months (Anak Rantau Standard Supermarket)
+// Pre-seeded Benchmark Prices from previous months (Lotte Mart Grocery - Puri Indah & Benchmark Standar)
 const INITIAL_BENCHMARK_PRICES = {
-  'beras ramos 5kg': { lastPrice: 74500, previousMonth: 'September 2026', unit: 'pack', category: 'bahan_pokok' },
-  'telur ayam negeri 1kg': { lastPrice: 29000, previousMonth: 'September 2026', unit: 'kg', category: 'bahan_pokok' },
-  'indomie goreng': { lastPrice: 3100, previousMonth: 'September 2026', unit: 'pcs', category: 'bahan_pokok' },
-  'minyak goreng 2l': { lastPrice: 34500, previousMonth: 'September 2026', unit: 'botol', category: 'bahan_pokok' },
+  'beras rojolele': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
+  'beras 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
+  'beras ramos 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'pack', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
+  'telur 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
+  'telur ayam 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
+  'telur ayam negeri 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
+  'garam 500g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery - Puri Indah' },
+  'garam dapur 250g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery - Puri Indah' },
+  'minyak goreng 2l': { lastPrice: 43000, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
+  'sabun mandi': { lastPrice: 15000, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Lotte Mart Grocery - Puri Indah' },
+  'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok' },
   'sabun cuci piring 750ml': { lastPrice: 13500, previousMonth: 'September 2026', unit: 'pack', category: 'mandi_cuci' },
   'sabun mandi cair refil 450ml': { lastPrice: 22000, previousMonth: 'September 2026', unit: 'pack', category: 'mandi_cuci' },
   'shampoo 170ml': { lastPrice: 24500, previousMonth: 'September 2026', unit: 'botol', category: 'mandi_cuci' },
@@ -151,11 +158,15 @@ const INITIAL_HISTORY_TRIPS = [
 
 // Autocomplete suggestion catalog for Anak Rantau
 const GROCERY_SUGGESTIONS = [
+  { name: 'Beras Rojolele', category: 'bahan_pokok', unit: 'karung/5kg', defaultPrice: 74000 },
   { name: 'Beras Ramos 5kg', category: 'bahan_pokok', unit: 'pack', defaultPrice: 73000 },
+  { name: 'Telur 1kg', category: 'bahan_pokok', unit: 'kg', defaultPrice: 28000 },
   { name: 'Telur Ayam Negeri 1kg', category: 'bahan_pokok', unit: 'kg', defaultPrice: 29500 },
+  { name: 'Minyak Goreng 2L', category: 'bahan_pokok', unit: 'botol', defaultPrice: 43000 },
+  { name: 'Garam 500g', category: 'bumbu_dapur', unit: 'pack', defaultPrice: 5000 },
+  { name: 'Sabun Mandi', category: 'mandi_cuci', unit: 'pcs', defaultPrice: 15000 },
   { name: 'Indomie Goreng', category: 'bahan_pokok', unit: 'pcs', defaultPrice: 3100 },
   { name: 'Indomie Ayam Bawang', category: 'bahan_pokok', unit: 'pcs', defaultPrice: 3100 },
-  { name: 'Minyak Goreng 2L', category: 'bahan_pokok', unit: 'botol', defaultPrice: 34000 },
   { name: 'Minyak Goreng 1L', category: 'bahan_pokok', unit: 'botol', defaultPrice: 17500 },
   { name: 'Susu UHT 1 Liter', category: 'camilan_minum', unit: 'box', defaultPrice: 19800 },
   { name: 'Susu Kental Manis Kaleng', category: 'bahan_pokok', unit: 'kaleng', defaultPrice: 12500 },
@@ -226,11 +237,11 @@ class SmartStorage {
 
   // Store Location
   static getStoreLocation() {
-    return this.get('store_location', 'Superindo Kaliurang');
+    return this.get('store_location', 'Lotte Mart Grocery - Puri Indah');
   }
 
   static saveStoreLocation(loc) {
-    this.set('store_location', loc || 'Superindo Kaliurang');
+    this.set('store_location', loc || 'Lotte Mart Grocery - Puri Indah');
   }
 
   // Shopping Date
@@ -310,7 +321,30 @@ class SmartStorage {
       this.setCurrentUser(found);
       return { success: true, user: found };
     }
-    return { success: false, message: 'Email atau password salah. Coba akun demo atau cek kembali.' };
+    return { success: false, message: 'Email atau password salah. Silakan periksa kembali.' };
+  }
+
+  static updateUserBudget(identifier, newBudget) {
+    const users = this.getUsers();
+    const cleanId = String(identifier || '').trim().toLowerCase();
+    const budgetNum = Number(newBudget) || 450000;
+    
+    let updated = false;
+    users.forEach(u => {
+      if ((u.id && String(u.id).toLowerCase() === cleanId) || (u.email && u.email.toLowerCase() === cleanId)) {
+        u.budget = budgetNum;
+        updated = true;
+      }
+    });
+    if (updated) {
+      this.saveUsers(users);
+    }
+    
+    const current = this.getCurrentUser();
+    if (current && ((current.id && String(current.id).toLowerCase() === cleanId) || (current.email && current.email.toLowerCase() === cleanId))) {
+      current.budget = budgetNum;
+      this.setCurrentUser(current);
+    }
   }
 
   static registerUser(userData) {
@@ -354,28 +388,7 @@ class SmartStorage {
   }
 }
 
-const DEFAULT_USERS = [
-  {
-    id: 'user-budi',
-    name: 'Budi Santoso',
-    email: 'budi@rantau.id',
-    password: '123',
-    role: 'Mahasiswa Rantau',
-    city: 'Yogyakarta',
-    budget: 450000,
-    avatar: '👨‍🎓'
-  },
-  {
-    id: 'user-siti',
-    name: 'Siti Rahma',
-    email: 'siti@rantau.id',
-    password: '123',
-    role: 'Anak Kos Hemat',
-    city: 'Bandung',
-    budget: 400000,
-    avatar: '👩‍💻'
-  }
-];
+const DEFAULT_USERS = [];
 
 // Pre-seeded Catalog of Shopee-style Product Store for Anak Rantau
 const SHOPEE_PRODUCTS = [

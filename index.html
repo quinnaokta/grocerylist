@@ -92,7 +92,7 @@
                 <label class="form-label" for="gateLoginEmail">Email atau Akun</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="mail" class="auth-input-icon"></i>
-                  <input type="text" class="form-input" id="gateLoginEmail" placeholder="Contoh: budi@rantau.id" autocomplete="username" required>
+                  <input type="text" class="form-input" id="gateLoginEmail" placeholder="nama@email.com" autocomplete="username" required>
                 </div>
               </div>
 
@@ -100,7 +100,7 @@
                 <label class="form-label" for="gateLoginPassword">Kata Sandi</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="lock" class="auth-input-icon"></i>
-                  <input type="password" class="form-input" id="gateLoginPassword" placeholder="Masukkan password (demo: 123)" autocomplete="current-password" required>
+                  <input type="password" class="form-input" id="gateLoginPassword" placeholder="Masukkan password" autocomplete="current-password" required>
                   <button type="button" class="toggle-password-btn" id="gateToggleLoginPassBtn" aria-label="Lihat Password">
                     <i data-lucide="eye" id="gateLoginEyeIcon"></i>
                   </button>
@@ -140,7 +140,7 @@
                 <label class="form-label" for="gateRegEmail">Alamat Email</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="mail" class="auth-input-icon"></i>
-                  <input type="email" class="form-input" id="gateRegEmail" placeholder="Contoh: budi@rantau.id" required>
+                  <input type="email" class="form-input" id="gateRegEmail" placeholder="nama@email.com" required>
                 </div>
               </div>
 
@@ -175,7 +175,7 @@
                 <label class="form-label" for="gateRegBudget">Pagu Anggaran Bulanan</label>
                 <div class="currency-input-box">
                   <span class="currency-prefix">Rp</span>
-                  <input type="number" class="form-input currency-input" id="gateRegBudget" value="450000" step="10000">
+                  <input type="number" class="form-input currency-input" id="gateRegBudget" value="450000" step="10000" inputmode="numeric">
                 </div>
               </div>
 
@@ -189,33 +189,6 @@
                 <button type="button" class="auth-inline-link" onclick="window.switchGateTab && window.switchGateTab('login')">Masuk di sini</button>
               </div>
             </form>
-
-            <!-- 1-Tap Quick Demo Logins Section -->
-            <div class="auth-demo-section">
-              <div class="auth-divider-line">
-                <span>atau masuk cepat 1-klik</span>
-              </div>
-              
-              <div class="demo-pills-grid">
-                <button type="button" class="demo-pill-card" id="gateQuickLoginBudi" onclick="window.gateQuickLogin && window.gateQuickLogin('budi@rantau.id', '123')">
-                  <span class="demo-pill-avatar">👨‍🎓</span>
-                  <div class="demo-pill-text">
-                    <strong>Budi Santoso</strong>
-                    <small>Mahasiswa • UGM</small>
-                  </div>
-                  <span class="demo-pill-badge">Pilih</span>
-                </button>
-
-                <button type="button" class="demo-pill-card" id="gateQuickLoginSiti" onclick="window.gateQuickLogin && window.gateQuickLogin('siti@rantau.id', '123')">
-                  <span class="demo-pill-avatar">👩‍💻</span>
-                  <div class="demo-pill-text">
-                    <strong>Siti Rahma</strong>
-                    <small>Anak Kos • ITB</small>
-                  </div>
-                  <span class="demo-pill-badge">Pilih</span>
-                </button>
-              </div>
-            </div>
 
             <!-- Footer Guest Explore Button -->
             <div class="guest-enter-wrapper">
@@ -242,28 +215,30 @@
                 <i data-lucide="shopping-bag" style="width: 19px; height: 19px;"></i>
               </div>
               <div class="brand-title-area">
-                <h1>Smart Grocery</h1>
-                <span>Budget Safety • Rantau</span>
-              </div>
-              <div class="header-live-pill" id="headerLiveSyncPill" title="Multi-Device Realtime Cloud Firestore Aktif (HP & PC Sinkron)">
-                <span class="live-pulse-dot"></span>
-                <span id="headerLiveSyncText">Live</span>
+                <div class="brand-title-row">
+                  <h1>Smart Grocery</h1>
+                  <div class="header-live-pill" id="headerLiveSyncPill" title="Multi-Device Realtime Cloud Firestore Aktif (HP & PC Sinkron)">
+                    <span class="live-pulse-dot"></span>
+                    <span id="headerLiveSyncText">Live</span>
+                  </div>
+                </div>
+                <span class="brand-tagline">Budget Safety • Rantau</span>
               </div>
             </div>
             <div class="header-actions">
               <button class="icon-btn header-cart-pill" id="headerCartBtn" title="Keranjang Belanja" aria-label="Buka Keranjang">
-                <i data-lucide="shopping-cart" style="width: 18px; height: 18px;"></i>
+                <i data-lucide="shopping-cart" style="width: 17px; height: 17px;"></i>
                 <span class="header-cart-badge" id="headerCartBadge">0</span>
               </button>
-              <button class="user-header-pill" id="headerUserBtn" onclick="window.showAuthGate && window.showAuthGate()" title="Buka Halaman Login / Profil Akun" aria-label="Akun Pengguna">
-                <span class="user-header-avatar" id="headerUserAvatar">👨‍🎓</span>
-                <span class="user-header-name" id="headerUserName">Budi</span>
+              <button class="user-header-pill" id="headerUserBtn" onclick="window.showAuthGate && window.showAuthGate()" title="Buka Profil Akun" aria-label="Akun Pengguna">
+                <span class="user-header-avatar" id="headerUserAvatar">👤</span>
+                <span class="user-header-name" id="headerUserName">Akun</span>
               </button>
               <button class="icon-btn" id="soundToggleBtn" title="Efek Suara Aktif/Nonaktif" aria-label="Toggle Sound">
-                <i data-lucide="volume-2" style="width: 18px; height: 18px;" id="soundIcon"></i>
+                <i data-lucide="volume-2" style="width: 17px; height: 17px;" id="soundIcon"></i>
               </button>
               <button class="icon-btn" id="headerInfoBtn" title="Petunjuk & Bantuan" aria-label="Help">
-                <i data-lucide="help-circle" style="width: 18px; height: 18px;"></i>
+                <i data-lucide="help-circle" style="width: 17px; height: 17px;"></i>
               </button>
             </div>
           </div>
@@ -379,7 +354,7 @@
           <div class="session-meta-strip" id="sessionMetaStrip">
             <div class="session-meta-item">
               <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
-              <input type="text" id="sessionStoreLocation" class="session-meta-input" placeholder="Superindo Kaliurang" value="Superindo Kaliurang" title="Ubah lokasi supermarket belanja">
+              <input type="text" id="sessionStoreLocation" class="session-meta-input" placeholder="Lotte Mart Grocery - Puri Indah" value="Lotte Mart Grocery - Puri Indah" title="Ubah lokasi supermarket belanja">
             </div>
             <div class="session-meta-item date-item">
               <i data-lucide="calendar" style="width: 14px; height: 14px; color: var(--primary);"></i>
@@ -435,8 +410,8 @@
             <div class="empty-state-icon">
               <i data-lucide="shopping-cart" style="width: 32px; height: 32px;"></i>
             </div>
-            <h3>Troli Belanja Masih Kosong</h3>
-            <p>Yuk mulai catat kebutuhan belanja bulananmu agar pengeluaran kos tetap terkendali!</p>
+            <h3>Keranjang Belanja Masih Kosong</h3>
+            <p>Keranjang belanja masih kosong, silakan scan atau tambahkan kebutuhan pokok pertamamu agar pengeluaran kos tetap terkendali!</p>
             <button type="button" class="btn-primary" id="emptyAddBtn" onclick="if(window.openAddItemModal) window.openAddItemModal();" style="max-width: 200px; margin: 0 auto;">
               <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
               <span>Tambah Belanjaan</span>
@@ -518,7 +493,7 @@
               <label class="form-label">Nominal Batas Anggaran</label>
               <div class="currency-input-box">
                 <span class="currency-prefix">Rp</span>
-                <input type="number" class="form-input currency-input" id="budgetLimitInput" value="450000" step="10000" min="50000" max="5000000">
+                <input type="number" class="form-input currency-input" id="budgetLimitInput" value="450000" step="10000" min="50000" max="5000000" inputmode="numeric">
               </div>
             </div>
 
@@ -613,9 +588,9 @@
 
               <!-- Mini stats inside profile -->
               <div class="profile-stats-grid">
-                <div class="profile-stat-box">
+                <div class="profile-stat-box clickable" onclick="window.switchTab && window.switchTab('viewAnggaran')" title="Klik untuk ubah batas pagu anggaran">
                   <span class="profile-stat-num" id="profileBudgetLimit">Rp 450.000</span>
-                  <span class="profile-stat-lbl">Pagu Bulanan</span>
+                  <span class="profile-stat-lbl">Pagu Bulanan ✏️</span>
                 </div>
                 <div class="profile-stat-box">
                   <span class="profile-stat-num" id="profileTripCount">2 Kali</span>
@@ -648,14 +623,6 @@
                 <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-soft);"></i>
               </button>
 
-              <button class="account-menu-item" id="menuSwitchAccountBtn" type="button" onclick="window.showAuthGate && window.showAuthGate()">
-                <div class="menu-item-left">
-                  <i data-lucide="users" style="width: 18px; height: 18px; color: #3B82F6;"></i>
-                  <span>Ganti / Masuk Akun Lain</span>
-                </div>
-                <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-soft);"></i>
-              </button>
-
               <button class="account-menu-item" id="menuSoundToggleBtn" type="button">
                 <div class="menu-item-left">
                   <i data-lucide="volume-2" style="width: 18px; height: 18px; color: #10B981;"></i>
@@ -671,14 +638,6 @@
                 </div>
                 <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--danger-rose);"></i>
               </button>
-            </div>
-
-            <!-- Quick Switch Account Pills -->
-            <div class="quick-switch-box">
-              <div class="quick-switch-title">Pilih Cepat Akun Rantau:</div>
-              <div class="quick-switch-chips" id="quickSwitchChips">
-                <!-- Rendered dynamically -->
-              </div>
             </div>
           </div>
 
@@ -710,7 +669,7 @@
                 <label class="form-label" for="loginEmail">Email atau Akun</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="mail" class="auth-input-icon"></i>
-                  <input type="text" class="form-input" id="loginEmail" placeholder="Contoh: budi@rantau.id" autocomplete="username" required>
+                  <input type="text" class="form-input" id="loginEmail" placeholder="nama@email.com" autocomplete="username" required>
                 </div>
               </div>
 
@@ -718,7 +677,7 @@
                 <label class="form-label" for="loginPassword">Kata Sandi</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="lock" class="auth-input-icon"></i>
-                  <input type="password" class="form-input" id="loginPassword" placeholder="Masukkan password (demo: 123)" autocomplete="current-password" required>
+                  <input type="password" class="form-input" id="loginPassword" placeholder="Masukkan password" autocomplete="current-password" required>
                   <button type="button" class="toggle-password-btn" id="toggleLoginPasswordBtn" aria-label="Lihat Password">
                     <i data-lucide="eye" id="loginEyeIcon"></i>
                   </button>
@@ -758,7 +717,7 @@
                 <label class="form-label" for="regEmail">Alamat Email</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="mail" class="auth-input-icon"></i>
-                  <input type="email" class="form-input" id="regEmail" placeholder="Contoh: budi@rantau.id" required>
+                  <input type="email" class="form-input" id="regEmail" placeholder="nama@email.com" required>
                 </div>
               </div>
 
@@ -793,7 +752,7 @@
                 <label class="form-label" for="regBudget">Pagu Anggaran Bulanan</label>
                 <div class="currency-input-box">
                   <span class="currency-prefix">Rp</span>
-                  <input type="number" class="form-input currency-input" id="regBudget" value="450000" step="10000">
+                  <input type="number" class="form-input currency-input" id="regBudget" value="450000" step="10000" inputmode="numeric">
                 </div>
               </div>
 
@@ -807,32 +766,6 @@
                 <button type="button" class="auth-inline-link" onclick="window.switchAuthTab && window.switchAuthTab('login')">Masuk di sini</button>
               </div>
             </form>
-
-            <!-- 1-Tap Quick Demo Logins Section -->
-            <div class="auth-demo-section">
-              <div class="auth-divider-line">
-                <span>atau masuk cepat 1-klik</span>
-              </div>
-              <div class="demo-pills-grid">
-                <button type="button" class="demo-pill-card" id="quickLoginBudi">
-                  <span class="demo-pill-avatar">👨‍🎓</span>
-                  <div class="demo-pill-text">
-                    <strong>Budi Santoso</strong>
-                    <small>Mahasiswa • UGM</small>
-                  </div>
-                  <span class="demo-pill-badge">Pilih</span>
-                </button>
-
-                <button type="button" class="demo-pill-card" id="quickLoginSiti">
-                  <span class="demo-pill-avatar">👩‍💻</span>
-                  <div class="demo-pill-text">
-                    <strong>Siti Rahma</strong>
-                    <small>Anak Kos • ITB</small>
-                  </div>
-                  <span class="demo-pill-badge">Pilih</span>
-                </button>
-              </div>
-            </div>
 
           </div>
 
@@ -940,6 +873,8 @@
                   <select class="form-input" id="inputUnit">
                     <option value="pcs">pcs</option>
                     <option value="kg">kg</option>
+                    <option value="karung/5kg">karung/5kg</option>
+                    <option value="karung">karung</option>
                     <option value="pack">pack</option>
                     <option value="liter">liter</option>
                     <option value="botol">botol</option>
@@ -959,7 +894,7 @@
                   <label class="form-label">Jumlah (Unit)</label>
                   <div style="display: flex; align-items: center; gap: 8px;">
                     <button type="button" class="stepper-btn" id="modalQtyMinus" style="border: 1px solid var(--border-color);">-</button>
-                    <input type="number" class="form-input" id="inputQty" value="1" min="1" max="999" style="text-align: center; font-weight: 800; font-size: 16px;">
+                    <input type="number" class="form-input" id="inputQty" value="1" min="1" max="999" inputmode="numeric" style="text-align: center; font-weight: 800; font-size: 16px;">
                     <button type="button" class="stepper-btn" id="modalQtyPlus" style="border: 1px solid var(--border-color);">+</button>
                   </div>
                 </div>
@@ -968,7 +903,7 @@
                   <label class="form-label">Harga Satuan (Rp) *</label>
                   <div class="currency-input-box">
                     <span class="currency-prefix">Rp</span>
-                    <input type="number" class="form-input currency-input" id="inputUnitPrice" placeholder="0" min="0" step="500" required>
+                    <input type="number" class="form-input currency-input" id="inputUnitPrice" placeholder="0" min="0" step="500" inputmode="numeric" required>
                   </div>
                 </div>
               </div>
@@ -1006,7 +941,7 @@
                     </div>
                     <div>
                       <label class="form-label" style="font-size: 11px;">Nilai Diskon</label>
-                      <input type="number" class="form-input" id="inputDiscountValue" placeholder="Misal: 15" min="0" style="height: 42px;">
+                      <input type="number" class="form-input" id="inputDiscountValue" placeholder="Misal: 15" min="0" inputmode="numeric" style="height: 42px;">
                     </div>
                   </div>
                 </div>
@@ -1019,11 +954,11 @@
                   <div class="form-row-2" style="margin-bottom: 8px;">
                     <div>
                       <label class="form-label" style="font-size: 10.5px;">Diskon Utama 1 (%)</label>
-                      <input type="number" class="form-input" id="inputStacked1" placeholder="Misal: 20%" min="0" max="99" style="height: 42px;">
+                      <input type="number" class="form-input" id="inputStacked1" placeholder="Misal: 20%" min="0" max="99" inputmode="numeric" style="height: 42px;">
                     </div>
                     <div>
                       <label class="form-label" style="font-size: 10.5px;">Diskon Tambahan 2 (%)</label>
-                      <input type="number" class="form-input" id="inputStacked2" placeholder="Misal: 5%" min="0" max="99" style="height: 42px;">
+                      <input type="number" class="form-input" id="inputStacked2" placeholder="Misal: 5%" min="0" max="99" inputmode="numeric" style="height: 42px;">
                     </div>
                   </div>
                 </div>

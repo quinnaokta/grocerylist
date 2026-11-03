@@ -22,7 +22,7 @@
     currentUser: null,
     authTab: 'login', // 'login' | 'register'
     soundEnabled: true,
-    storeLocation: 'Superindo Kaliurang',
+    storeLocation: 'Lotte Mart Grocery - Puri Indah',
     shoppingDate: new Date().toISOString().split('T')[0],
     cloudSyncStatus: 'connecting' // 'connected' | 'offline' | 'syncing'
   };
@@ -421,8 +421,20 @@
 
   // Price Trend Detector vs Historical Benchmarks
   function detectPriceTrend(itemName, currentUnitPrice) {
-    const key = (itemName || '').trim().toLowerCase();
-    const benchmark = state.benchmarks[key];
+    const raw = (itemName || '').trim().toLowerCase();
+    let benchmark = state.benchmarks[raw];
+    if (!benchmark) {
+      const clean = raw.replace(/\s+/g, ' ');
+      benchmark = state.benchmarks[clean];
+      if (!benchmark) {
+        const foundKey = Object.keys(state.benchmarks).find(k => {
+          return k === clean || clean.includes(k) || k.includes(clean);
+        });
+        if (foundKey) {
+          benchmark = state.benchmarks[foundKey];
+        }
+      }
+    }
 
     if (!benchmark || !benchmark.lastPrice) {
       return { status: 'new', label: 'Item Baru', diff: 0, percent: 0 };
@@ -434,16 +446,17 @@
     if (diff === 0) {
       return {
         status: 'stable',
-        label: 'Stabil vs ' + (benchmark.previousMonth || 'lalu'),
+        label: `= Stabil (sama dengan bulan ${benchmark.previousMonth || 'lalu'} ${formatRp(pastPrice)})`,
         diff: 0,
         percent: 0,
-        pastPrice
+        pastPrice,
+        period: benchmark.previousMonth
       };
     } else if (diff < 0) {
       const pct = Math.abs(Math.round((diff / pastPrice) * 100));
       return {
         status: 'drop',
-        label: `Turun ${formatRp(Math.abs(diff))} (-${pct}%)`,
+        label: `↓ Turun ${formatRp(Math.abs(diff))} (-${pct}%)`,
         diff,
         percent: pct,
         pastPrice,
@@ -453,7 +466,7 @@
       const pct = Math.abs(Math.round((diff / pastPrice) * 100));
       return {
         status: 'up',
-        label: `Naik ${formatRp(diff)} (+${pct}%)`,
+        label: `↑ Naik ${formatRp(diff)} (+${pct}%)`,
         diff,
         percent: pct,
         pastPrice,
@@ -936,7 +949,15 @@
     const rawItems = window.SmartData.SmartStorage.getActiveItems();
     state.activeItems = groupActiveItems(rawItems);
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
-    state.budgetLimit = window.SmartData.SmartStorage.getBudgetLimit();
+
+    // Sinkronisasi pagu sesuai dengan akun yang aktif
+    if (state.currentUser && state.currentUser.budget) {
+      state.budgetLimit = Number(state.currentUser.budget);
+      window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
+    } else {
+      state.budgetLimit = window.SmartData.SmartStorage.getBudgetLimit() || 450000;
+    }
+
     state.storeLocation = window.SmartData.SmartStorage.getStoreLocation();
     state.shoppingDate = window.SmartData.SmartStorage.getShoppingDate();
     state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
@@ -944,6 +965,7 @@
 
     if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
     if (el.sessionShoppingDate) el.sessionShoppingDate.value = state.shoppingDate;
+    if (el.budgetLimitInput) el.budgetLimitInput.value = state.budgetLimit;
   }
 
   // Render Horizontal Category Chips Carousel
@@ -1036,9 +1058,11 @@
         // Price trend badge HTML
         let trendBadgeHtml = '';
         if (trend.status === 'drop') {
-          trendBadgeHtml = `<span class="price-trend-tag drop" title="${trend.label}"><i data-lucide="trending-down" style="width: 10px; height: 10px;"></i> Turun</span>`;
+          trendBadgeHtml = `<span class="price-trend-tag drop" title="${trend.label}"><i data-lucide="arrow-down" style="width: 10px; height: 10px;"></i> ↓ -${formatRp(Math.abs(trend.diff))}</span>`;
         } else if (trend.status === 'up') {
-          trendBadgeHtml = `<span class="price-trend-tag up" title="${trend.label}"><i data-lucide="trending-up" style="width: 10px; height: 10px;"></i> Naik</span>`;
+          trendBadgeHtml = `<span class="price-trend-tag up" title="${trend.label}"><i data-lucide="arrow-up" style="width: 10px; height: 10px;"></i> ↑ +${formatRp(trend.diff)}</span>`;
+        } else if (trend.status === 'stable') {
+          trendBadgeHtml = `<span class="price-trend-tag stable" title="${trend.label}"><i data-lucide="equal" style="width: 10px; height: 10px;"></i> = Stabil</span>`;
         }
 
         card.innerHTML = `
@@ -1194,8 +1218,8 @@
     el.budgetProgressBar.style.width = `${barWidth}%`;
 
     // Status Pill & Banner logic
-    if (ratio < 0.8) {
-      // SAFE (< 80%)
+    if (ratio < 0.9) {
+      // SAFE (< 90%)
       el.budgetProgressBar.style.backgroundColor = 'var(--safe-green)';
       el.budgetStatusPill.className = 'budget-status-pill status-safe';
       el.budgetStatusPill.innerHTML = `<i data-lucide="check-circle" style="width: 12px; height: 12px;"></i><span>Aman (${percent}%)</span>`;
@@ -1203,7 +1227,7 @@
       el.headerRemainingText.textContent = checkedCount > 0 ? `Sisa ${formatRp(remainder)} (${checkedCount} checklist)` : `Sisa ${formatRp(remainder)} (0 checklist)`;
       el.budgetWarningBanner.style.display = 'none';
     } else if (ratio <= 1.0) {
-      // WARNING (80% - 100%)
+      // WARNING (90% - 100% Peringatan Waspada)
       el.budgetProgressBar.style.backgroundColor = 'var(--warn-amber)';
       el.budgetStatusPill.className = 'budget-status-pill status-warning';
       el.budgetStatusPill.innerHTML = `<i data-lucide="alert-triangle" style="width: 12px; height: 12px;"></i><span>Waspada (${percent}%)</span>`;
@@ -1211,7 +1235,7 @@
       el.headerRemainingText.textContent = `Tersisa ${formatRp(remainder)} (${checkedCount} checklist)`;
       el.budgetWarningBanner.style.display = 'flex';
       el.budgetWarningBanner.className = 'alert-banner warning';
-      el.budgetWarningText.textContent = `Mendekati limit! Belanjaan checklist sudah ${percent}% dari anggaran bulanan.`;
+      el.budgetWarningText.textContent = `Peringatan Waspada: Total belanja sudah mencapai ${percent}% dari batas saldo dompet!`;
     } else {
       // DANGER / OVERBUDGET (> 100%)
       el.budgetProgressBar.style.backgroundColor = 'var(--danger-rose)';
@@ -1221,7 +1245,7 @@
       el.headerRemainingText.textContent = `Lebih ${formatRp(Math.abs(remainder))}!`;
       el.budgetWarningBanner.style.display = 'flex';
       el.budgetWarningBanner.className = 'alert-banner danger';
-      el.budgetWarningText.textContent = `🚨 OVERBUDGET! Barang checklist melebihi batas anggaran sebesar ${formatRp(Math.abs(remainder))}.`;
+      el.budgetWarningText.textContent = `🚨 Total belanja melebihi batas saldo dompet! Kurangi kuantitas atau batalkan barang sekunder. (Lebih ${formatRp(Math.abs(remainder))})`;
     }
 
     // Overbudget State & Animated Pop-up Trigger (Hanya jika ada checklist yang melebihi limit)
@@ -1324,7 +1348,7 @@
     const userLabel = state.currentUser ? `${state.currentUser.name} (${deviceLabel})` : `Tamu (${deviceLabel})`;
 
     const sessionPayload = {
-      storeLocation: state.storeLocation || 'Superindo Kaliurang',
+      storeLocation: state.storeLocation || 'Lotte Mart Grocery - Puri Indah',
       shoppingDate: state.shoppingDate || new Date().toISOString().split('T')[0],
       walletLimit: Number(state.budgetLimit) || 450000,
       items: state.activeItems,
@@ -1590,15 +1614,30 @@
     const name = el.inputItemName.value.trim();
     const category = el.inputCategory.value;
     const unit = el.inputUnit.value;
-    const qty = Math.max(1, Number(el.inputQty.value) || 1);
-    const unitPrice = Math.max(0, Number(el.inputUnitPrice.value) || 0);
-    const note = el.inputItemNote.value.trim();
+    const rawPrice = Number(el.inputUnitPrice.value);
+    const rawQty = Number(el.inputQty.value);
 
     if (!name) {
       showToast('Silakan masukkan nama barang belanjaan.', 'warning');
       if (el.inputItemName) el.inputItemName.focus();
       return;
     }
+
+    if (el.inputUnitPrice.value === '' || isNaN(rawPrice) || rawPrice <= 0) {
+      showToast('Harga satuan harus lebih besar dari Rp 0 dan tidak boleh negatif!', 'warning');
+      if (el.inputUnitPrice) el.inputUnitPrice.focus();
+      return;
+    }
+
+    if (el.inputQty.value === '' || isNaN(rawQty) || rawQty <= 0) {
+      showToast('Kuantitas (Qty) harus minimal 1!', 'warning');
+      if (el.inputQty) el.inputQty.focus();
+      return;
+    }
+
+    const qty = Math.max(1, rawQty);
+    const unitPrice = rawPrice;
+    const note = el.inputItemNote.value.trim();
 
     // Determine discount fields
     let discountType = 'none';
@@ -1666,7 +1705,7 @@
           discountType,
           discountValue,
           stackedDiscount,
-          inCart: false,
+          inCart: true,
           note
         };
         state.activeItems.unshift(newItem);
@@ -1963,16 +2002,25 @@
   function saveBudgetLimit() {
     const val = Number(el.budgetLimitInput.value);
     if (!val || val <= 0) {
-      alert('Masukkan batas anggaran yang valid.');
+      showToast('Masukkan batas anggaran yang valid.', 'warning');
       return;
     }
 
     state.budgetLimit = val;
     window.SmartData.SmartStorage.saveBudgetLimit(val);
+
+    // Update pagu anggaran di akun pengguna yang sedang aktif
+    if (state.currentUser) {
+      state.currentUser.budget = val;
+      window.SmartData.SmartStorage.setCurrentUser(state.currentUser);
+      window.SmartData.SmartStorage.updateUserBudget(state.currentUser.id || state.currentUser.email, val);
+    }
+
     updateBudgetSafetyMeter();
     renderAnggaranScreen();
+    renderUserProfile();
     pushToFirestore();
-    showToast(`Batas anggaran diubah menjadi ${formatRp(val)}`, 'success');
+    showToast(`Batas anggaran akun berhasil diperbarui menjadi ${formatRp(val)}`, 'success');
     if (window.soundCtrl) window.soundCtrl.playSuccess();
   }
 
@@ -2042,7 +2090,8 @@
       if (el.profileRoleBadge) el.profileRoleBadge.textContent = user.role || 'Mahasiswa Rantau';
       if (el.profileEmail) el.profileEmail.textContent = user.email;
       if (el.profileLocation) el.profileLocation.textContent = `📍 Kost di ${user.city || 'Yogyakarta'}`;
-      if (el.profileBudgetLimit) el.profileBudgetLimit.textContent = formatRp(state.budgetLimit);
+      const budgetVal = (user && user.budget) ? user.budget : (state.budgetLimit || 450000);
+      if (el.profileBudgetLimit) el.profileBudgetLimit.textContent = formatRp(budgetVal);
 
       // Mini stats
       let grandSpent = 0;
@@ -2285,21 +2334,9 @@
     if (el.gateToggleRegPassBtn) {
       el.gateToggleRegPassBtn.addEventListener('click', () => togglePassword('gateRegPassword', 'gateRegEyeIcon'));
     }
-    if (el.gateQuickLoginBudi) {
-      el.gateQuickLoginBudi.addEventListener('click', (e) => {
-        e.preventDefault();
-        gateQuickLogin('budi@rantau.id', '123');
-      });
-    }
-    if (el.gateQuickLoginSiti) {
-      el.gateQuickLoginSiti.addEventListener('click', (e) => {
-        e.preventDefault();
-        gateQuickLogin('siti@rantau.id', '123');
-      });
-    }
     if (el.gateForgotPassBtn) {
       el.gateForgotPassBtn.addEventListener('click', () => {
-        alert('Petunjuk pemulihan kata sandi telah dikirim ke email kos kamu (Password akun demo: 123).');
+        showToast('Petunjuk pemulihan kata sandi telah dikirim ke email kos kamu.', 'info');
       });
     }
 
@@ -2311,7 +2348,7 @@
     // Realtime Multi-Device Session Strip: Store Location & Shopping Date
     if (el.sessionStoreLocation) {
       el.sessionStoreLocation.addEventListener('change', (e) => {
-        state.storeLocation = e.target.value.trim() || 'Superindo Kaliurang';
+        state.storeLocation = e.target.value.trim() || 'Lotte Mart Grocery - Puri Indah';
         window.SmartData.SmartStorage.saveStoreLocation(state.storeLocation);
         pushToFirestore();
         showToast(`Lokasi toko diset: ${state.storeLocation} (tersinkron ke PC/HP)`, 'info');
@@ -2423,14 +2460,6 @@
       el.toggleRegPasswordBtn.addEventListener('click', () => togglePassword('regPassword', 'regEyeIcon'));
     }
 
-    // Quick demo login accounts (on account tab)
-    if (el.quickLoginBudi) {
-      el.quickLoginBudi.addEventListener('click', () => quickLogin('budi@rantau.id', '123'));
-    }
-    if (el.quickLoginSiti) {
-      el.quickLoginSiti.addEventListener('click', () => quickLogin('siti@rantau.id', '123'));
-    }
-
     // Profile menu actions
     if (el.btnLogoutUser) {
       el.btnLogoutUser.addEventListener('click', handleLogout);
@@ -2453,7 +2482,7 @@
     }
     if (el.forgotPassBtn) {
       el.forgotPassBtn.addEventListener('click', () => {
-        alert('Petunjuk pemulihan kata sandi telah dikirim ke email kos kamu (Password akun demo: 123).');
+        showToast('Petunjuk pemulihan kata sandi telah dikirim ke email kos kamu.', 'info');
       });
     }
 
