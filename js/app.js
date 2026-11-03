@@ -743,6 +743,9 @@
       window.SmartData.SmartStorage.saveBudgetLimit(budget);
       window.SmartData.SmartStorage.saveActiveItems([]);
       window.SmartData.SmartStorage.saveHistoryTrips([]);
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
+      }
       checkAuthGate();
       updateBudgetSafetyMeter();
       renderShopeeCatalog();
@@ -768,6 +771,9 @@
       if (res.user.budget) {
         state.budgetLimit = Number(res.user.budget);
         window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
+      }
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
       }
       state.activeItems = window.SmartData.SmartStorage.getActiveItems();
       state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
@@ -1049,7 +1055,7 @@
       state.budgetLimit = Number(state.currentUser.budget);
       window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
     } else {
-      state.budgetLimit = window.SmartData.SmartStorage.getBudgetLimit() || 450000;
+      state.budgetLimit = window.SmartData.SmartStorage.getBudgetLimit() || 400000;
     }
 
     state.storeLocation = window.SmartData.SmartStorage.getStoreLocation();
@@ -1305,7 +1311,10 @@
       }
     });
 
-    const limit = state.budgetLimit || 450000;
+    // Pagu Bulanan: Utamakan pagu bulanan dari akun aktif (misal Siti: Rp 400.000)
+    const userBudget = state.currentUser && state.currentUser.budget ? Number(state.currentUser.budget) : null;
+    const limit = (userBudget && userBudget > 0) ? userBudget : (state.budgetLimit || 400000);
+    state.budgetLimit = limit;
     // Evaluasi pengeluaran & analisis belanja:
     // HANYA hitung barang yang sudah dichecklist (siap beli).
     // Barang yang belum dichecklist tidak dihitung karena belum tentu dibeli.
@@ -1455,7 +1464,7 @@
     const sessionPayload = {
       storeLocation: state.storeLocation || 'Lotte Mart Grocery - Puri Indah',
       shoppingDate: state.shoppingDate || new Date().toISOString().split('T')[0],
-      walletLimit: Number(state.budgetLimit) || 450000,
+      walletLimit: Number(state.currentUser && state.currentUser.budget ? state.currentUser.budget : state.budgetLimit) || 400000,
       items: state.activeItems,
       totalSpent: checkedSpent,
       totalSavings: checkedSavings,
@@ -1497,9 +1506,10 @@
         hasChanged = true;
       }
 
-      // 2. Wallet limit from Firestore
+      // 2. Wallet limit from Firestore (Hanya ubah jika akun tidak memiliki pagu spesifik)
       if (typeof cloudData.walletLimit === 'number' && cloudData.walletLimit > 0) {
-        if (state.budgetLimit !== cloudData.walletLimit) {
+        const userBudget = state.currentUser && state.currentUser.budget ? Number(state.currentUser.budget) : null;
+        if (!userBudget && state.budgetLimit !== cloudData.walletLimit) {
           state.budgetLimit = cloudData.walletLimit;
           window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
           hasChanged = true;
@@ -2292,6 +2302,9 @@
             state.budgetLimit = u.budget;
             window.SmartData.SmartStorage.saveBudgetLimit(u.budget);
           }
+          if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+            window.SmartData.FirestoreRealtimeSync.setSessionUser(u.id);
+          }
           state.activeItems = window.SmartData.SmartStorage.getActiveItems();
           state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
           updateBudgetSafetyMeter();
@@ -2342,8 +2355,11 @@
     if (res.success) {
       state.currentUser = res.user;
       if (res.user.budget) {
-        state.budgetLimit = res.user.budget;
+        state.budgetLimit = Number(res.user.budget);
         window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+      }
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
       }
       state.activeItems = window.SmartData.SmartStorage.getActiveItems();
       state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();
@@ -2371,7 +2387,7 @@
     const password = el.regPassword.value.trim();
     const role = el.regRole.value;
     const city = el.regCity.value.trim();
-    const budget = Number(el.regBudget.value) || 450000;
+    const budget = Number(el.regBudget.value) || 400000;
 
     const res = window.SmartData.SmartStorage.registerUser({
       name,
@@ -2391,6 +2407,9 @@
       window.SmartData.SmartStorage.saveBudgetLimit(budget);
       window.SmartData.SmartStorage.saveActiveItems([]);
       window.SmartData.SmartStorage.saveHistoryTrips([]);
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
+      }
       renderUserProfile();
       updateBudgetSafetyMeter();
       renderGroceryList();
@@ -2413,8 +2432,11 @@
     if (res.success) {
       state.currentUser = res.user;
       if (res.user.budget) {
-        state.budgetLimit = res.user.budget;
+        state.budgetLimit = Number(res.user.budget);
         window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+      }
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
       }
       state.activeItems = window.SmartData.SmartStorage.getActiveItems();
       state.historyTrips = window.SmartData.SmartStorage.getHistoryTrips();

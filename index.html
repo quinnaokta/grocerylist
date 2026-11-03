@@ -175,7 +175,7 @@
                 <label class="form-label" for="gateRegBudget">Pagu Anggaran Bulanan</label>
                 <div class="currency-input-box">
                   <span class="currency-prefix">Rp</span>
-                  <input type="number" class="form-input currency-input" id="gateRegBudget" value="450000" step="10000" inputmode="numeric">
+                  <input type="number" class="form-input currency-input" id="gateRegBudget" value="400000" step="10000" inputmode="numeric">
                 </div>
               </div>
 
@@ -254,10 +254,10 @@
           <div class="budget-meta-row">
             <div>
               <span class="budget-meta-spent" id="headerSpentText">Rp 0</span>
-              <span class="budget-meta-limit" id="headerLimitText"> / Rp 450.000</span>
+              <span class="budget-meta-limit" id="headerLimitText"> / Rp 400.000</span>
             </div>
             <div class="budget-meta-remaining" id="headerRemainingText" style="color: var(--safe-green);">
-              Sisa Rp 450.000
+              Sisa Rp 400.000
             </div>
           </div>
 
@@ -342,11 +342,24 @@
               <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
               <input type="text" id="sessionStoreLocation" class="session-meta-input" list="storeLocationsList" placeholder="Lotte Mart Grocery - Puri Indah" value="Lotte Mart Grocery - Puri Indah" title="Ubah lokasi supermarket belanja">
               <datalist id="storeLocationsList">
-                <option value="Lotte Mart Grocery - Puri Indah">Supermarket Grosir Langganan (Puri Indah)</option>
-                <option value="Indomaret - Puri Kencana">Minimarket (Puri Kencana)</option>
-                <option value="Alfamart - Meruya Ilir">Minimarket (Meruya Ilir)</option>
-                <option value="Superindo - Intercon Kebon Jeruk">Supermarket (Kebon Jeruk)</option>
-                <option value="Hypermart - Puri Indah Mall">Hypermarket (Puri Indah Mall)</option>
+                <!-- Supermarket Jakarta -->
+                <option value="Lotte Mart Grocery - Puri Indah">Lotte Mart Grocery (Puri Indah, Jakbar) - Grosir Langganan</option>
+                <option value="Grand Lucky Superstore - SCBD">Grand Lucky Superstore (SCBD, Jaksel)</option>
+                <option value="Farmers Market - Kelapa Gading">Farmers Market (Kelapa Gading, Jakut)</option>
+                <option value="Hero Supermarket - Pondok Indah Mall">Hero Supermarket (Pondok Indah, Jaksel)</option>
+                <option value="Superindo - Intercon Kebon Jeruk">Superindo (Kebon Jeruk, Jakbar)</option>
+                <option value="Hypermart - Puri Indah Mall">Hypermart (Puri Indah Mall, Jakbar)</option>
+                <option value="Total Buah Segar - Rawamangun">Total Buah Segar (Rawamangun, Jaktim)</option>
+                <option value="Transmart Carrefour - Cempaka Putih">Transmart Carrefour (Cempaka Putih, Jakpus)</option>
+                <option value="Indomaret - Puri Kencana">Indomaret (Puri Kencana, Jakbar)</option>
+                <option value="Alfamart - Meruya Ilir">Alfamart (Meruya Ilir, Jakbar)</option>
+                <!-- Supermarket Tangerang & Tangsel -->
+                <option value="AEON Store - BSD City Tangerang">AEON Store (BSD City, Tangsel)</option>
+                <option value="Lotte Mart Wholesale - Alam Sutera Tangerang">Lotte Mart Wholesale (Alam Sutera, Tangerang)</option>
+                <option value="Superindo - Gading Serpong Tangerang">Superindo (Gading Serpong, Tangerang)</option>
+                <option value="Hypermart - Cyberpark Lippo Karawaci">Hypermart (Lippo Karawaci, Tangerang)</option>
+                <option value="Tip Top Supermarket - Ciputat Tangerang">Tip Top Supermarket (Ciputat, Tangsel)</option>
+                <option value="Hari Hari Pasar Swalayan - Bintaro Tangerang">Hari Hari Pasar Swalayan (Bintaro, Tangsel)</option>
               </datalist>
             </div>
             <div class="session-meta-item date-item">
@@ -359,12 +372,64 @@
             </div>
           </div>
 
-          <!-- Quick Store Selector Chips (Pilih Lokasi untuk Komparasi Fluktuasi Harga) -->
-          <div class="store-quick-slider" id="storeQuickSlider" title="Pilih supermarket/minimarket untuk komparasi harga">
+          <!-- Quick Store Selector Chips (Pilih Lokasi untuk Komparasi Fluktuasi Harga Jakarta & Tangerang) -->
+          <div class="store-quick-slider" id="storeQuickSlider" title="Pilih supermarket/minimarket di Jakarta & Tangerang untuk komparasi harga">
+            <!-- Jakarta Stores -->
             <button type="button" class="store-chip-btn active" data-store="Lotte Mart Grocery - Puri Indah">
               <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
               <span>Lotte Mart (Puri Indah)</span>
-              <span class="store-badge-tag">Grosir</span>
+              <span class="store-badge-tag">Jakarta</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Grand Lucky Superstore - SCBD">
+              <i data-lucide="sparkles" style="width: 12px; height: 12px;"></i>
+              <span>Grand Lucky (SCBD)</span>
+              <span class="store-badge-tag">Jaksel</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Farmers Market - Kelapa Gading">
+              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
+              <span>Farmers Market (KG)</span>
+              <span class="store-badge-tag">Jakut</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Hero Supermarket - Pondok Indah Mall">
+              <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i>
+              <span>Hero (PIM)</span>
+              <span class="store-badge-tag">Jaksel</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Superindo - Intercon Kebon Jeruk">
+              <i data-lucide="shopping-cart" style="width: 12px; height: 12px;"></i>
+              <span>Superindo (Kebon Jeruk)</span>
+              <span class="store-badge-tag">Jakarta</span>
+            </button>
+            <!-- Tangerang Stores -->
+            <button type="button" class="store-chip-btn" data-store="AEON Store - BSD City Tangerang">
+              <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
+              <span>AEON (BSD City)</span>
+              <span class="store-badge-tag">Tangerang</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Lotte Mart Wholesale - Alam Sutera Tangerang">
+              <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
+              <span>Lotte Mart (Alam Sutera)</span>
+              <span class="store-badge-tag">Tangerang</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Superindo - Gading Serpong Tangerang">
+              <i data-lucide="shopping-cart" style="width: 12px; height: 12px;"></i>
+              <span>Superindo (Serpong)</span>
+              <span class="store-badge-tag">Tangerang</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Hypermart - Cyberpark Lippo Karawaci">
+              <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i>
+              <span>Hypermart (Karawaci)</span>
+              <span class="store-badge-tag">Tangerang</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Tip Top Supermarket - Ciputat Tangerang">
+              <i data-lucide="tag" style="width: 12px; height: 12px;"></i>
+              <span>Tip Top (Ciputat)</span>
+              <span class="store-badge-tag">Tangsel</span>
+            </button>
+            <button type="button" class="store-chip-btn" data-store="Hari Hari Pasar Swalayan - Bintaro Tangerang">
+              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
+              <span>Hari Hari (Bintaro)</span>
+              <span class="store-badge-tag">Tangsel</span>
             </button>
             <button type="button" class="store-chip-btn" data-store="Indomaret - Puri Kencana">
               <i data-lucide="store" style="width: 12px; height: 12px;"></i>
@@ -376,15 +441,10 @@
               <span>Alfamart (Meruya Ilir)</span>
               <span class="store-badge-tag">Minimarket</span>
             </button>
-            <button type="button" class="store-chip-btn" data-store="Superindo - Intercon Kebon Jeruk">
-              <i data-lucide="shopping-cart" style="width: 12px; height: 12px;"></i>
-              <span>Superindo (Kebon Jeruk)</span>
-              <span class="store-badge-tag">Supermarket</span>
-            </button>
             <button type="button" class="store-chip-btn" data-store="Hypermart - Puri Indah Mall">
               <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i>
               <span>Hypermart (Puri Mall)</span>
-              <span class="store-badge-tag">Hypermarket</span>
+              <span class="store-badge-tag">Jakbar</span>
             </button>
           </div>
 
@@ -774,7 +834,7 @@
                 <label class="form-label" for="regBudget">Pagu Anggaran Bulanan</label>
                 <div class="currency-input-box">
                   <span class="currency-prefix">Rp</span>
-                  <input type="number" class="form-input currency-input" id="regBudget" value="450000" step="10000" inputmode="numeric">
+                  <input type="number" class="form-input currency-input" id="regBudget" value="400000" step="10000" inputmode="numeric">
                 </div>
               </div>
 
