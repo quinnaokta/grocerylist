@@ -200,6 +200,43 @@ body {
   margin-top: 1px;
 }
 
+.header-current-store {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 3px;
+  padding: 2px 7px;
+  background: rgba(225, 29, 72, 0.06);
+  border: 1px solid rgba(251, 207, 232, 0.85);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  max-width: 230px;
+}
+
+.header-current-store:hover {
+  background: rgba(225, 29, 72, 0.12);
+  border-color: var(--primary);
+  transform: translateY(-0.5px);
+}
+
+.header-current-store .store-prefix {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.header-current-store .store-name {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 135px;
+}
+
 .header-actions {
   display: flex;
   align-items: center;

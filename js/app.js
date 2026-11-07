@@ -81,6 +81,8 @@
     menuOpenLoginBtn: document.getElementById('menuOpenLoginBtn'),
 
     // Session Meta Strip & Store Location Modal (Persis Screenshot 2)
+    headerStoreLocationBtn: document.getElementById('headerStoreLocationBtn'),
+    headerCurrentStoreName: document.getElementById('headerCurrentStoreName'),
     openLocationModalBtn: document.getElementById('openLocationModalBtn'),
     sessionLocationDisplay: document.getElementById('sessionLocationDisplay'),
     storeLocationModal: document.getElementById('storeLocationModal'),
@@ -1254,6 +1256,7 @@
 
     if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
     if (el.sessionLocationDisplay) el.sessionLocationDisplay.textContent = state.storeLocation || 'Lotte Mart Grocery – Puri Indah';
+    if (el.headerCurrentStoreName) el.headerCurrentStoreName.textContent = state.storeLocation || 'Lotte Mart Grocery – Puri Indah';
     if (el.sessionShoppingDate) el.sessionShoppingDate.value = state.shoppingDate;
     if (el.budgetLimitInput) el.budgetLimitInput.value = state.budgetLimit;
     syncStoreChips(state.storeLocation);
@@ -1306,6 +1309,7 @@
 
     if (el.sessionStoreLocation) el.sessionStoreLocation.value = trimmed;
     if (el.sessionLocationDisplay) el.sessionLocationDisplay.textContent = trimmed;
+    if (el.headerCurrentStoreName) el.headerCurrentStoreName.textContent = trimmed;
 
     syncStoreChips(trimmed);
     renderStoreLocationCardsList();
@@ -1888,6 +1892,8 @@
         state.storeLocation = cloudData.storeLocation;
         window.SmartData.SmartStorage.saveStoreLocation(state.storeLocation);
         if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
+        if (el.sessionLocationDisplay) el.sessionLocationDisplay.textContent = state.storeLocation;
+        if (el.headerCurrentStoreName) el.headerCurrentStoreName.textContent = state.storeLocation;
         hasChanged = true;
       }
 
@@ -2870,7 +2876,10 @@
       });
     }
 
-    // Modal Pemilihan Lokasi Toko Belanja (Persis Screenshot 2)
+    // Modal Pemilihan Lokasi Toko Belanja (Persis Screenshot 2 & Header Top Bar)
+    if (el.headerStoreLocationBtn) {
+      el.headerStoreLocationBtn.addEventListener('click', openStoreLocationModal);
+    }
     if (el.openLocationModalBtn) {
       el.openLocationModalBtn.addEventListener('click', openStoreLocationModal);
     }
