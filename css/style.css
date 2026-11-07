@@ -784,8 +784,8 @@ body {
 }
 
 .price-trend-tag.new {
-  background: #F0F4FF;
-  color: #3B82F6;
+  background: var(--primary-soft);
+  color: var(--primary);
 }
 
 .discount-applied-badge {
@@ -3596,17 +3596,17 @@ select.form-input:focus {
 }
 
 .unit-chip.active {
-  background: #00D4FF;
-  color: #031122;
-  border-color: #00B4D8;
-  font-weight: 800;
-  box-shadow: 0 2px 8px rgba(0, 212, 255, 0.35);
+  background: var(--primary);
+  color: #FFFFFF;
+  border-color: var(--primary);
+  font-weight: 700;
+  box-shadow: 0 3px 10px var(--primary-glow);
 }
 
-/* Discount Calculator Card (Soft Warm Tone) */
+/* Discount Calculator Card (Soft Blush Pink Theme) */
 .discount-calc-card {
-  background: #FFFDF9;
-  border: 1.5px solid #FED7AA;
+  background: #FFF5F7;
+  border: 1.5px solid #FBCFE8;
   border-radius: var(--radius-md);
   padding: 12px 14px;
   margin-bottom: 12px;
@@ -3616,7 +3616,7 @@ select.form-input:focus {
   display: block;
   font-size: 11px;
   font-weight: 800;
-  color: #C2410C;
+  color: var(--primary);
   letter-spacing: 0.5px;
   margin-bottom: 8px;
   text-transform: uppercase;
@@ -3624,10 +3624,14 @@ select.form-input:focus {
 
 .discount-formula-input {
   background: #FFFFFF !important;
-  border: 1.5px solid #FDBA74 !important;
+  border: 1.5px solid #FBCFE8 !important;
   height: 42px !important;
   font-size: 13px !important;
   margin-bottom: 10px;
+}
+
+.discount-formula-input:focus {
+  border-color: var(--primary) !important;
 }
 
 .discount-preset-chips {
@@ -3637,9 +3641,9 @@ select.form-input:focus {
 }
 
 .dis-preset-chip {
-  background: #FFF7ED;
-  border: 1px solid #FDBA74;
-  color: #EA580C;
+  background: #FFFFFF;
+  border: 1px solid #FBCFE8;
+  color: var(--primary);
   font-size: 11px;
   font-weight: 700;
   padding: 4px 10px;
@@ -3650,8 +3654,8 @@ select.form-input:focus {
 }
 
 .dis-preset-chip:hover {
-  background: #FFEDD5;
-  border-color: #FB923C;
+  background: var(--primary-soft);
+  border-color: var(--primary);
   transform: translateY(-1px);
 }
 
@@ -3735,7 +3739,7 @@ select.form-input:focus {
 .summary-val-total {
   font-size: 17px;
   font-weight: 800;
-  color: #0284C7;
+  color: var(--primary);
 }
 
 /* Modal Price Trend Pill */
@@ -3765,19 +3769,17 @@ select.form-input:focus {
 }
 
 /* ==========================================================================
-   MODAL 6: PILIH LOKASI BELANJA (PERSIS SCREENSHOT 2)
+   MODAL 6: PILIH LOKASI BELANJA (TEMA PINK LEMBUT & PUTIH BERSIH)
    ========================================================================== */
-
-/* Modal 6: Pilih Lokasi Belanja (Persis Screenshot 2) */
 .store-location-sheet {
-  background: #0B1626;
-  border: 1px solid rgba(0, 212, 255, 0.25);
+  background: #FFFFFF;
+  border: 1.5px solid #FBCFE8;
   border-radius: 24px;
   padding: 18px 18px 22px;
   max-width: 440px;
   width: 92%;
   margin: 0 auto;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 32px rgba(0, 212, 255, 0.15);
+  box-shadow: 0 16px 40px rgba(216, 74, 117, 0.12);
   display: flex;
   flex-direction: column;
   position: relative;
@@ -3788,7 +3790,7 @@ select.form-input:focus {
 .sheet-handle-bar {
   width: 42px;
   height: 4px;
-  background: rgba(255, 255, 255, 0.2);
+  background: #E2E8F0;
   border-radius: 2px;
   margin: 0 auto 12px;
 }
@@ -3801,16 +3803,16 @@ select.form-input:focus {
 }
 
 .store-modal-header h3 {
-  color: #FFFFFF;
+  color: var(--text-main);
   font-size: 17px;
-  font-weight: 700;
+  font-weight: 800;
   margin: 0;
 }
 
 .store-modal-close-btn {
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--primary-soft);
   border: none;
-  color: rgba(255, 255, 255, 0.65);
+  color: var(--primary);
   width: 32px;
   height: 32px;
   border-radius: 50%;
@@ -3822,18 +3824,18 @@ select.form-input:focus {
 }
 
 .store-modal-close-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #FFFFFF;
+  background: #FFE4EC;
+  color: var(--primary-hover);
 }
 
 .btn-detect-gps {
   width: 100%;
-  background: rgba(0, 212, 255, 0.08);
-  border: 1px solid rgba(0, 212, 255, 0.45);
+  background: var(--primary-soft);
+  border: 1.5px solid #FBCFE8;
   border-radius: 12px;
-  color: #00D4FF;
+  color: var(--primary);
   font-size: 13.5px;
-  font-weight: 600;
+  font-weight: 700;
   padding: 11px 16px;
   display: flex;
   align-items: center;
@@ -3846,8 +3848,9 @@ select.form-input:focus {
 }
 
 .btn-detect-gps:hover {
-  background: rgba(0, 212, 255, 0.18);
-  border-color: #00D4FF;
+  background: #FFE4EC;
+  border-color: var(--primary);
+  transform: translateY(-0.5px);
 }
 
 .btn-detect-gps.detecting {
@@ -3856,7 +3859,7 @@ select.form-input:focus {
 }
 
 .store-list-subtitle {
-  color: rgba(255, 255, 255, 0.7);
+  color: var(--text-muted);
   font-size: 12px;
   margin: 0 0 10px;
 }
@@ -3871,8 +3874,8 @@ select.form-input:focus {
 }
 
 .store-select-row {
-  background: #0F2038;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-color);
   border-radius: 12px;
   padding: 12px 14px;
   display: flex;
@@ -3883,42 +3886,47 @@ select.form-input:focus {
 }
 
 .store-select-row:hover {
-  background: #132744;
-  border-color: rgba(0, 212, 255, 0.35);
+  background: var(--primary-subtle);
+  border-color: var(--primary);
 }
 
 .store-select-row.is-active {
-  border: 1.5px solid #00D4FF;
-  background: rgba(0, 212, 255, 0.09);
+  border: 1.5px solid var(--primary);
+  background: var(--primary-soft);
 }
 
 .store-row-title {
-  color: #FFFFFF;
+  color: var(--text-main);
   font-size: 13.5px;
   font-weight: 600;
 }
 
-.store-active-badge {
-  color: #00D4FF;
-  font-size: 12.5px;
+.store-select-row.is-active .store-row-title {
+  color: var(--primary);
   font-weight: 700;
+}
+
+.store-active-badge {
+  color: var(--primary);
+  font-size: 12.5px;
+  font-weight: 800;
   display: inline-flex;
   align-items: center;
   gap: 4px;
 }
 
 .add-custom-store-section {
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  border-top: 1px solid var(--border-color);
   margin-top: 16px;
   padding-top: 14px;
 }
 
 .add-custom-store-label {
   display: block;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-muted);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: 0.8px;
+  letter-spacing: 0.5px;
   margin-bottom: 8px;
 }
 
@@ -3930,11 +3938,11 @@ select.form-input:focus {
 
 .input-new-store {
   flex: 1;
-  background: #071322;
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: #FFFFFF;
+  border: 1.5px solid var(--border-color);
   border-radius: 12px;
   padding: 10px 14px;
-  color: #FFFFFF;
+  color: var(--text-main);
   font-size: 13px;
   font-family: inherit;
   outline: none;
@@ -3942,11 +3950,11 @@ select.form-input:focus {
 }
 
 .input-new-store:focus {
-  border-color: #00D4FF;
+  border-color: var(--primary);
 }
 
 .btn-submit-new-store {
-  background: #00B894;
+  background: var(--primary);
   color: #FFFFFF;
   font-weight: 700;
   font-size: 13px;
@@ -3957,10 +3965,11 @@ select.form-input:focus {
   transition: all 0.2s ease;
   white-space: nowrap;
   font-family: inherit;
+  box-shadow: 0 4px 12px var(--primary-glow);
 }
 
 .btn-submit-new-store:hover {
-  background: #00A381;
+  background: var(--primary-hover);
 }
 
 .location-meta-picker {

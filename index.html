@@ -117,11 +117,6 @@
               <button type="submit" class="btn-primary auth-submit-btn" id="gateSubmitLoginBtn">
                 <span>Masuk ke Akun 🐾</span>
               </button>
-
-              <div class="auth-switch-prompt">
-                <span>Belum punya akun?</span>
-                <button type="button" class="auth-inline-link" onclick="window.switchGateTab && window.switchGateTab('register')">Daftar di sini</button>
-              </div>
             </form>
 
             <!-- Form REGISTER GATE -->
@@ -179,16 +174,6 @@
               </div>
 
               <button type="submit" class="btn-primary auth-submit-btn" id="gateSubmitRegBtn">
-                <span>Daftar Akun Baru 🐾</span>
-              </button>
-
-              <div class="auth-switch-prompt">
-                <span>Sudah punya akun?</span>
-                <button type="button" class="auth-inline-link" onclick="window.switchGateTab && window.switchGateTab('login')">Masuk di sini</button>
-              </div>
-            </form>
-
-              <button type="submit" class="btn-primary auth-submit-btn grocify-submit-btn" id="gateSubmitRegBtn">
                 <span>Daftar Akun Baru 🐾</span>
               </button>
 
@@ -390,82 +375,6 @@
               <span class="session-cloud-dot"></span>
               <span id="sessionCloudText">Realtime Multi-Device</span>
             </div>
-          </div>
-
-          <!-- Quick Store Selector Chips (Pilih Lokasi untuk Komparasi Fluktuasi Harga Jakarta & Tangerang) -->
-          <div class="store-quick-slider" id="storeQuickSlider" title="Pilih supermarket/minimarket di Jakarta & Tangerang untuk komparasi harga">
-            <!-- Jakarta Stores -->
-            <button type="button" class="store-chip-btn active" data-store="Lotte Mart Grocery - Puri Indah">
-              <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
-              <span>Lotte Mart (Puri Indah)</span>
-              <span class="store-badge-tag">Jakarta</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Grand Lucky Superstore - SCBD">
-              <i data-lucide="sparkles" style="width: 12px; height: 12px;"></i>
-              <span>Grand Lucky (SCBD)</span>
-              <span class="store-badge-tag">Jaksel</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Farmers Market - Kelapa Gading">
-              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
-              <span>Farmers Market (KG)</span>
-              <span class="store-badge-tag">Jakut</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Hero Supermarket - Pondok Indah Mall">
-              <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i>
-              <span>Hero (PIM)</span>
-              <span class="store-badge-tag">Jaksel</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Superindo - Intercon Kebon Jeruk">
-              <i data-lucide="shopping-cart" style="width: 12px; height: 12px;"></i>
-              <span>Superindo (Kebon Jeruk)</span>
-              <span class="store-badge-tag">Jakarta</span>
-            </button>
-            <!-- Tangerang Stores -->
-            <button type="button" class="store-chip-btn" data-store="AEON Store - BSD City Tangerang">
-              <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
-              <span>AEON (BSD City)</span>
-              <span class="store-badge-tag">Tangerang</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Lotte Mart Wholesale - Alam Sutera Tangerang">
-              <i data-lucide="building-2" style="width: 12px; height: 12px;"></i>
-              <span>Lotte Mart (Alam Sutera)</span>
-              <span class="store-badge-tag">Tangerang</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Superindo - Gading Serpong Tangerang">
-              <i data-lucide="shopping-cart" style="width: 12px; height: 12px;"></i>
-              <span>Superindo (Serpong)</span>
-              <span class="store-badge-tag">Tangerang</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Hypermart - Cyberpark Lippo Karawaci">
-              <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i>
-              <span>Hypermart (Karawaci)</span>
-              <span class="store-badge-tag">Tangerang</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Tip Top Supermarket - Ciputat Tangerang">
-              <i data-lucide="tag" style="width: 12px; height: 12px;"></i>
-              <span>Tip Top (Ciputat)</span>
-              <span class="store-badge-tag">Tangsel</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Hari Hari Pasar Swalayan - Bintaro Tangerang">
-              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
-              <span>Hari Hari (Bintaro)</span>
-              <span class="store-badge-tag">Tangsel</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Indomaret - Puri Kencana">
-              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
-              <span>Indomaret (Puri Kencana)</span>
-              <span class="store-badge-tag">Minimarket</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Alfamart - Meruya Ilir">
-              <i data-lucide="store" style="width: 12px; height: 12px;"></i>
-              <span>Alfamart (Meruya Ilir)</span>
-              <span class="store-badge-tag">Minimarket</span>
-            </button>
-            <button type="button" class="store-chip-btn" data-store="Hypermart - Puri Indah Mall">
-              <i data-lucide="shopping-bag" style="width: 12px; height: 12px;"></i>
-              <span>Hypermart (Puri Mall)</span>
-              <span class="store-badge-tag">Jakbar</span>
-            </button>
           </div>
 
           <!-- Search & Filter Area -->

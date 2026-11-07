@@ -489,29 +489,28 @@
   // Price Trend Detector vs Historical Benchmarks (Membandingkan histori harga pada toko yang sama)
   function detectPriceTrend(itemName, currentUnitPrice, customStore) {
     const raw = (itemName || '').trim().toLowerCase();
-    const activeStore = customStore || state.storeLocation || 'Lotte Mart Grocery - Puri Indah';
+    const activeStore = (customStore || state.storeLocation || 'Lotte Mart Grocery – Puri Indah').trim();
+    const normActive = activeStore.toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, ' ');
 
     let benchmark = null;
 
     // 1. Prioritaskan pencarian pada katalog histori toko yang aktif
     if (window.SmartData && window.SmartData.STORE_BENCHMARK_PRICES) {
       const storeMapKeys = Object.keys(window.SmartData.STORE_BENCHMARK_PRICES);
-      const matchedStoreKey = storeMapKeys.find(s => 
-        s.toLowerCase() === activeStore.toLowerCase() || 
-        activeStore.toLowerCase().includes(s.toLowerCase()) || 
-        s.toLowerCase().includes(activeStore.toLowerCase())
-      );
+      const matchedStoreKey = storeMapKeys.find(s => {
+        const nKey = s.toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, ' ');
+        return nKey === normActive || normActive.includes(nKey) || nKey.includes(normActive) ||
+               normActive.split('-')[0].trim() === nKey.split('-')[0].trim();
+      });
 
       if (matchedStoreKey) {
         const storeMap = window.SmartData.STORE_BENCHMARK_PRICES[matchedStoreKey];
-        benchmark = storeMap[raw];
-        if (!benchmark) {
-          const clean = raw.replace(/\s+/g, ' ');
+        const clean = raw.replace(/\s+/g, ' ');
+        if (storeMap[clean]) {
           benchmark = storeMap[clean];
-          if (!benchmark) {
-            const foundKey = Object.keys(storeMap).find(k => k === clean || clean.includes(k) || k.includes(clean));
-            if (foundKey) benchmark = storeMap[foundKey];
-          }
+        } else {
+          const foundKey = Object.keys(storeMap).find(k => k === clean || clean.includes(k) || k.includes(clean));
+          if (foundKey) benchmark = storeMap[foundKey];
         }
       }
     }
@@ -1534,7 +1533,7 @@
           discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="layers" style="width: 10px; height: 10px;"></i> ${s1}%+${s2}%</span>`;
         }
 
-        const taxBadgeHtml = item.taxPPN ? `<span class="discount-applied-badge" style="background: #EFF6FF; color: #2563EB; border-color: #BFDBFE;"><i data-lucide="receipt" style="width: 10px; height: 10px;"></i> PPN 11%</span>` : '';
+        const taxBadgeHtml = item.taxPPN ? `<span class="discount-applied-badge" style="background: #FFF0F4; color: #D84A75; border-color: #FBCFE8;"><i data-lucide="receipt" style="width: 10px; height: 10px;"></i> PPN 11%</span>` : '';
 
         // Price trend badge HTML
         let trendBadgeHtml = '';
@@ -2070,10 +2069,11 @@
       return;
     }
 
-    const trend = detectPriceTrend(name, price);
+    const trend = detectPriceTrend(name, price, state.storeLocation);
     if (!el.priceComparisonNotice) return;
     el.priceComparisonNotice.style.display = 'block';
 
+    const storeShort = (trend.store || state.storeLocation || 'Toko Ini').split(/[–—-]/)[0].trim();
     let badgeClass = 'drop';
     let icon = 'arrow-down';
     let text = '';
@@ -2081,19 +2081,19 @@
     if (trend.status === 'drop') {
       badgeClass = 'drop';
       icon = 'arrow-down';
-      text = `Harga turun (Rp ${formatRp(trend.pastPrice)} • ${trend.period || '14 Okt'})`;
+      text = `Harga turun (${formatRp(trend.pastPrice)} di ${storeShort} • ${trend.period || '26 September 2026'})`;
     } else if (trend.status === 'up') {
       badgeClass = 'up';
       icon = 'arrow-up';
-      text = `Harga naik (Rp ${formatRp(trend.pastPrice)} • ${trend.period || 'Histori'})`;
+      text = `Harga naik (${formatRp(trend.pastPrice)} di ${storeShort} • ${trend.period || '26 September 2026'})`;
     } else if (trend.status === 'stable') {
       badgeClass = 'stable';
       icon = 'equal';
-      text = `Harga stabil (Rp ${formatRp(trend.pastPrice)} • ${trend.period || 'Histori'})`;
+      text = `Harga stabil (${formatRp(trend.pastPrice)} di ${storeShort} • ${trend.period || '26 September 2026'})`;
     } else {
       badgeClass = 'stable';
       icon = 'info';
-      text = `Barang baru (Acuan harga belanja berikutnya)`;
+      text = `Barang baru di ${storeShort} (Acuan belanja berikutnya)`;
     }
 
     el.priceComparisonNotice.innerHTML = `
