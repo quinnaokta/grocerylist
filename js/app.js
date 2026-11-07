@@ -524,18 +524,28 @@
   function getEffectiveProductPrice(prod, storeName) {
     if (!prod) return 0;
     const targetStore = storeName || state.storeLocation || 'Lotte Mart Grocery – Puri Indah';
-    const cleanStore = targetStore.toLowerCase().replace(/[–—]/g, '-').trim();
+    const cleanStore = targetStore.toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
     const prodName = (prod.name || '').trim().toLowerCase();
     const cleanName = cleanItemNameForMatch(prodName);
 
-    // 1. Cek penyimpanan harga custom yang diperbarui pengguna di toko ini
+    // 1. Cek penyimpanan harga custom yang diperbarui pengguna di toko ini (prioritas tertinggi)
     if (window.SmartData && window.SmartData.SmartStorage && window.SmartData.SmartStorage.getCustomStorePrices) {
       const customMap = window.SmartData.SmartStorage.getCustomStorePrices(targetStore);
+      if (prod.id && customMap[prod.id] && Number(customMap[prod.id]) > 0) {
+        return Number(customMap[prod.id]);
+      }
       if (customMap[prodName] && Number(customMap[prodName]) > 0) {
         return Number(customMap[prodName]);
       }
       if (cleanName && customMap[cleanName] && Number(customMap[cleanName]) > 0) {
         return Number(customMap[cleanName]);
+      }
+      // Fuzzy search jika nama sedikit berbeda (misal "Telur Ayam" vs "Telur Ayam Negeri 1kg")
+      const cKeys = Object.keys(customMap);
+      for (const k of cKeys) {
+        if (Number(customMap[k]) > 0 && isSameGroceryItem({ name: k }, prod)) {
+          return Number(customMap[k]);
+        }
       }
     }
 
@@ -545,11 +555,16 @@
       return Number(inCart.unitPrice);
     }
 
-    // 3. Cek STORE_BENCHMARK_PRICES sesuai toko yang aktif
+    // 3. Cek harga yang tercatat di objek produk katalog SHOPEE_PRODUCTS
+    if (prod.price && Number(prod.price) > 0) {
+      return Number(prod.price);
+    }
+
+    // 4. Fallback ke STORE_BENCHMARK_PRICES sesuai toko yang aktif
     if (window.SmartData && window.SmartData.STORE_BENCHMARK_PRICES) {
       const keys = Object.keys(window.SmartData.STORE_BENCHMARK_PRICES);
       const matchedKey = keys.find(k => {
-        const nK = k.toLowerCase().replace(/[–—]/g, '-').trim();
+        const nK = k.toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
         return nK === cleanStore || cleanStore.includes(nK) || nK.includes(cleanStore) ||
                cleanStore.split('-')[0].trim() === nK.split('-')[0].trim();
       });
@@ -569,12 +584,11 @@
       }
     }
 
-    // 4. Fallback ke harga bawaan produk
-    return Number(prod.price) || 0;
+    return 0;
   }
 
-  // Update Harga Produk Toko & Sinkronisasi Realtime ke Etalase & Benchmark Toko
-  function updateStoreProductPrice(itemName, newPrice, storeName) {
+  // Update Harga Produk Toko & Sinkronisasi Realtime ke Etalase & Benchmark Toko Tanpa Refresh
+  function updateStoreProductPrice(itemName, newPrice, storeName, reRenderCatalog = true) {
     const rawName = (itemName || '').trim();
     const priceVal = Number(newPrice);
     if (!rawName || isNaN(priceVal) || priceVal <= 0) return;
@@ -586,36 +600,39 @@
       window.SmartData.SmartStorage.saveStoreProductPrice(targetStore, rawName, priceVal);
     }
 
-    // 2. Perbarui harga di katalog SHOPEE_PRODUCTS
+    // 2. Perbarui harga di katalog SHOPEE_PRODUCTS dan simpan aliasnya
     const matchProd = findMatchingShopeeProduct({ name: rawName });
     if (matchProd) {
       matchProd.price = priceVal;
-    }
-
-    // 3. Catat di state.benchmarks dan STORE_BENCHMARK_PRICES
-    const cleanLower = rawName.toLowerCase();
-    if (window.SmartData && window.SmartData.STORE_BENCHMARK_PRICES) {
-      const keys = Object.keys(window.SmartData.STORE_BENCHMARK_PRICES);
-      const matchedKey = keys.find(k => {
-        const nK = k.toLowerCase().replace(/[–—]/g, '-').trim();
-        const tS = targetStore.toLowerCase().replace(/[–—]/g, '-').trim();
-        return nK === tS || tS.includes(nK) || nK.includes(tS) || tS.split('-')[0].trim() === nK.split('-')[0].trim();
-      });
-
-      if (matchedKey) {
-        const storeMap = window.SmartData.STORE_BENCHMARK_PRICES[matchedKey];
-        if (!storeMap[cleanLower]) {
-          storeMap[cleanLower] = {
-            lastPrice: priceVal,
-            previousMonth: 'Bulan Lalu',
-            store: targetStore
-          };
+      if (window.SmartData && window.SmartData.SmartStorage && window.SmartData.SmartStorage.saveStoreProductPrice) {
+        window.SmartData.SmartStorage.saveStoreProductPrice(targetStore, matchProd.name, priceVal);
+        if (matchProd.id) {
+          window.SmartData.SmartStorage.saveStoreProductPrice(targetStore, matchProd.id, priceVal);
         }
       }
     }
 
-    // 4. Render ulang etalase agar harga dan badge update toko langsung berubah
-    renderShopeeCatalog();
+    // 3. Update juga barang yang sedang aktif di troli belanja
+    let itemInCartChanged = false;
+    state.activeItems.forEach(it => {
+      if (isSameGroceryItem(it, { name: rawName, productId: matchProd ? matchProd.id : undefined })) {
+        it.unitPrice = priceVal;
+        itemInCartChanged = true;
+      }
+    });
+
+    if (itemInCartChanged && window.SmartData && window.SmartData.SmartStorage) {
+      window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
+    }
+
+    // 4. Render ulang etalase seketika tanpa perlu refresh halaman
+    if (reRenderCatalog) {
+      renderShopeeCatalog();
+      if (itemInCartChanged) {
+        renderGroceryList();
+        updateBudgetSafetyMeter();
+      }
+    }
   }
 
   // Price Trend Detector vs Historical Benchmarks (Membandingkan histori harga pada toko yang sama)
@@ -1299,7 +1316,7 @@
         });
       }
 
-      // Klik foto / emoji barang untuk cepat update detail barang jika ada di troli
+      // Klik foto / emoji barang atau kotak harga untuk cepat edit harga barang di etalase tanpa refresh
       const imgBox = card.querySelector('.shopee-card-img-box');
       if (imgBox) {
         imgBox.style.cursor = 'pointer';
@@ -1307,7 +1324,35 @@
           if (existingInCart) {
             openEditItemModal(existingInCart);
           } else {
-            addToCartFromCatalog(prod);
+            openAddItemModal();
+            if (el.inputItemName) el.inputItemName.value = prod.name;
+            if (el.inputCategory) el.inputCategory.value = prod.category || 'bahan_pokok';
+            if (el.inputUnit) el.inputUnit.value = prod.unit || 'pcs';
+            setModalUnit(prod.unit || 'pcs');
+            if (el.inputUnitPrice) el.inputUnitPrice.value = effPrice || prod.price;
+            updateModalCalculations();
+            checkModalPriceComparison();
+          }
+        });
+      }
+
+      const priceBox = card.querySelector('.shopee-card-prices');
+      if (priceBox) {
+        priceBox.style.cursor = 'pointer';
+        priceBox.title = 'Klik untuk edit harga barang ini';
+        priceBox.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (existingInCart) {
+            openEditItemModal(existingInCart);
+          } else {
+            openAddItemModal();
+            if (el.inputItemName) el.inputItemName.value = prod.name;
+            if (el.inputCategory) el.inputCategory.value = prod.category || 'bahan_pokok';
+            if (el.inputUnit) el.inputUnit.value = prod.unit || 'pcs';
+            setModalUnit(prod.unit || 'pcs');
+            if (el.inputUnitPrice) el.inputUnitPrice.value = effPrice || prod.price;
+            updateModalCalculations();
+            checkModalPriceComparison();
           }
         });
       }
@@ -3439,10 +3484,15 @@
       ['input', 'change'].forEach(evt => el.inputQty.addEventListener(evt, updateModalCalculations));
     }
     if (el.inputUnitPrice) {
-      ['input', 'change'].forEach(evt => {
+      ['input', 'change', 'keyup'].forEach(evt => {
         el.inputUnitPrice.addEventListener(evt, () => {
           updateModalCalculations();
           checkModalPriceComparison();
+          const val = Number(el.inputUnitPrice.value);
+          const currentName = el.inputItemName ? el.inputItemName.value.trim() : '';
+          if (val > 0 && currentName) {
+            updateStoreProductPrice(currentName, val, state.storeLocation, true);
+          }
         });
       });
     }
@@ -3453,7 +3503,16 @@
       el.inputTaxPPN.addEventListener('change', updateModalCalculations);
     }
     if (el.inputItemName) {
-      ['input', 'change'].forEach(evt => el.inputItemName.addEventListener(evt, checkModalPriceComparison));
+      ['input', 'change', 'keyup'].forEach(evt => {
+        el.inputItemName.addEventListener(evt, () => {
+          checkModalPriceComparison();
+          const val = Number(el.inputUnitPrice ? el.inputUnitPrice.value : 0);
+          const currentName = el.inputItemName.value.trim();
+          if (val > 0 && currentName) {
+            updateStoreProductPrice(currentName, val, state.storeLocation, true);
+          }
+        });
+      });
     }
 
     // Checkout Modal

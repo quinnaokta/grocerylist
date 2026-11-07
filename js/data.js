@@ -453,13 +453,18 @@ class SmartStorage {
   // Custom Store Price Overrides (Per-toko agar update harga langsung tercermin di etalase toko tersebut)
   static getCustomStorePrices(storeName) {
     const all = this.get('store_prices_map', {});
-    const norm = (storeName || '').toLowerCase().replace(/[–—]/g, '-').trim();
-    return all[norm] || {};
+    const norm = (storeName || '').toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
+    if (all[norm]) return all[norm];
+    const key = Object.keys(all).find(k => {
+      const nK = k.toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
+      return nK === norm || nK.includes(norm) || norm.includes(nK) || (norm.split('-')[0].trim() === nK.split('-')[0].trim());
+    });
+    return key ? all[key] : {};
   }
 
   static saveStoreProductPrice(storeName, productName, price) {
     const all = this.get('store_prices_map', {});
-    const norm = (storeName || '').toLowerCase().replace(/[–—]/g, '-').trim();
+    const norm = (storeName || '').toLowerCase().replace(/[–—]/g, '-').replace(/\s+/g, ' ').trim();
     if (!all[norm]) all[norm] = {};
     const normProd = (productName || '').toLowerCase().trim();
     all[norm][normProd] = Number(price);
