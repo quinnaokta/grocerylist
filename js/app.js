@@ -91,6 +91,12 @@
     inputNewStoreName: document.getElementById('inputNewStoreName'),
     submitNewStoreBtn: document.getElementById('submitNewStoreBtn'),
 
+    // Google Account Picker Modal (Modal 7)
+    googleAccountModal: document.getElementById('googleAccountModal'),
+    closeGoogleModalBtn: document.getElementById('closeGoogleModalBtn'),
+    googleCustomForm: document.getElementById('googleCustomForm'),
+    googleCustomEmailInput: document.getElementById('googleCustomEmailInput'),
+
     // User Header Pill & Cart Pill
     headerUserBtn: document.getElementById('headerUserBtn'),
     headerUserAvatar: document.getElementById('headerUserAvatar'),
@@ -778,92 +784,126 @@
   }
 
   // Google OAuth Login & Register Handler (Persis Screenshot 1)
+  function openGoogleAccountModal() {
+    if (el.googleAccountModal) {
+      el.googleAccountModal.style.display = 'flex';
+      if (window.lucide) window.lucide.createIcons({ root: el.googleAccountModal });
+      if (el.googleCustomEmailInput) {
+        setTimeout(() => el.googleCustomEmailInput.focus(), 150);
+      }
+    }
+  }
+
+  function closeGoogleAccountModal() {
+    if (el.googleAccountModal) {
+      el.googleAccountModal.style.display = 'none';
+    }
+  }
+
+  function completeGoogleSignIn(googlePayload) {
+    if (!googlePayload || !googlePayload.email) return;
+
+    closeGoogleAccountModal();
+
+    const res = window.SmartData.SmartStorage.loginOrRegisterGoogleUser(googlePayload);
+    if (res && res.success) {
+      state.currentUser = res.user;
+      if (res.user.budget) {
+        state.budgetLimit = res.user.budget;
+        window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
+      }
+
+      if (res.isNew) {
+        state.activeItems = [];
+        state.historyTrips = [];
+        window.SmartData.SmartStorage.saveActiveItems([]);
+        window.SmartData.SmartStorage.saveHistoryTrips([]);
+      }
+
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
+      }
+
+      checkAuthGate();
+      updateBudgetSafetyMeter();
+      renderShopeeCatalog();
+      renderGroceryList();
+      renderHistoryScreen();
+      renderUserProfile();
+      renderAnggaranScreen();
+      syncCartBadges();
+      pushToFirestore();
+      switchTab('viewKatalog');
+
+      showToast(`Berhasil masuk dengan Google! Halo ${res.user.name} 🚀`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playSuccess();
+    }
+  }
+
   async function handleGoogleSignIn() {
     try {
       showToast('Menghubungkan ke Akun Google...', 'info');
 
-      let googleUser = null;
+      // 1. Pastikan Firebase terinisialisasi
+      if (window.firebase && (!firebase.apps || !firebase.apps.length) && window.SmartData && window.SmartData.FIREBASE_CONFIG) {
+        try {
+          firebase.initializeApp(window.SmartData.FIREBASE_CONFIG);
+        } catch (e) {
+          console.warn('Firebase init error:', e);
+        }
+      }
 
-      // Integrasi Firebase Auth Google Provider Compat
-      if (window.firebase && firebase.auth) {
+      // 2. Coba signInWithPopup jika didukung Firebase Auth
+      let popupSucceeded = false;
+      if (window.firebase && firebase.auth && firebase.apps && firebase.apps.length) {
         try {
           const provider = new firebase.auth.GoogleAuthProvider();
           provider.setCustomParameters({ prompt: 'select_account' });
           const result = await firebase.auth().signInWithPopup(provider);
           if (result && result.user) {
-            googleUser = {
+            popupSucceeded = true;
+            completeGoogleSignIn({
               uid: result.user.uid,
               displayName: result.user.displayName,
               email: result.user.email,
               photoURL: result.user.photoURL
-            };
+            });
+            return;
           }
         } catch (popupErr) {
-          console.warn('Firebase Auth popup error / unauthorized domain:', popupErr);
-          // Fallback interaktif tanpa popup error
-          const emailInput = prompt('Masukkan Email Akun Google Anda:', 'user@gmail.com');
-          if (emailInput && emailInput.trim()) {
-            googleUser = {
-              uid: 'google-' + btoa(emailInput.trim()).slice(0, 10),
-              displayName: emailInput.split('@')[0],
-              email: emailInput.trim(),
-              photoURL: null
-            };
-          }
-        }
-      } else {
-        const emailInput = prompt('Masukkan Email Akun Google Anda:', 'user@gmail.com');
-        if (emailInput && emailInput.trim()) {
-          googleUser = {
-            uid: 'google-' + btoa(emailInput.trim()).slice(0, 10),
-            displayName: emailInput.split('@')[0],
-            email: emailInput.trim(),
-            photoURL: null
-          };
+          console.warn('Firebase popup unavailable or domain not registered:', popupErr);
         }
       }
 
-      if (!googleUser || !googleUser.email) {
-        return;
-      }
-
-      const res = window.SmartData.SmartStorage.loginOrRegisterGoogleUser(googleUser);
-      if (res && res.success) {
-        state.currentUser = res.user;
-        if (res.user.budget) {
-          state.budgetLimit = res.user.budget;
-          window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
-        }
-
-        if (res.isNew) {
-          state.activeItems = [];
-          state.historyTrips = [];
-          window.SmartData.SmartStorage.saveActiveItems([]);
-          window.SmartData.SmartStorage.saveHistoryTrips([]);
-        }
-
-        if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
-          window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
-        }
-
-        checkAuthGate();
-        updateBudgetSafetyMeter();
-        renderShopeeCatalog();
-        renderGroceryList();
-        renderHistoryScreen();
-        renderUserProfile();
-        renderAnggaranScreen();
-        syncCartBadges();
-        pushToFirestore();
-        switchTab('viewKatalog');
-
-        showToast(`Berhasil masuk dengan Google! Halo ${res.user.name} 🚀`, 'success');
-        if (window.soundCtrl) window.soundCtrl.playSuccess();
+      // 3. Fallback andal: Buka Google Account Chooser Modal langsung
+      if (!popupSucceeded) {
+        openGoogleAccountModal();
       }
     } catch (err) {
       console.error('Google Sign-In Error:', err);
-      showToast('Gagal login Google: ' + (err.message || 'Terjadi kesalahan'), 'danger');
+      openGoogleAccountModal();
     }
+  }
+
+  function confirmGoogleAccount(email, name) {
+    completeGoogleSignIn({
+      uid: 'google-' + btoa(email).slice(0, 10),
+      displayName: name || email.split('@')[0],
+      email: email,
+      photoURL: null
+    });
+  }
+
+  function submitCustomGoogleAccount() {
+    if (!el.googleCustomEmailInput) return;
+    const email = el.googleCustomEmailInput.value.trim();
+    if (!email || !email.includes('@')) {
+      showToast('Harap masukkan alamat email Google yang valid!', 'warning');
+      return;
+    }
+    const namePart = email.split('@')[0].replace(/[._-]/g, ' ');
+    const formattedName = namePart.split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    confirmGoogleAccount(email, formattedName);
   }
 
   function gateQuickLogin(email, password) {
@@ -2857,6 +2897,18 @@
       });
     }
 
+    // Modal 7: Google Account Chooser Listeners
+    if (el.closeGoogleModalBtn) {
+      el.closeGoogleModalBtn.addEventListener('click', closeGoogleAccountModal);
+    }
+    if (el.googleAccountModal) {
+      el.googleAccountModal.addEventListener('click', (e) => {
+        if (e.target === el.googleAccountModal) {
+          closeGoogleAccountModal();
+        }
+      });
+    }
+
     // Header Cart Pill Button (jump to cart from any tab)
     if (el.headerCartBtn) {
       el.headerCartBtn.addEventListener('click', () => switchTab('viewBelanja'));
@@ -3210,6 +3262,14 @@
   window.formatCategory = formatCategory;
   window.formatRp = formatRp;
   window.renderShopeeCatalog = renderShopeeCatalog;
+  window.handleGoogleSignIn = handleGoogleSignIn;
+  window.confirmGoogleAccount = confirmGoogleAccount;
+  window.submitCustomGoogleAccount = submitCustomGoogleAccount;
+  window.openGoogleAccountModal = openGoogleAccountModal;
+  window.closeGoogleAccountModal = closeGoogleAccountModal;
+  window.openStoreLocationModal = openStoreLocationModal;
+  window.closeStoreLocationModal = closeStoreLocationModal;
+  window.setStoreLocation = setStoreLocation;
 
   // Start app on DOM ready
   if (document.readyState === 'loading') {

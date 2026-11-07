@@ -3942,6 +3942,93 @@ body {
   white-space: nowrap;
 }
 
+/* Modal 7: Google Account Chooser Sheet */
+.google-auth-sheet {
+  background: #0B1626;
+  border: 1px solid rgba(0, 212, 255, 0.25);
+  border-radius: 24px;
+  padding: 18px 18px 22px;
+  max-width: 420px;
+  width: 92%;
+  margin: 0 auto;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 32px rgba(0, 212, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+}
+
+.google-sheet-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.google-accounts-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.google-acc-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #0F2038;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 11px 14px;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  width: 100%;
+}
+
+.google-acc-card:hover {
+  background: #132744;
+  border-color: rgba(0, 212, 255, 0.35);
+  transform: translateY(-1px);
+}
+
+.google-acc-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #2563EB;
+  color: #FFFFFF;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+}
+
+.google-acc-avatar.siti {
+  background: #E11D48;
+}
+
+.google-acc-meta {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+}
+
+.google-acc-name {
+  color: #FFFFFF;
+  font-size: 13.5px;
+  font-weight: 700;
+}
+
+.google-acc-email {
+  color: rgba(255, 255, 255, 0.55);
+  font-size: 11.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+
 
 
 
