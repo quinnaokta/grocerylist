@@ -1164,9 +1164,34 @@ body {
   color: var(--text-main);
   outline: none;
   transition: all 0.2s ease;
+  box-sizing: border-box;
 }
 
-.form-input:focus {
+.form-select,
+select.form-input {
+  width: 100%;
+  height: 48px;
+  padding: 0 34px 0 14px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background-color: var(--bg-card);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23706e7b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--text-main);
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  box-sizing: border-box;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.form-input:focus,
+.form-select:focus,
+select.form-input:focus {
   border-color: var(--primary);
   box-shadow: 0 0 0 3px var(--primary-glow);
 }
@@ -1705,16 +1730,24 @@ body {
   gap: 8px;
   padding-top: 14px;
   border-top: 1px dashed #FFD4DF;
+  align-items: stretch;
 }
 
 .profile-stat-box {
   background: #FFFFFF;
   border: 1.5px solid #FFE4EC;
   border-radius: var(--radius-md);
-  padding: 10px 6px;
+  padding: 10px 4px;
   text-align: center;
   box-shadow: 0 2px 6px rgba(224, 90, 126, 0.04);
   transition: all 0.15s ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 82px;
+  height: 100%;
+  box-sizing: border-box;
 }
 
 .profile-stat-box.clickable {
@@ -1732,41 +1765,25 @@ body {
 
 .profile-stat-num {
   display: block;
-  font-size: 13px;
+  font-size: 13.5px;
   font-weight: 800;
   color: var(--primary);
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.25;
 }
 
 .profile-stat-lbl {
-  display: block;
-  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  font-size: 9.5px;
   font-weight: 700;
   color: var(--text-soft);
-  margin-top: 3px;
+  margin-top: 5px;
   text-transform: uppercase;
   letter-spacing: 0.3px;
-}
-}
-
-.profile-stat-num {
-  display: block;
-  font-size: 12.5px;
-  font-weight: 800;
-  color: var(--primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.profile-stat-lbl {
-  display: block;
-  font-size: 10px;
-  font-weight: 600;
-  color: var(--text-soft);
-  margin-top: 2px;
+  line-height: 1.2;
 }
 
 /* Account Menu Options */
@@ -3494,219 +3511,225 @@ body {
 }
 
 /* ==========================================================================
-   GROCIFY DARK AUTH THEME & STORE LOCATION MODAL (PERSIS SCREENSHOT 1 & 2)
+   MODAL 1: EDIT ITEM BELANJA & DISKON KALKULATOR (PERSIS SCREENSHOT 2)
    ========================================================================== */
-.auth-gate-screen {
-  background: radial-gradient(circle at 50% 20%, #0D223E 0%, #061122 55%, #020712 100%) !important;
-  color: #FFFFFF;
+.auth-security-pill {
+  display: inline-block;
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  border: 1px solid rgba(224, 90, 126, 0.25);
+  background: rgba(224, 90, 126, 0.08);
+  color: var(--primary);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  margin-top: 8px;
 }
 
-.auth-gate-topbar {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-}
-
-.auth-gate-close-btn {
-  background: rgba(255, 255, 255, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  color: #94A3B8;
-}
-
-.auth-gate-close-btn:hover {
-  background: rgba(255, 255, 255, 0.16);
-  color: #FFFFFF;
-}
-
-.grocify-hero {
+/* Unit Selector Chips */
+.unit-selector-chips {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 6px 0 16px;
-  text-align: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 2px 0 6px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
 }
 
-.grocify-logo-box {
-  width: 68px;
-  height: 68px;
-  background: #0E1E34;
-  border-radius: 20px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 24px rgba(0, 212, 255, 0.3), inset 0 0 12px rgba(0, 212, 255, 0.15);
-  border: 1.5px solid rgba(0, 212, 255, 0.4);
+.unit-selector-chips::-webkit-scrollbar {
+  display: none;
+}
+
+.unit-chip {
+  padding: 6px 12px;
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border-color);
+  background: #FFFFFF;
+  color: var(--text-main);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.unit-chip:hover {
+  border-color: var(--primary);
+}
+
+.unit-chip.active {
+  background: #00D4FF;
+  color: #031122;
+  border-color: #00B4D8;
+  font-weight: 800;
+  box-shadow: 0 2px 8px rgba(0, 212, 255, 0.35);
+}
+
+/* Discount Calculator Card (Soft Warm Tone) */
+.discount-calc-card {
+  background: #FFFDF9;
+  border: 1.5px solid #FED7AA;
+  border-radius: var(--radius-md);
+  padding: 12px 14px;
   margin-bottom: 12px;
 }
 
-.grocify-title {
-  font-size: 26px;
+.discount-calc-label {
+  display: block;
+  font-size: 11px;
   font-weight: 800;
-  color: #FFFFFF !important;
-  letter-spacing: -0.5px;
-  margin: 0 0 4px;
+  color: #C2410C;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
 }
 
-.grocify-tagline {
-  font-size: 13px;
-  font-weight: 600;
-  color: #38BDF8 !important;
-  margin: 0 0 12px;
+.discount-formula-input {
+  background: #FFFFFF !important;
+  border: 1.5px solid #FDBA74 !important;
+  height: 42px !important;
+  font-size: 13px !important;
+  margin-bottom: 10px;
 }
 
-.grocify-security-pill {
-  display: inline-block;
-  padding: 5px 16px;
-  border-radius: 20px;
-  border: 1.5px solid #F59E0B;
-  background: rgba(245, 158, 11, 0.1);
-  color: #FBBF24;
-  font-size: 11.5px;
-  font-weight: 700;
-  letter-spacing: 0.2px;
-}
-
-.grocify-card {
-  background: #0B1626 !important;
-  border: 1px solid rgba(0, 212, 255, 0.22) !important;
-  border-radius: 24px !important;
-  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.6), 0 0 24px rgba(0, 212, 255, 0.1) !important;
-  padding: 16px 16px 20px !important;
-}
-
-.grocify-segmented-nav {
-  background: #06101E !important;
-  border: 1px solid rgba(255, 255, 255, 0.08) !important;
-  border-radius: 14px !important;
-  padding: 4px !important;
+.discount-preset-chips {
   display: flex;
-  gap: 4px;
-  margin-bottom: 14px;
+  flex-wrap: wrap;
+  gap: 6px;
 }
 
-.grocify-segmented-nav .auth-segment-btn {
-  flex: 1;
-  background: transparent;
-  color: #94A3B8;
-  font-size: 13.5px;
+.dis-preset-chip {
+  background: #FFF7ED;
+  border: 1px solid #FDBA74;
+  color: #EA580C;
+  font-size: 11px;
   font-weight: 700;
-  padding: 10px 14px;
-  border-radius: 10px;
-  border: none;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.15s ease;
+  font-family: inherit;
 }
 
-.grocify-segmented-nav .auth-segment-btn.active {
-  background: linear-gradient(135deg, #00D4FF 0%, #0099FF 100%) !important;
-  color: #031122 !important;
-  font-weight: 800;
-  box-shadow: 0 4px 16px rgba(0, 212, 255, 0.4);
+.dis-preset-chip:hover {
+  background: #FFEDD5;
+  border-color: #FB923C;
+  transform: translateY(-1px);
 }
 
-.btn-google-auth {
-  width: 100%;
+/* Tax PPN 11% Card */
+.tax-ppn-card {
   background: #FFFFFF;
-  color: #1E293B;
-  border: none;
-  border-radius: 22px;
-  padding: 12px 18px;
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+}
+
+.tax-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  user-select: none;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--text-main);
+  margin: 0;
+}
+
+.tax-checkbox-label input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--primary);
+  cursor: pointer;
+}
+
+/* Modal Calculation Summary Card */
+.modal-summary-card {
+  background: #FFFFFF;
+  border: 1.5px solid #FFE4EC;
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  margin-top: 14px;
+  box-shadow: 0 2px 8px rgba(224, 90, 126, 0.04);
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.summary-lbl {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.summary-val {
+  color: var(--text-main);
+  font-weight: 700;
+}
+
+.summary-val.discount-green {
+  color: #10B981;
+}
+
+.summary-divider-dashed {
+  border-top: 1px dashed #FFD4DF;
+  margin: 10px 0;
+}
+
+.summary-line.total-line {
+  margin-bottom: 0;
+}
+
+.summary-lbl-total {
   font-size: 14px;
+  font-weight: 800;
+  color: var(--text-main);
+}
+
+.summary-val-total {
+  font-size: 17px;
+  font-weight: 800;
+  color: #0284C7;
+}
+
+/* Modal Price Trend Pill */
+.modal-price-trend-badge {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  background: #ECFDF5;
+  border: 1px solid #A7F3D0;
+  color: #065F46;
+  font-size: 12px;
   font-weight: 700;
   display: flex;
   align-items: center;
-  justify-content: center;
-  gap: 10px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15);
-  font-family: inherit;
+  gap: 6px;
 }
 
-.btn-google-auth:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 5px 16px rgba(0, 0, 0, 0.25);
+.modal-price-trend-badge.up {
+  background: #FFF1F2;
+  border-color: #FECDD3;
+  color: #BE123C;
+}
+
+.modal-price-trend-badge.stable {
   background: #F8FAFC;
+  border-color: #E2E8F0;
+  color: #475569;
 }
 
-.btn-google-auth:active {
-  transform: translateY(0);
-}
-
-.auth-divider-line {
-  display: flex;
-  align-items: center;
-  text-align: center;
-  margin: 16px 0 14px;
-}
-
-.auth-divider-line::before,
-.auth-divider-line::after {
-  content: '';
-  flex: 1;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-}
-
-.auth-divider-line span {
-  padding: 0 12px;
-  font-size: 10.5px;
-  font-weight: 800;
-  color: rgba(255, 255, 255, 0.4);
-  letter-spacing: 1.2px;
-}
-
-.grocify-form .form-label {
-  color: #CBD5E1 !important;
-  font-size: 12px;
-  font-weight: 600;
-  margin-bottom: 5px;
-}
-
-.grocify-form .auth-input-wrapper {
-  background: #06101E !important;
-  border: 1px solid rgba(255, 255, 255, 0.12) !important;
-  border-radius: 12px;
-  transition: all 0.2s ease;
-}
-
-.grocify-form .auth-input-wrapper:focus-within {
-  border-color: #00D4FF !important;
-  box-shadow: 0 0 14px rgba(0, 212, 255, 0.25);
-}
-
-.grocify-form .form-input,
-.grocify-form .form-select {
-  background: transparent !important;
-  color: #FFFFFF !important;
-  font-size: 13.5px;
-}
-
-.grocify-form .form-input::placeholder {
-  color: rgba(255, 255, 255, 0.3) !important;
-}
-
-.grocify-submit-btn {
-  width: 100%;
-  background: linear-gradient(135deg, #00D4FF 0%, #0099FF 100%) !important;
-  color: #031122 !important;
-  font-weight: 800 !important;
-  font-size: 15px !important;
-  padding: 13px 20px !important;
-  border: none !important;
-  border-radius: 24px !important;
-  cursor: pointer;
-  box-shadow: 0 6px 20px rgba(0, 212, 255, 0.4) !important;
-  margin-top: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  transition: all 0.2s ease;
-  font-family: inherit;
-}
-
-.grocify-submit-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 26px rgba(0, 212, 255, 0.6) !important;
-}
+/* ==========================================================================
+   MODAL 6: PILIH LOKASI BELANJA (PERSIS SCREENSHOT 2)
+   ========================================================================== */
 
 /* Modal 6: Pilih Lokasi Belanja (Persis Screenshot 2) */
 .store-location-sheet {
@@ -3937,92 +3960,6 @@ body {
   font-weight: 700;
   color: var(--text-main);
   max-width: 190px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-/* Modal 7: Google Account Chooser Sheet */
-.google-auth-sheet {
-  background: #0B1626;
-  border: 1px solid rgba(0, 212, 255, 0.25);
-  border-radius: 24px;
-  padding: 18px 18px 22px;
-  max-width: 420px;
-  width: 92%;
-  margin: 0 auto;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.75), 0 0 32px rgba(0, 212, 255, 0.15);
-  display: flex;
-  flex-direction: column;
-}
-
-.google-sheet-header {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 16px;
-}
-
-.google-accounts-picker {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.google-acc-card {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  background: #0F2038;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  padding: 11px 14px;
-  text-align: left;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.google-acc-card:hover {
-  background: #132744;
-  border-color: rgba(0, 212, 255, 0.35);
-  transform: translateY(-1px);
-}
-
-.google-acc-avatar {
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: #2563EB;
-  color: #FFFFFF;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  flex-shrink: 0;
-}
-
-.google-acc-avatar.siti {
-  background: #E11D48;
-}
-
-.google-acc-meta {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-width: 0;
-}
-
-.google-acc-name {
-  color: #FFFFFF;
-  font-size: 13.5px;
-  font-weight: 700;
-}
-
-.google-acc-email {
-  color: rgba(255, 255, 255, 0.55);
-  font-size: 11.5px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;

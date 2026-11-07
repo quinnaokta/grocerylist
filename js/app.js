@@ -91,12 +91,6 @@
     inputNewStoreName: document.getElementById('inputNewStoreName'),
     submitNewStoreBtn: document.getElementById('submitNewStoreBtn'),
 
-    // Google Account Picker Modal (Modal 7)
-    googleAccountModal: document.getElementById('googleAccountModal'),
-    closeGoogleModalBtn: document.getElementById('closeGoogleModalBtn'),
-    googleCustomForm: document.getElementById('googleCustomForm'),
-    googleCustomEmailInput: document.getElementById('googleCustomEmailInput'),
-
     // User Header Pill & Cart Pill
     headerUserBtn: document.getElementById('headerUserBtn'),
     headerUserAvatar: document.getElementById('headerUserAvatar'),
@@ -149,7 +143,7 @@
     navAkun: document.getElementById('navAkun'),
     navAkunLabel: document.getElementById('navAkunLabel'),
 
-    // Item Modal Elements
+    // Item Modal Elements (Persis Screenshot 2)
     itemModal: document.getElementById('itemModal'),
     modalTitle: document.getElementById('modalTitle'),
     closeItemModalBtn: document.getElementById('closeItemModalBtn'),
@@ -160,24 +154,18 @@
     inputItemName: document.getElementById('inputItemName'),
     inputCategory: document.getElementById('inputCategory'),
     inputUnit: document.getElementById('inputUnit'),
+    unitSelectorChips: document.getElementById('unitSelectorChips'),
     inputQty: document.getElementById('inputQty'),
-    modalQtyMinus: document.getElementById('modalQtyMinus'),
-    modalQtyPlus: document.getElementById('modalQtyPlus'),
     inputUnitPrice: document.getElementById('inputUnitPrice'),
     priceComparisonNotice: document.getElementById('priceComparisonNotice'),
-    disTabNone: document.getElementById('disTabNone'),
-    disTabRegular: document.getElementById('disTabRegular'),
-    disTabStacked: document.getElementById('disTabStacked'),
-    regularDiscountInputs: document.getElementById('regularDiscountInputs'),
-    inputDiscountMode: document.getElementById('inputDiscountMode'),
-    inputDiscountValue: document.getElementById('inputDiscountValue'),
-    stackedDiscountInputs: document.getElementById('stackedDiscountInputs'),
-    inputStacked1: document.getElementById('inputStacked1'),
-    inputStacked2: document.getElementById('inputStacked2'),
-    discountLiveCalculation: document.getElementById('discountLiveCalculation'),
-    liveNormalTotal: document.getElementById('liveNormalTotal'),
-    liveSavingsRow: document.getElementById('liveSavingsRow'),
-    liveTotalSavings: document.getElementById('liveTotalSavings'),
+    inputDiscountFormula: document.getElementById('inputDiscountFormula'),
+    discountPresetChips: document.getElementById('discountPresetChips'),
+    inputTaxPPN: document.getElementById('inputTaxPPN'),
+    liveNormalPrice: document.getElementById('liveNormalPrice'),
+    liveDiscountDeduction: document.getElementById('liveDiscountDeduction'),
+    liveDiscountedPrice: document.getElementById('liveDiscountedPrice'),
+    liveTaxRow: document.getElementById('liveTaxRow'),
+    liveTaxAmount: document.getElementById('liveTaxAmount'),
     liveFinalSubtotal: document.getElementById('liveFinalSubtotal'),
     inputItemNote: document.getElementById('inputItemNote'),
 
@@ -404,35 +392,93 @@
     return grouped;
   }
 
-  // Helper: Calculate Item Pricing & Discounts
+  // Parser Rumus Diskon Fleksibel (Persis Screenshot 2: 25%, 50% + 20%, 20% + 5%, Rp 5000, dll)
+  function parseDiscountFormula(formula, unitPrice) {
+    if (!formula || typeof formula !== 'string') return { discountAmount: 0, discountPercent: 0, label: '' };
+    const raw = formula.trim().toLowerCase();
+    if (!raw) return { discountAmount: 0, discountPercent: 0, label: '' };
+
+    // Stacked percentage: misal "50% + 20%" atau "20% + 5%"
+    if (raw.includes('+')) {
+      const parts = raw.split('+').map(p => parseFloat(p.replace(/[^0-9.]/g, '')) || 0);
+      let current = unitPrice;
+      parts.forEach(pct => {
+        current = current * (1 - (pct / 100));
+      });
+      const discountAmount = Math.max(0, unitPrice - current);
+      const effPercent = unitPrice > 0 ? Math.round((discountAmount / unitPrice) * 100) : 0;
+      return { discountAmount, discountPercent: effPercent, label: formula };
+    }
+
+    // Single percentage: misal "25%" atau "25% (Sabun Cuci)" atau "Beli 1 Gratis 1 (50%)"
+    if (raw.includes('%')) {
+      const match = raw.match(/(\d+(\.\d+)?)%/);
+      const pct = match ? parseFloat(match[1]) : 0;
+      const discountAmount = unitPrice * (pct / 100);
+      return { discountAmount, discountPercent: pct, label: formula };
+    }
+
+    // Flat amount: misal "Rp 5.000" atau "5000"
+    const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
+    if (!isNaN(num) && num > 0) {
+      const discountAmount = Math.min(unitPrice, num);
+      const effPercent = unitPrice > 0 ? Math.round((discountAmount / unitPrice) * 100) : 0;
+      return { discountAmount, discountPercent: effPercent, label: `Rp ${formatRp(num)}` };
+    }
+
+    return { discountAmount: 0, discountPercent: 0, label: '' };
+  }
+
+  // Helper: Calculate Item Pricing & Discounts (Persis Screenshot 2)
   function calculateItemPricing(item) {
     const qty = Math.max(1, Number(item.qty) || 1);
     const unitPrice = Math.max(0, Number(item.unitPrice) || 0);
     const normalTotal = qty * unitPrice;
-    let finalUnitPrice = unitPrice;
+    let discountAmount = 0;
+    let discountPercent = 0;
 
-    if (item.discountType === 'percent') {
+    if (item.discountFormula) {
+      const parsed = parseDiscountFormula(item.discountFormula, unitPrice);
+      discountAmount = Math.round(parsed.discountAmount);
+      discountPercent = parsed.discountPercent;
+    } else if (item.discountType === 'percent') {
       const p = Math.min(100, Math.max(0, Number(item.discountValue) || 0));
-      finalUnitPrice = unitPrice * (1 - p / 100);
+      discountPercent = p;
+      discountAmount = Math.round(unitPrice * (p / 100));
     } else if (item.discountType === 'amount') {
       const a = Math.max(0, Number(item.discountValue) || 0);
-      finalUnitPrice = Math.max(0, unitPrice - a);
+      discountAmount = Math.round(a);
+      discountPercent = unitPrice > 0 ? Math.round((a / unitPrice) * 100) : 0;
     } else if (item.discountType === 'stacked') {
       const p1 = Math.min(100, Math.max(0, Number(item.stackedDiscount?.val1) || 0));
       const p2 = Math.min(100, Math.max(0, Number(item.stackedDiscount?.val2) || 0));
       const priceAfterFirst = unitPrice * (1 - p1 / 100);
-      finalUnitPrice = priceAfterFirst * (1 - p2 / 100);
+      const priceAfterSecond = priceAfterFirst * (1 - p2 / 100);
+      discountAmount = Math.round(unitPrice - priceAfterSecond);
+      discountPercent = unitPrice > 0 ? Math.round((discountAmount / unitPrice) * 100) : 0;
     }
 
-    finalUnitPrice = Math.round(finalUnitPrice);
-    const finalSubtotal = Math.round(qty * finalUnitPrice);
-    const totalSavings = Math.max(0, normalTotal - finalSubtotal);
+    const finalUnitPrice = Math.max(0, unitPrice - discountAmount);
+    let finalSubtotal = Math.round(qty * finalUnitPrice);
+
+    // Pajak PPN 11% (Persis Screenshot 2)
+    let taxAmount = 0;
+    if (item.taxPPN) {
+      taxAmount = Math.round(finalSubtotal * 0.11);
+      finalSubtotal += taxAmount;
+    }
+
+    const totalSavings = Math.max(0, normalTotal - (qty * finalUnitPrice));
 
     return {
       qty,
       unitPrice,
       normalTotal,
       finalUnitPrice,
+      discountAmount,
+      discountPercent,
+      taxAmount,
+      hasTaxPPN: !!item.taxPPN,
       finalSubtotal,
       totalSavings
     };
@@ -1470,9 +1516,11 @@
         card.className = `grocery-card ${item.inCart ? 'in-cart' : ''}`;
         card.dataset.id = item.id;
 
-        // Discount tag text
+        // Discount tag text & Pajak PPN
         let discountBadgeHtml = '';
-        if (item.discountType === 'percent') {
+        if (item.discountFormula) {
+          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> Diskon: ${escapeHtml(item.discountFormula)}</span>`;
+        } else if (item.discountType === 'percent') {
           discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> ${item.discountValue}% Off</span>`;
         } else if (item.discountType === 'amount') {
           discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> -${formatRp(item.discountValue)}</span>`;
@@ -1481,6 +1529,8 @@
           const s2 = item.stackedDiscount?.val2 || 0;
           discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="layers" style="width: 10px; height: 10px;"></i> ${s1}%+${s2}%</span>`;
         }
+
+        const taxBadgeHtml = item.taxPPN ? `<span class="discount-applied-badge" style="background: #EFF6FF; color: #2563EB; border-color: #BFDBFE;"><i data-lucide="receipt" style="width: 10px; height: 10px;"></i> PPN 11%</span>` : '';
 
         // Price trend badge HTML
         let trendBadgeHtml = '';
@@ -1512,6 +1562,7 @@
               <span class="category-tag-mini">${catObj.name}</span>
               ${trendBadgeHtml}
               ${discountBadgeHtml}
+              ${taxBadgeHtml}
             </div>
             ${item.note ? `<div class="item-note-inline"><em>Catatan: ${escapeHtml(item.note)}</em></div>` : ''}
           </div>
@@ -1886,8 +1937,24 @@
   }
 
   // ==========================================
-  // MODAL: ADD / EDIT ITEM & DISCOUNT SIMULATOR
+  // MODAL: ADD / EDIT ITEM & DISCOUNT CALCULATOR (PERSIS SCREENSHOT 2)
   // ==========================================
+
+  function setModalUnit(unit) {
+    if (el.inputUnit) el.inputUnit.value = unit;
+    if (el.unitSelectorChips) {
+      el.unitSelectorChips.querySelectorAll('.unit-chip').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.unit === unit);
+      });
+    }
+  }
+
+  function applyDiscountPreset(formula) {
+    if (el.inputDiscountFormula) {
+      el.inputDiscountFormula.value = formula;
+      updateModalCalculations();
+    }
+  }
 
   function openAddItemModal() {
     state.editingItemId = null;
@@ -1895,12 +1962,14 @@
     if (el.saveBtnText) el.saveBtnText.textContent = 'Simpan ke Troli';
     if (el.inputItemName) el.inputItemName.value = '';
     if (el.inputCategory) el.inputCategory.value = 'bahan_pokok';
-    if (el.inputUnit) el.inputUnit.value = 'pcs';
+    if (el.inputUnit) el.inputUnit.value = 'kg';
+    setModalUnit('kg');
     if (el.inputQty) el.inputQty.value = 1;
     if (el.inputUnitPrice) el.inputUnitPrice.value = '';
+    if (el.inputDiscountFormula) el.inputDiscountFormula.value = '';
+    if (el.inputTaxPPN) el.inputTaxPPN.checked = false;
     if (el.inputItemNote) el.inputItemNote.value = '';
 
-    setDiscountTab('none');
     updateModalCalculations();
     checkModalPriceComparison();
 
@@ -1912,188 +1981,129 @@
 
   function openEditItemModal(item) {
     state.editingItemId = item.id;
-    if (el.modalTitle) el.modalTitle.textContent = 'Edit Barang Belanja';
+    if (el.modalTitle) el.modalTitle.textContent = 'Edit Item Belanja';
     if (el.saveBtnText) el.saveBtnText.textContent = 'Perbarui Barang';
-    el.inputItemName.value = item.name;
-    el.inputCategory.value = item.category;
-    el.inputUnit.value = item.unit;
-    el.inputQty.value = item.qty;
-    el.inputUnitPrice.value = item.unitPrice;
-    el.inputItemNote.value = item.note || '';
+    if (el.inputItemName) el.inputItemName.value = item.name;
+    if (el.inputCategory) el.inputCategory.value = item.category || 'bahan_pokok';
+    const unit = item.unit || 'pcs';
+    if (el.inputUnit) el.inputUnit.value = unit;
+    setModalUnit(unit);
+    if (el.inputQty) el.inputQty.value = item.qty || 1;
+    if (el.inputUnitPrice) el.inputUnitPrice.value = item.unitPrice || 0;
 
-    if (item.discountType === 'percent') {
-      setDiscountTab('regular');
-      el.inputDiscountMode.value = 'percent';
-      el.inputDiscountValue.value = item.discountValue;
-    } else if (item.discountType === 'amount') {
-      setDiscountTab('regular');
-      el.inputDiscountMode.value = 'amount';
-      el.inputDiscountValue.value = item.discountValue;
-    } else if (item.discountType === 'stacked') {
-      setDiscountTab('stacked');
-      el.inputStacked1.value = item.stackedDiscount?.val1 || 0;
-      el.inputStacked2.value = item.stackedDiscount?.val2 || 0;
-    } else {
-      setDiscountTab('none');
+    // Diskon formula fleksibel (25%, 50% + 20%, Rp 5000)
+    let formula = item.discountFormula || '';
+    if (!formula) {
+      if (item.discountType === 'percent' && item.discountValue) formula = `${item.discountValue}%`;
+      else if (item.discountType === 'amount' && item.discountValue) formula = `Rp ${item.discountValue}`;
+      else if (item.discountType === 'stacked' && (item.stackedDiscount?.val1 || item.stackedDiscount?.val2)) {
+        formula = `${item.stackedDiscount.val1}% + ${item.stackedDiscount.val2}%`;
+      }
     }
+    if (el.inputDiscountFormula) el.inputDiscountFormula.value = formula;
+    if (el.inputTaxPPN) el.inputTaxPPN.checked = !!item.taxPPN;
+    if (el.inputItemNote) el.inputItemNote.value = item.note || '';
 
     updateModalCalculations();
     checkModalPriceComparison();
-    el.itemModal.classList.add('open');
+    if (el.itemModal) el.itemModal.classList.add('open');
   }
 
   function closeItemModal() {
-    el.itemModal.classList.remove('open');
+    if (el.itemModal) el.itemModal.classList.remove('open');
   }
 
-  function setDiscountTab(type) {
-    state.currentDiscountType = type;
-    el.disTabNone.classList.toggle('active', type === 'none');
-    el.disTabRegular.classList.toggle('active', type === 'regular');
-    el.disTabStacked.classList.toggle('active', type === 'stacked');
-
-    el.regularDiscountInputs.style.display = type === 'regular' ? 'block' : 'none';
-    el.stackedDiscountInputs.style.display = type === 'stacked' ? 'block' : 'none';
-
-    updateModalCalculations();
-  }
-
-  // Live Reactive Discount Simulator Calculation inside Modal
+  // Live Reactive Discount Simulator Calculation inside Modal (Persis Screenshot 2)
   function updateModalCalculations() {
-    const qty = Math.max(1, Number(el.inputQty.value) || 1);
-    const unitPrice = Math.max(0, Number(el.inputUnitPrice.value) || 0);
-    const normalTotal = qty * unitPrice;
-    let finalUnitPrice = unitPrice;
+    const qty = Math.max(1, Number(el.inputQty?.value) || 1);
+    const unitPrice = Math.max(0, Number(el.inputUnitPrice?.value) || 0);
 
-    if (state.currentDiscountType === 'regular') {
-      const mode = el.inputDiscountMode.value;
-      const val = Math.max(0, Number(el.inputDiscountValue.value) || 0);
-      if (mode === 'percent') {
-        finalUnitPrice = unitPrice * (1 - Math.min(100, val) / 100);
-      } else {
-        finalUnitPrice = Math.max(0, unitPrice - val);
-      }
-    } else if (state.currentDiscountType === 'stacked') {
-      const p1 = Math.min(100, Math.max(0, Number(el.inputStacked1.value) || 0));
-      const p2 = Math.min(100, Math.max(0, Number(el.inputStacked2.value) || 0));
-      const price1 = unitPrice * (1 - p1 / 100);
-      finalUnitPrice = price1 * (1 - p2 / 100);
+    const formula = el.inputDiscountFormula ? el.inputDiscountFormula.value.trim() : '';
+    const parsed = parseDiscountFormula(formula, unitPrice);
+    const discountAmount = Math.round(parsed.discountAmount);
+    const discountPercent = parsed.discountPercent;
+
+    const discountedUnitPrice = Math.max(0, unitPrice - discountAmount);
+    const discountedSubtotal = Math.round(qty * discountedUnitPrice);
+
+    let taxAmount = 0;
+    const hasPPN = el.inputTaxPPN ? el.inputTaxPPN.checked : false;
+    if (hasPPN) {
+      taxAmount = Math.round(discountedSubtotal * 0.11);
     }
+    const finalSubtotal = discountedSubtotal + taxAmount;
 
-    finalUnitPrice = Math.round(finalUnitPrice);
-    const finalSubtotal = Math.round(qty * finalUnitPrice);
-    const totalSavings = Math.max(0, normalTotal - finalSubtotal);
-
-    el.liveNormalTotal.textContent = formatRp(normalTotal);
-    el.liveFinalSubtotal.textContent = formatRp(finalSubtotal);
-
-    if (totalSavings > 0) {
-      el.liveSavingsRow.style.display = 'flex';
-      el.liveTotalSavings.textContent = `- ${formatRp(totalSavings)}`;
-    } else {
-      el.liveSavingsRow.style.display = 'none';
+    // Tampilkan Breakdown Persis Screenshot 2
+    if (el.liveNormalPrice) el.liveNormalPrice.textContent = `Rp ${formatRp(unitPrice)}`;
+    if (el.liveDiscountDeduction) {
+      el.liveDiscountDeduction.textContent = `Rp ${formatRp(discountAmount)} (${discountPercent}%)`;
+    }
+    if (el.liveDiscountedPrice) {
+      el.liveDiscountedPrice.textContent = `Rp ${formatRp(discountedUnitPrice)}`;
+    }
+    if (el.liveTaxRow && el.liveTaxAmount) {
+      if (hasPPN) {
+        el.liveTaxRow.style.display = 'flex';
+        el.liveTaxAmount.textContent = `+ Rp ${formatRp(taxAmount)}`;
+      } else {
+        el.liveTaxRow.style.display = 'none';
+      }
+    }
+    if (el.liveFinalSubtotal) {
+      el.liveFinalSubtotal.textContent = `Rp ${formatRp(finalSubtotal)}`;
     }
   }
 
-  // Real-time Price Comparison Insight inside Modal (Histori Toko Sama & Komparasi Antartoko)
+  // Real-time Price Comparison Insight inside Modal (Persis Screenshot 2: ↓ Harga turun)
+  // Catatan: Kotak antar toko di Screenshot 4 sudah dihapus sesuai instruksi user
   function checkModalPriceComparison() {
-    const name = el.inputItemName.value;
-    const price = Number(el.inputUnitPrice.value) || 0;
+    const name = el.inputItemName ? el.inputItemName.value : '';
+    const price = Number(el.inputUnitPrice ? el.inputUnitPrice.value : 0) || 0;
     if (!name.trim() || price <= 0) {
-      el.priceComparisonNotice.style.display = 'none';
+      if (el.priceComparisonNotice) el.priceComparisonNotice.style.display = 'none';
       return;
     }
 
     const trend = detectPriceTrend(name, price);
-    const crossStores = getCrossStoreBenchmarks(name, price);
+    if (!el.priceComparisonNotice) return;
     el.priceComparisonNotice.style.display = 'block';
 
-    const activeStoreShort = (state.storeLocation || 'Lotte Mart').split('-')[0].trim();
-    let noticeHtml = '';
+    let badgeClass = 'drop';
+    let icon = 'arrow-down';
+    let text = '';
 
     if (trend.status === 'drop') {
-      noticeHtml = `
-        <div style="padding: 9px 12px; background: #E8F7F0; border-radius: 12px; font-size: 11.5px; color: #059669; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="arrow-down" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
-          <span><strong>Kabar Baik di ${escapeHtml(activeStoreShort)}!</strong> Lebih hemat ${formatRp(Math.abs(trend.diff))} (${trend.percent}%) dibanding bulan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
-        </div>
-      `;
+      badgeClass = 'drop';
+      icon = 'arrow-down';
+      text = `Harga turun (Rp ${formatRp(trend.pastPrice)} • ${trend.period || '14 Okt'})`;
     } else if (trend.status === 'up') {
-      noticeHtml = `
-        <div style="padding: 9px 12px; background: #FFE8ED; border-radius: 12px; font-size: 11.5px; color: #E11D48; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="arrow-up" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
-          <span><strong>Harga Naik di ${escapeHtml(activeStoreShort)}:</strong> Naik ${formatRp(trend.diff)} (+${trend.percent}%) dibanding catatan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
-        </div>
-      `;
+      badgeClass = 'up';
+      icon = 'arrow-up';
+      text = `Harga naik (Rp ${formatRp(trend.pastPrice)} • ${trend.period || 'Histori'})`;
     } else if (trend.status === 'stable') {
-      noticeHtml = `
-        <div style="padding: 9px 12px; background: #F3F4F6; border-radius: 12px; font-size: 11.5px; color: #4B5563; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="equal" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
-          <span><strong>Harga Stabil di ${escapeHtml(activeStoreShort)}:</strong> Sama dengan catatan belanja bulan ${trend.period || 'lalu'} (${formatRp(trend.pastPrice)}).</span>
-        </div>
-      `;
+      badgeClass = 'stable';
+      icon = 'equal';
+      text = `Harga stabil (Rp ${formatRp(trend.pastPrice)} • ${trend.period || 'Histori'})`;
     } else {
-      noticeHtml = `
-        <div style="padding: 9px 12px; background: #EFF6FF; border-radius: 12px; font-size: 11.5px; color: #2563EB; display: flex; align-items: center; gap: 6px;">
-          <i data-lucide="info" style="width: 16px; height: 16px; flex-shrink: 0;"></i>
-          <span>Item baru di ${escapeHtml(activeStoreShort)}! Acuan untuk belanja berikutnya.</span>
-        </div>
-      `;
+      badgeClass = 'stable';
+      icon = 'info';
+      text = `Barang baru (Acuan harga belanja berikutnya)`;
     }
 
-    // Komparasi harga antar toko (Lotte Mart, Indomaret, Alfamart, Superindo, dll)
-    if (crossStores && crossStores.length > 0) {
-      noticeHtml += `
-        <div class="cross-store-box">
-          <div class="cross-store-title">
-            <i data-lucide="store" style="width: 14px; height: 14px; color: var(--primary);"></i>
-            <span>Perbandingan Harga di Lokasi Toko Lain:</span>
-          </div>
-          <div class="cross-store-grid">
-      `;
-
-      crossStores.forEach(cs => {
-        let tagHtml = '';
-        if (cs.isCheapest) {
-          tagHtml = `<span class="cross-store-tag cheapest">⭐ Termurah</span>`;
-        } else if (cs.isCurrent) {
-          tagHtml = `<span class="cross-store-tag current">📍 Toko Anda</span>`;
-        } else if (cs.diff < 0) {
-          tagHtml = `<span class="cross-store-tag diff-up">+${formatRp(Math.abs(cs.diff))}</span>`;
-        } else if (cs.diff > 0) {
-          tagHtml = `<span class="cross-store-tag diff-down">-${formatRp(cs.diff)}</span>`;
-        }
-
-        noticeHtml += `
-          <div class="cross-store-row ${cs.isCurrent ? 'is-current' : ''} ${cs.isCheapest ? 'is-cheapest' : ''}">
-            <div class="cross-store-name">
-              <span>${cs.icon}</span>
-              <span>${escapeHtml(cs.storeName.split('-')[0].trim())}</span>
-              <small style="color: var(--text-soft); font-size: 9px;">(${escapeHtml(cs.badge)})</small>
-            </div>
-            <div class="cross-store-price-area">
-              <span class="cross-store-price">${formatRp(cs.price)}</span>
-              ${tagHtml}
-            </div>
-          </div>
-        `;
-      });
-
-      noticeHtml += `
-          </div>
-        </div>
-      `;
-    }
-
-    el.priceComparisonNotice.innerHTML = noticeHtml;
+    el.priceComparisonNotice.innerHTML = `
+      <div class="modal-price-trend-badge ${badgeClass}">
+        <i data-lucide="${icon}" style="width: 14px; height: 14px;"></i>
+        <span>${text}</span>
+      </div>
+    `;
     if (window.lucide) window.lucide.createIcons({ root: el.priceComparisonNotice });
   }
 
-  // Save Item from Modal
+  // Save Item from Modal (Persis Screenshot 2: dengan formula diskon & PPN 11%)
   function saveItemFromModal() {
     const name = el.inputItemName.value.trim();
     const category = el.inputCategory.value;
-    const unit = el.inputUnit.value;
+    const unit = el.inputUnit.value || 'pcs';
     const rawPrice = Number(el.inputUnitPrice.value);
     const rawQty = Number(el.inputQty.value);
 
@@ -2117,26 +2127,18 @@
 
     const qty = Math.max(1, rawQty);
     const unitPrice = rawPrice;
-    const note = el.inputItemNote.value.trim();
+    const note = el.inputItemNote ? el.inputItemNote.value.trim() : '';
+    const discountFormula = el.inputDiscountFormula ? el.inputDiscountFormula.value.trim() : '';
+    const taxPPN = el.inputTaxPPN ? el.inputTaxPPN.checked : false;
 
-    // Determine discount fields
+    // Backward compatible discount fields
     let discountType = 'none';
     let discountValue = 0;
-    let stackedDiscount = { val1: 0, val2: 0 };
-
-    if (state.currentDiscountType === 'regular') {
-      const mode = el.inputDiscountMode.value;
-      const val = Math.max(0, Number(el.inputDiscountValue.value) || 0);
-      if (val > 0) {
-        discountType = mode;
-        discountValue = val;
-      }
-    } else if (state.currentDiscountType === 'stacked') {
-      const s1 = Math.max(0, Number(el.inputStacked1.value) || 0);
-      const s2 = Math.max(0, Number(el.inputStacked2.value) || 0);
-      if (s1 > 0 || s2 > 0) {
-        discountType = 'stacked';
-        stackedDiscount = { val1: s1, val2: s2 };
+    if (discountFormula) {
+      const parsed = parseDiscountFormula(discountFormula, unitPrice);
+      if (parsed.discountAmount > 0) {
+        discountType = 'percent';
+        discountValue = parsed.discountPercent;
       }
     }
 
@@ -2151,9 +2153,10 @@
           unit,
           qty,
           unitPrice,
+          discountFormula,
           discountType,
           discountValue,
-          stackedDiscount,
+          taxPPN,
           note
         };
         showToast(`"${name}" berhasil diperbarui!`, 'success');
@@ -2164,11 +2167,8 @@
       if (existing) {
         existing.qty = (Number(existing.qty) || 0) + qty;
         if (unitPrice > 0) existing.unitPrice = unitPrice;
-        if (discountType !== 'none') {
-          existing.discountType = discountType;
-          existing.discountValue = discountValue;
-          existing.stackedDiscount = stackedDiscount;
-        }
+        if (discountFormula) existing.discountFormula = discountFormula;
+        if (taxPPN) existing.taxPPN = taxPPN;
         if (note) {
           existing.note = existing.note ? `${existing.note} • ${note}` : note;
         }
@@ -2182,21 +2182,23 @@
           unit,
           qty,
           unitPrice,
+          discountFormula,
           discountType,
           discountValue,
-          stackedDiscount,
+          taxPPN,
           inCart: true,
           note
         };
         state.activeItems.unshift(newItem);
-        showToast(`"${name}" masuk ke daftar belanja!`, 'success');
+        showToast(`"${name}" ditambahkan ke troli!`, 'success');
         if (window.soundCtrl) window.soundCtrl.playSuccess();
       }
     }
 
     state.activeItems = groupActiveItems(state.activeItems);
-    closeItemModal();
     saveAndRefresh();
+    closeItemModal();
+    if (window.soundCtrl) window.soundCtrl.playPop();
   }
 
   // ==========================================
@@ -3125,40 +3127,49 @@
       });
     }
 
-    // Modal Qty Stepper
-    el.modalQtyPlus.addEventListener('click', () => {
-      el.inputQty.value = (Number(el.inputQty.value) || 1) + 1;
-      updateModalCalculations();
-      if (window.soundCtrl) window.soundCtrl.playTick();
-    });
-
-    el.modalQtyMinus.addEventListener('click', () => {
-      const q = Number(el.inputQty.value) || 1;
-      if (q > 1) {
-        el.inputQty.value = q - 1;
-        updateModalCalculations();
-        if (window.soundCtrl) window.soundCtrl.playTick();
-      }
-    });
-
-    // Realtime modal calculations on input changes
-    ['input', 'change'].forEach(evt => {
-      el.inputQty.addEventListener(evt, updateModalCalculations);
-      el.inputUnitPrice.addEventListener(evt, () => {
-        updateModalCalculations();
-        checkModalPriceComparison();
+    // Unit selector chips in Modal (Persis Screenshot 2)
+    if (el.unitSelectorChips) {
+      el.unitSelectorChips.querySelectorAll('.unit-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const unit = btn.dataset.unit || 'pcs';
+          setModalUnit(unit);
+          if (window.soundCtrl) window.soundCtrl.playTick();
+        });
       });
-      el.inputDiscountMode.addEventListener(evt, updateModalCalculations);
-      el.inputDiscountValue.addEventListener(evt, updateModalCalculations);
-      el.inputStacked1.addEventListener(evt, updateModalCalculations);
-      el.inputStacked2.addEventListener(evt, updateModalCalculations);
-      el.inputItemName.addEventListener(evt, checkModalPriceComparison);
-    });
+    }
 
-    // Discount Tabs inside Modal
-    el.disTabNone.addEventListener('click', () => setDiscountTab('none'));
-    el.disTabRegular.addEventListener('click', () => setDiscountTab('regular'));
-    el.disTabStacked.addEventListener('click', () => setDiscountTab('stacked'));
+    // Discount Preset Chips in Modal (Persis Screenshot 2)
+    if (el.discountPresetChips) {
+      el.discountPresetChips.querySelectorAll('.dis-preset-chip').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const formula = btn.dataset.formula || btn.textContent.trim();
+          applyDiscountPreset(formula);
+          if (window.soundCtrl) window.soundCtrl.playPop();
+        });
+      });
+    }
+
+    // Realtime modal calculations on input changes (Persis Screenshot 2)
+    if (el.inputQty) {
+      ['input', 'change'].forEach(evt => el.inputQty.addEventListener(evt, updateModalCalculations));
+    }
+    if (el.inputUnitPrice) {
+      ['input', 'change'].forEach(evt => {
+        el.inputUnitPrice.addEventListener(evt, () => {
+          updateModalCalculations();
+          checkModalPriceComparison();
+        });
+      });
+    }
+    if (el.inputDiscountFormula) {
+      ['input', 'change'].forEach(evt => el.inputDiscountFormula.addEventListener(evt, updateModalCalculations));
+    }
+    if (el.inputTaxPPN) {
+      el.inputTaxPPN.addEventListener('change', updateModalCalculations);
+    }
+    if (el.inputItemName) {
+      ['input', 'change'].forEach(evt => el.inputItemName.addEventListener(evt, checkModalPriceComparison));
+    }
 
     // Checkout Modal
     el.finishShoppingBtn.addEventListener('click', openCheckoutModal);
@@ -3248,8 +3259,11 @@
   // Expose helpful functions to window for resilience
   window.switchTab = switchTab;
   window.openAddItemModal = openAddItemModal;
+  window.openEditItemModal = openEditItemModal;
   window.saveItemFromModal = saveItemFromModal;
   window.closeItemModal = closeItemModal;
+  window.setModalUnit = setModalUnit;
+  window.applyDiscountPreset = applyDiscountPreset;
   window.showAuthGate = showAuthGate;
   window.hideAuthGate = hideAuthGate;
   window.gateQuickLogin = gateQuickLogin;
