@@ -14,19 +14,25 @@ const UNITS = [
   'pcs', 'kg', 'pack', 'liter', 'botol', 'sachet', 'box', 'roll', 'renceng', 'ikat', 'kaleng', 'karung', 'karung/5kg'
 ];
 
-// Daftar Lokasi Toko & Supermarket untuk Komparasi Harga (Wilayah Jakarta & Tangerang)
+// Daftar Lokasi Toko & Supermarket untuk Komparasi Harga (Persis Screenshot 2 & Wilayah Jakarta - Tangerang)
 const STORE_LOCATIONS = [
-  // --- JAKARTA ---
-  { id: 'lotte_mart', name: 'Lotte Mart Grocery - Puri Indah', type: 'Supermarket Grosir', area: 'Puri Indah, Jakarta Barat', icon: '🏢', badge: 'Grosir Langganan', region: 'Jakarta' },
-  { id: 'indomaret', name: 'Indomaret - Puri Kencana', type: 'Minimarket', area: 'Puri Kencana, Jakarta Barat', icon: '🏪', badge: 'Minimarket', region: 'Jakarta' },
-  { id: 'alfamart', name: 'Alfamart - Meruya Ilir', type: 'Minimarket', area: 'Meruya Ilir, Jakarta Barat', icon: '🏪', badge: 'Minimarket', region: 'Jakarta' },
-  { id: 'superindo', name: 'Superindo - Intercon Kebon Jeruk', type: 'Supermarket', area: 'Kebon Jeruk, Jakarta Barat', icon: '🛒', badge: 'Supermarket', region: 'Jakarta' },
-  { id: 'hypermart', name: 'Hypermart - Puri Indah Mall', type: 'Hypermarket', area: 'Puri Indah Mall, Jakarta Barat', icon: '🏬', badge: 'Hypermarket', region: 'Jakarta' },
-  { id: 'grand_lucky', name: 'Grand Lucky Superstore - SCBD', type: 'Supermarket', area: 'SCBD, Jakarta Selatan', icon: '✨', badge: 'Superstore', region: 'Jakarta' },
+  // --- 7 LOKASI PILIHAN UTAMA (PERSIS SCREENSHOT 2) ---
+  { id: 'lotte_mart_puri', name: 'Lotte Mart Grocery – Puri Indah', type: 'Supermarket Grosir', area: 'Puri Indah, Jakarta Barat', icon: '🏢', badge: 'Grosir Langganan', region: 'Jakarta' },
+  { id: 'superindo_intercon', name: 'Super Indo – Intercon Kebon Jeruk', type: 'Supermarket', area: 'Kebon Jeruk, Jakarta Barat', icon: '🛒', badge: 'Supermarket', region: 'Jakarta' },
+  { id: 'indomaret_kemanggisan', name: 'Indomaret Fresh – Kemanggisan', type: 'Minimarket Fresh', area: 'Kemanggisan, Jakarta Barat', icon: '🏪', badge: 'Minimarket Fresh', region: 'Jakarta' },
+  { id: 'grand_lucky_meruya', name: 'Grand Lucky Superstore – Meruya', type: 'Superstore', area: 'Meruya, Jakarta Barat', icon: '✨', badge: 'Superstore', region: 'Jakarta' },
+  { id: 'alfamidi_palmerah', name: 'Alfamidi Super – Palmerah', type: 'Minimarket Super', area: 'Palmerah, Jakarta Barat', icon: '🏪', badge: 'Minimarket', region: 'Jakarta' },
+  { id: 'hypermart_puri', name: 'Hypermart – Puri Indah', type: 'Hypermarket', area: 'Puri Indah Mall, Jakarta Barat', icon: '🏬', badge: 'Hypermarket', region: 'Jakarta' },
+  { id: 'pasar_puri', name: 'Pasar Tradisional Puri Indah', type: 'Pasar Tradisional', area: 'Puri Indah, Jakarta Barat', icon: '🥬', badge: 'Pasar Tradisional', region: 'Jakarta' },
+
+  // --- LOKASI LAINNYA DI JAKARTA ---
+  { id: 'grand_lucky_scbd', name: 'Grand Lucky Superstore - SCBD', type: 'Supermarket', area: 'SCBD, Jakarta Selatan', icon: '✨', badge: 'Superstore', region: 'Jakarta' },
   { id: 'farmers_market', name: 'Farmers Market - Kelapa Gading', type: 'Supermarket', area: 'Kelapa Gading, Jakarta Utara', icon: '🥦', badge: 'Supermarket Segar', region: 'Jakarta' },
   { id: 'hero_pim', name: 'Hero Supermarket - Pondok Indah Mall', type: 'Supermarket', area: 'Pondok Indah, Jakarta Selatan', icon: '🏪', badge: 'Supermarket', region: 'Jakarta' },
   { id: 'total_buah', name: 'Total Buah Segar - Rawamangun', type: 'Supermarket Segar', area: 'Rawamangun, Jakarta Timur', icon: '🍎', badge: 'Pasar Segar', region: 'Jakarta' },
   { id: 'transmart_cp', name: 'Transmart Carrefour - Cempaka Putih', type: 'Hypermarket', area: 'Cempaka Putih, Jakarta Pusat', icon: '🛍️', badge: 'Hypermarket', region: 'Jakarta' },
+  { id: 'indomaret_kencana', name: 'Indomaret - Puri Kencana', type: 'Minimarket', area: 'Puri Kencana, Jakarta Barat', icon: '🏪', badge: 'Minimarket', region: 'Jakarta' },
+  { id: 'alfamart_meruya', name: 'Alfamart - Meruya Ilir', type: 'Minimarket', area: 'Meruya Ilir, Jakarta Barat', icon: '🏪', badge: 'Minimarket', region: 'Jakarta' },
 
   // --- TANGERANG & TANGERANG SELATAN ---
   { id: 'aeon_bsd', name: 'AEON Store - BSD City Tangerang', type: 'Hypermarket', area: 'BSD City, Tangerang Selatan', icon: '🏬', badge: 'Hypermarket BSD', region: 'Tangerang' },
@@ -37,22 +43,132 @@ const STORE_LOCATIONS = [
   { id: 'harihari_bintaro', name: 'Hari Hari Pasar Swalayan - Bintaro Tangerang', type: 'Pasar Swalayan', area: 'Bintaro Jaya, Tangerang Selatan', icon: '🛒', badge: 'Swalayan Bintaro', region: 'Tangerang' }
 ];
 
-// Pre-seeded Benchmark Prices per Store (Histori Harga Toko yang Sama & Komparasi Antartoko Jakarta & Tangerang)
+// Pre-seeded Benchmark Prices per Store (Histori Harga Toko yang Sama & Komparasi Antartoko)
 const STORE_BENCHMARK_PRICES = {
-  // JAKARTA
+  // 1. Lotte Mart Grocery – Puri Indah (Grosir Langganan)
+  'Lotte Mart Grocery – Puri Indah': {
+    'beras rojolele': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'beras 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'beras ramos 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'pack', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'telur 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'telur ayam 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'telur ayam negeri 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'garam 500g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery – Puri Indah' },
+    'garam dapur 250g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery – Puri Indah' },
+    'minyak goreng 2l': { lastPrice: 43000, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'sabun mandi': { lastPrice: 15000, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Lotte Mart Grocery – Puri Indah' },
+    'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'sabun cuci piring 750ml': { lastPrice: 13500, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Lotte Mart Grocery – Puri Indah' }
+  },
   'Lotte Mart Grocery - Puri Indah': {
-    'beras rojolele': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'beras 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'beras ramos 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'pack', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'telur 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'telur ayam 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'telur ayam negeri 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'garam 500g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery - Puri Indah' },
-    'garam dapur 250g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery - Puri Indah' },
-    'minyak goreng 2l': { lastPrice: 43000, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'sabun mandi': { lastPrice: 15000, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Lotte Mart Grocery - Puri Indah' },
-    'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Lotte Mart Grocery - Puri Indah' },
-    'sabun cuci piring 750ml': { lastPrice: 13500, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Lotte Mart Grocery - Puri Indah' }
+    'beras rojolele': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'beras 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'beras ramos 5kg': { lastPrice: 68000, previousMonth: '26 September 2026', unit: 'pack', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'telur 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'telur ayam 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'telur ayam negeri 1kg': { lastPrice: 32000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'garam 500g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery – Puri Indah' },
+    'garam dapur 250g': { lastPrice: 5000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Lotte Mart Grocery – Puri Indah' },
+    'minyak goreng 2l': { lastPrice: 43000, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'sabun mandi': { lastPrice: 15000, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Lotte Mart Grocery – Puri Indah' },
+    'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Lotte Mart Grocery – Puri Indah' },
+    'sabun cuci piring 750ml': { lastPrice: 13500, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Lotte Mart Grocery – Puri Indah' }
+  },
+
+  // 2. Super Indo – Intercon Kebon Jeruk
+  'Super Indo – Intercon Kebon Jeruk': {
+    'beras rojolele': { lastPrice: 69500, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'beras 5kg': { lastPrice: 69500, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'telur 1kg': { lastPrice: 31000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'telur ayam 1kg': { lastPrice: 31000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'garam 500g': { lastPrice: 4900, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'minyak goreng 2l': { lastPrice: 38500, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'sabun mandi': { lastPrice: 14500, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'sabun cuci piring 750ml': { lastPrice: 13800, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Super Indo – Intercon Kebon Jeruk' }
+  },
+  'Superindo - Intercon Kebon Jeruk': {
+    'beras rojolele': { lastPrice: 69500, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'beras 5kg': { lastPrice: 69500, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'telur 1kg': { lastPrice: 31000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'garam 500g': { lastPrice: 4900, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'minyak goreng 2l': { lastPrice: 38500, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'sabun mandi': { lastPrice: 14500, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Super Indo – Intercon Kebon Jeruk' },
+    'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Super Indo – Intercon Kebon Jeruk' }
+  },
+
+  // 3. Indomaret Fresh – Kemanggisan
+  'Indomaret Fresh – Kemanggisan': {
+    'beras rojolele': { lastPrice: 72000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Indomaret Fresh – Kemanggisan' },
+    'beras 5kg': { lastPrice: 72000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Indomaret Fresh – Kemanggisan' },
+    'telur 1kg': { lastPrice: 33500, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Indomaret Fresh – Kemanggisan' },
+    'telur ayam 1kg': { lastPrice: 33500, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Indomaret Fresh – Kemanggisan' },
+    'garam 500g': { lastPrice: 5500, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Indomaret Fresh – Kemanggisan' },
+    'minyak goreng 2l': { lastPrice: 39500, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Indomaret Fresh – Kemanggisan' },
+    'sabun mandi': { lastPrice: 16000, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Indomaret Fresh – Kemanggisan' },
+    'indomie goreng': { lastPrice: 3200, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Indomaret Fresh – Kemanggisan' },
+    'sabun cuci piring 750ml': { lastPrice: 14200, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Indomaret Fresh – Kemanggisan' }
+  },
+
+  // 4. Grand Lucky Superstore – Meruya
+  'Grand Lucky Superstore – Meruya': {
+    'beras rojolele': { lastPrice: 75000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Grand Lucky Superstore – Meruya' },
+    'beras 5kg': { lastPrice: 75000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Grand Lucky Superstore – Meruya' },
+    'telur 1kg': { lastPrice: 34000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Grand Lucky Superstore – Meruya' },
+    'telur ayam 1kg': { lastPrice: 34000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Grand Lucky Superstore – Meruya' },
+    'garam 500g': { lastPrice: 6000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Grand Lucky Superstore – Meruya' },
+    'minyak goreng 2l': { lastPrice: 44000, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Grand Lucky Superstore – Meruya' },
+    'sabun mandi': { lastPrice: 17000, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Grand Lucky Superstore – Meruya' },
+    'indomie goreng': { lastPrice: 3300, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Grand Lucky Superstore – Meruya' },
+    'sabun cuci piring 750ml': { lastPrice: 14500, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Grand Lucky Superstore – Meruya' }
+  },
+
+  // 5. Alfamidi Super – Palmerah
+  'Alfamidi Super – Palmerah': {
+    'beras rojolele': { lastPrice: 71500, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Alfamidi Super – Palmerah' },
+    'beras 5kg': { lastPrice: 71500, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Alfamidi Super – Palmerah' },
+    'telur 1kg': { lastPrice: 33000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Alfamidi Super – Palmerah' },
+    'telur ayam 1kg': { lastPrice: 33000, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Alfamidi Super – Palmerah' },
+    'garam 500g': { lastPrice: 5300, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Alfamidi Super – Palmerah' },
+    'minyak goreng 2l': { lastPrice: 39900, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Alfamidi Super – Palmerah' },
+    'sabun mandi': { lastPrice: 15500, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Alfamidi Super – Palmerah' },
+    'indomie goreng': { lastPrice: 3200, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Alfamidi Super – Palmerah' },
+    'sabun cuci piring 750ml': { lastPrice: 13900, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Alfamidi Super – Palmerah' }
+  },
+
+  // 6. Hypermart – Puri Indah
+  'Hypermart – Puri Indah': {
+    'beras rojolele': { lastPrice: 70000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'beras 5kg': { lastPrice: 70000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'telur 1kg': { lastPrice: 32500, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'telur ayam 1kg': { lastPrice: 32500, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'garam 500g': { lastPrice: 5100, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Hypermart – Puri Indah' },
+    'minyak goreng 2l': { lastPrice: 40500, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'sabun mandi': { lastPrice: 15200, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Hypermart – Puri Indah' },
+    'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'sabun cuci piring 750ml': { lastPrice: 13600, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Hypermart – Puri Indah' }
+  },
+  'Hypermart - Puri Indah Mall': {
+    'beras rojolele': { lastPrice: 70000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'beras 5kg': { lastPrice: 70000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'telur 1kg': { lastPrice: 32500, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'garam 500g': { lastPrice: 5100, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Hypermart – Puri Indah' },
+    'minyak goreng 2l': { lastPrice: 40500, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' },
+    'sabun mandi': { lastPrice: 15200, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Hypermart – Puri Indah' },
+    'indomie goreng': { lastPrice: 3100, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Hypermart – Puri Indah' }
+  },
+
+  // 7. Pasar Tradisional Puri Indah
+  'Pasar Tradisional Puri Indah': {
+    'beras rojolele': { lastPrice: 65000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Pasar Tradisional Puri Indah' },
+    'beras 5kg': { lastPrice: 65000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Pasar Tradisional Puri Indah' },
+    'telur 1kg': { lastPrice: 28500, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Pasar Tradisional Puri Indah' },
+    'telur ayam 1kg': { lastPrice: 28500, previousMonth: '26 September 2026', unit: 'kg', category: 'bahan_pokok', store: 'Pasar Tradisional Puri Indah' },
+    'garam 500g': { lastPrice: 4000, previousMonth: '26 September 2026', unit: 'pack', category: 'bumbu_dapur', store: 'Pasar Tradisional Puri Indah' },
+    'minyak goreng 2l': { lastPrice: 36000, previousMonth: '26 September 2026', unit: 'botol', category: 'bahan_pokok', store: 'Pasar Tradisional Puri Indah' },
+    'sabun mandi': { lastPrice: 14000, previousMonth: '26 September 2026', unit: 'pcs', category: 'mandi_cuci', store: 'Pasar Tradisional Puri Indah' },
+    'indomie goreng': { lastPrice: 3000, previousMonth: '26 September 2026', unit: 'pcs', category: 'bahan_pokok', store: 'Pasar Tradisional Puri Indah' },
+    'sabun cuci piring 750ml': { lastPrice: 13000, previousMonth: '26 September 2026', unit: 'pack', category: 'mandi_cuci', store: 'Pasar Tradisional Puri Indah' }
   },
   'Indomaret - Puri Kencana': {
     'beras rojolele': { lastPrice: 72000, previousMonth: '26 September 2026', unit: 'karung/5kg', category: 'bahan_pokok', store: 'Indomaret - Puri Kencana' },
@@ -489,6 +605,69 @@ class SmartStorage {
     this.set('history_trips', []);
 
     return { success: true, user: newUser };
+  }
+
+  // Google OAuth Login or Register Helper (Persis Screenshot 1)
+  static loginOrRegisterGoogleUser(googlePayload) {
+    const users = this.getUsers();
+    const cleanEmail = (googlePayload.email || '').trim().toLowerCase();
+    
+    let found = users.find(u => u.email.toLowerCase() === cleanEmail);
+    let isNew = false;
+
+    if (!found) {
+      isNew = true;
+      found = {
+        id: 'user-google-' + (googlePayload.uid || Date.now()),
+        name: googlePayload.displayName || googlePayload.name || cleanEmail.split('@')[0],
+        email: cleanEmail,
+        password: 'google_oauth_auth_token',
+        role: 'Anak Kos Hemat',
+        city: 'Jakarta Barat',
+        budget: 450000,
+        avatar: '👩‍💻',
+        photoURL: googlePayload.photoURL || null,
+        isGoogleAuth: true,
+        createdAt: new Date().toISOString()
+      };
+
+      users.push(found);
+      this.saveUsers(users);
+
+      // Pastikan keranjang dan riwayat kosong untuk akun baru
+      this.set(`active_items_${found.id}`, []);
+      this.set(`history_trips_${found.id}`, []);
+      this.set('active_items', []);
+      this.set('history_trips', []);
+    } else {
+      if (googlePayload.displayName && (!found.name || found.name.includes('@'))) {
+        found.name = googlePayload.displayName;
+      }
+      if (googlePayload.photoURL) {
+        found.photoURL = googlePayload.photoURL;
+      }
+      this.saveUsers(users);
+    }
+
+    this.setCurrentUser(found);
+    return { success: true, user: found, isNew };
+  }
+
+  // Custom Store Locations (Persis Screenshot 2: Tambah Toko / Tempat Belanja Baru)
+  static getCustomStores() {
+    return this.get('custom_stores_list', []);
+  }
+
+  static addCustomStore(storeName) {
+    const trimmed = (storeName || '').trim();
+    if (!trimmed) return null;
+    const list = this.getCustomStores();
+    const exists = list.some(s => s.toLowerCase() === trimmed.toLowerCase());
+    if (!exists) {
+      list.push(trimmed);
+      this.set('custom_stores_list', list);
+    }
+    return trimmed;
   }
 
   // Reset to initial demo data

@@ -62,34 +62,59 @@
 
         <div class="auth-gate-container">
           
-          <!-- Hero Brand Header (Rapi, Elegan & Minimalis) -->
-          <div class="auth-gate-hero">
-            <div class="auth-gate-icon">
-              <i data-lucide="shopping-bag" style="width: 30px; height: 30px; color: #FFFFFF;"></i>
+          <!-- Hero Brand Header (Persis Screenshot 1: Grocify & Cat Basket) -->
+          <div class="auth-gate-hero grocify-hero">
+            <div class="grocify-logo-box">
+              <svg class="grocify-basket-svg" viewBox="0 0 48 48" width="36" height="36" fill="none" stroke="#00D4FF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <!-- Cat ears -->
+                <path d="M14 18 L18 8 L22 17" fill="rgba(0, 212, 255, 0.2)"/>
+                <path d="M26 17 L30 8 L34 18" fill="rgba(0, 212, 255, 0.2)"/>
+                <!-- Basket outline & mesh -->
+                <path d="M8 18 H40 L36 40 H12 Z"/>
+                <line x1="16" y1="24" x2="16" y2="34"/>
+                <line x1="24" y1="24" x2="24" y2="34"/>
+                <line x1="32" y1="24" x2="32" y2="34"/>
+                <line x1="11" y1="28" x2="37" y2="28"/>
+              </svg>
             </div>
-            <h2 class="auth-gate-brand">Smart Grocery</h2>
-            <p class="auth-gate-tagline">Budget Safety Tracker • Anak Rantau</p>
+            <h2 class="auth-gate-brand grocify-title">Grocify</h2>
+            <p class="auth-gate-tagline grocify-tagline">Smart Grocery &amp; Budget Tracker</p>
+            <div class="grocify-security-pill">Amankan Saldo &amp; Belanja Hemat Terkendali</div>
           </div>
 
-          <!-- Auth Card Form & Tabs -->
-          <div class="auth-gate-card">
+          <!-- Auth Card Form & Tabs (Dark Theme Card Glowing) -->
+          <div class="auth-gate-card grocify-card">
             
             <!-- Tab Switcher Segmented Control -->
-            <div class="auth-segmented-nav">
+            <div class="auth-segmented-nav grocify-segmented-nav">
               <button class="auth-segment-btn active" id="gateTabLogin" type="button" onclick="window.switchGateTab && window.switchGateTab('login')">
-                <i data-lucide="log-in" style="width: 15px; height: 15px;"></i>
                 <span>Masuk</span>
               </button>
               <button class="auth-segment-btn" id="gateTabRegister" type="button" onclick="window.switchGateTab && window.switchGateTab('register')">
-                <i data-lucide="user-plus" style="width: 15px; height: 15px;"></i>
                 <span>Daftar Akun</span>
               </button>
             </div>
 
+            <!-- Tombol Masuk Cepat dengan Google (Persis Screenshot 1) -->
+            <button type="button" class="btn-google-auth" id="gateGoogleLoginBtn">
+              <svg class="google-svg" viewBox="0 0 24 24" width="20" height="20">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+              </svg>
+              <span>Masuk Cepat dengan Google</span>
+            </button>
+
+            <!-- Divider Garis -->
+            <div class="auth-divider-line">
+              <span>ATAU EMAIL SANDI</span>
+            </div>
+
             <!-- Form LOGIN GATE -->
-            <form class="auth-form-card clean-form" id="gateLoginForm">
+            <form class="auth-form-card clean-form grocify-form" id="gateLoginForm">
               <div class="form-group">
-                <label class="form-label" for="gateLoginEmail">Email atau Akun</label>
+                <label class="form-label" for="gateLoginEmail">Email Pengguna</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="mail" class="auth-input-icon"></i>
                   <input type="text" class="form-input" id="gateLoginEmail" placeholder="nama@email.com" autocomplete="username" required>
@@ -100,7 +125,7 @@
                 <label class="form-label" for="gateLoginPassword">Kata Sandi</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="lock" class="auth-input-icon"></i>
-                  <input type="password" class="form-input" id="gateLoginPassword" placeholder="Masukkan password" autocomplete="current-password" required>
+                  <input type="password" class="form-input" id="gateLoginPassword" placeholder="Minimal 6 karakter" autocomplete="current-password" required minlength="6">
                   <button type="button" class="toggle-password-btn" id="gateToggleLoginPassBtn" aria-label="Lihat Password">
                     <i data-lucide="eye" id="gateLoginEyeIcon"></i>
                   </button>
@@ -115,9 +140,8 @@
                 <button type="button" class="forgot-pass-link" id="gateForgotPassBtn">Lupa sandi?</button>
               </div>
 
-              <button type="submit" class="btn-primary auth-submit-btn" id="gateSubmitLoginBtn">
-                <i data-lucide="log-in" style="width: 17px; height: 17px;"></i>
-                <span>Masuk Sekarang</span>
+              <button type="submit" class="btn-primary auth-submit-btn grocify-submit-btn" id="gateSubmitLoginBtn">
+                <span>Masuk ke Akun 🐾</span>
               </button>
 
               <div class="auth-switch-prompt">
@@ -127,7 +151,22 @@
             </form>
 
             <!-- Form REGISTER GATE -->
-            <form class="auth-form-card clean-form" id="gateRegisterForm" style="display: none;">
+            <form class="auth-form-card clean-form grocify-form" id="gateRegisterForm" style="display: none;">
+              <!-- Tombol Daftar Cepat dengan Google -->
+              <button type="button" class="btn-google-auth" id="gateGoogleRegBtn">
+                <svg class="google-svg" viewBox="0 0 24 24" width="20" height="20">
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                <span>Daftar Cepat dengan Google</span>
+              </button>
+
+              <div class="auth-divider-line">
+                <span>ATAU DAFTAR DENGAN EMAIL</span>
+              </div>
+
               <div class="form-group">
                 <label class="form-label" for="gateRegName">Nama Lengkap</label>
                 <div class="auth-input-wrapper">
@@ -145,10 +184,10 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label" for="gateRegPassword">Kata Sandi (Min. 3 Karakter)</label>
+                <label class="form-label" for="gateRegPassword">Kata Sandi (Min. 6 Karakter)</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="lock" class="auth-input-icon"></i>
-                  <input type="password" class="form-input" id="gateRegPassword" placeholder="Buat kata sandi akun..." required minlength="3">
+                  <input type="password" class="form-input" id="gateRegPassword" placeholder="Buat kata sandi akun..." required minlength="6">
                   <button type="button" class="toggle-password-btn" id="gateToggleRegPassBtn" aria-label="Lihat Password">
                     <i data-lucide="eye" id="gateRegEyeIcon"></i>
                   </button>
@@ -167,7 +206,7 @@
                 </div>
                 <div class="form-group">
                   <label class="form-label" for="gateRegCity">Kota Rantau</label>
-                  <input type="text" class="form-input" id="gateRegCity" placeholder="Contoh: Yogyakarta" value="Yogyakarta">
+                  <input type="text" class="form-input" id="gateRegCity" placeholder="Contoh: Jakarta Barat" value="Jakarta Barat">
                 </div>
               </div>
 
@@ -179,9 +218,8 @@
                 </div>
               </div>
 
-              <button type="submit" class="btn-primary auth-submit-btn" id="gateSubmitRegBtn">
-                <i data-lucide="user-plus" style="width: 17px; height: 17px;"></i>
-                <span>Daftar Akun Baru</span>
+              <button type="submit" class="btn-primary auth-submit-btn grocify-submit-btn" id="gateSubmitRegBtn">
+                <span>Daftar Akun Baru 🐾</span>
               </button>
 
               <div class="auth-switch-prompt">
@@ -338,17 +376,23 @@
 
           <!-- Realtime Shopping Session Strip (Lokasi Toko, Tanggal, Multi-Device Cloud Sync) -->
           <div class="session-meta-strip" id="sessionMetaStrip">
-            <div class="session-meta-item">
+            <div class="session-meta-item location-meta-picker" id="openLocationModalBtn" title="Ketuk untuk memilih lokasi belanja">
               <i data-lucide="map-pin" style="width: 14px; height: 14px; color: var(--primary);"></i>
-              <input type="text" id="sessionStoreLocation" class="session-meta-input" list="storeLocationsList" placeholder="Lotte Mart Grocery - Puri Indah" value="Lotte Mart Grocery - Puri Indah" title="Ubah lokasi supermarket belanja">
+              <span class="session-location-label" id="sessionLocationDisplay">Lotte Mart Grocery – Puri Indah</span>
+              <input type="hidden" id="sessionStoreLocation" value="Lotte Mart Grocery – Puri Indah">
+              <i data-lucide="chevron-down" style="width: 12px; height: 12px; color: var(--text-soft); margin-left: 2px;"></i>
               <datalist id="storeLocationsList">
-                <!-- Supermarket Jakarta -->
-                <option value="Lotte Mart Grocery - Puri Indah">Lotte Mart Grocery (Puri Indah, Jakbar) - Grosir Langganan</option>
+                <!-- Supermarket Jakarta (Persis Screenshot & Pilihan Wilayah) -->
+                <option value="Lotte Mart Grocery – Puri Indah">Lotte Mart Grocery – Puri Indah (Grosir Langganan)</option>
+                <option value="Super Indo – Intercon Kebon Jeruk">Super Indo – Intercon Kebon Jeruk</option>
+                <option value="Indomaret Fresh – Kemanggisan">Indomaret Fresh – Kemanggisan</option>
+                <option value="Grand Lucky Superstore – Meruya">Grand Lucky Superstore – Meruya</option>
+                <option value="Alfamidi Super – Palmerah">Alfamidi Super – Palmerah</option>
+                <option value="Hypermart – Puri Indah">Hypermart – Puri Indah</option>
+                <option value="Pasar Tradisional Puri Indah">Pasar Tradisional Puri Indah</option>
                 <option value="Grand Lucky Superstore - SCBD">Grand Lucky Superstore (SCBD, Jaksel)</option>
                 <option value="Farmers Market - Kelapa Gading">Farmers Market (Kelapa Gading, Jakut)</option>
                 <option value="Hero Supermarket - Pondok Indah Mall">Hero Supermarket (Pondok Indah, Jaksel)</option>
-                <option value="Superindo - Intercon Kebon Jeruk">Superindo (Kebon Jeruk, Jakbar)</option>
-                <option value="Hypermart - Puri Indah Mall">Hypermart (Puri Indah Mall, Jakbar)</option>
                 <option value="Total Buah Segar - Rawamangun">Total Buah Segar (Rawamangun, Jaktim)</option>
                 <option value="Transmart Carrefour - Cempaka Putih">Transmart Carrefour (Cempaka Putih, Jakpus)</option>
                 <option value="Indomaret - Puri Kencana">Indomaret (Puri Kencana, Jakbar)</option>
@@ -1249,11 +1293,52 @@
         </div>
       </div>
 
+      <!-- ==========================================
+           MODAL 6: PILIH LOKASI BELANJA (PERSIS SCREENSHOT 2)
+           ========================================== -->
+      <div class="modal-overlay" id="storeLocationModal" style="display: none;">
+        <div class="store-location-sheet" id="storeLocationSheet">
+          <div class="sheet-handle-bar"></div>
+          
+          <div class="store-modal-header">
+            <h3>Pilih Lokasi Belanja</h3>
+            <button type="button" class="store-modal-close-btn" id="closeStoreLocationModalBtn" aria-label="Tutup Pilihan Toko">
+              <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+
+          <!-- Tombol GPS Deteksi Lokasi Terdekat (Persis Screenshot 2) -->
+          <button type="button" class="btn-detect-gps" id="detectGpsStoreBtn">
+            <i data-lucide="compass" style="width: 17px; height: 17px;"></i>
+            <span>Deteksi Lokasi Terdekat (GPS)</span>
+          </button>
+
+          <!-- Label Subtitle -->
+          <p class="store-list-subtitle">Pilih toko supermarket tempat kamu belanja saat ini:</p>
+
+          <!-- Daftar Pilihan Toko Supermarket (Persis Screenshot 2) -->
+          <div class="store-location-cards-list" id="storeLocationCardsList">
+            <!-- Rendered via JS -->
+          </div>
+
+          <!-- Form Tambah Toko Baru (Persis Screenshot 2) -->
+          <div class="add-custom-store-section">
+            <label class="add-custom-store-label">TAMBAH TOKO / TEMPAT BELANJA BARU</label>
+            <div class="add-custom-store-row">
+              <input type="text" class="input-new-store" id="inputNewStoreName" placeholder="Nama toko / minimarket baru" autocomplete="off">
+              <button type="button" class="btn-submit-new-store" id="submitNewStoreBtn">+ Toko</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
     </main>
   </div>
 
-  <!-- Firebase SDK (Compat Version for Multi-Device Realtime Cloud Firestore) -->
+  <!-- Firebase SDK (Compat Version for Multi-Device Realtime Cloud Firestore & Google Auth) -->
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <!-- Scripts with cache-busting version query -->
