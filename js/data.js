@@ -450,6 +450,22 @@ class SmartStorage {
     this.set('store_location', loc || 'Lotte Mart Grocery - Puri Indah');
   }
 
+  // Custom Store Price Overrides (Per-toko agar update harga langsung tercermin di etalase toko tersebut)
+  static getCustomStorePrices(storeName) {
+    const all = this.get('store_prices_map', {});
+    const norm = (storeName || '').toLowerCase().replace(/[–—]/g, '-').trim();
+    return all[norm] || {};
+  }
+
+  static saveStoreProductPrice(storeName, productName, price) {
+    const all = this.get('store_prices_map', {});
+    const norm = (storeName || '').toLowerCase().replace(/[–—]/g, '-').trim();
+    if (!all[norm]) all[norm] = {};
+    const normProd = (productName || '').toLowerCase().trim();
+    all[norm][normProd] = Number(price);
+    this.set('store_prices_map', all);
+  }
+
   // Shopping Date
   static getShoppingDate() {
     const today = new Date().toISOString().split('T')[0];

@@ -2833,6 +2833,36 @@ select.form-input:focus {
   text-decoration: line-through;
 }
 
+.shopee-trend-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-size: 9.5px;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 6px;
+  margin-bottom: 8px;
+  line-height: 1.2;
+}
+
+.shopee-trend-pill.up {
+  background: #FFF1F2;
+  color: #BE123C;
+  border: 1px solid #FECDD3;
+}
+
+.shopee-trend-pill.drop {
+  background: #ECFDF5;
+  color: #065F46;
+  border: 1px solid #A7F3D0;
+}
+
+.shopee-trend-pill.stable {
+  background: #F8FAFC;
+  color: #64748B;
+  border: 1px solid #E2E8F0;
+}
+
 .shopee-card-meta {
   display: none !important;
 }
@@ -2862,6 +2892,19 @@ select.form-input:focus {
 
 .btn-shopee-add:active {
   transform: scale(0.95);
+}
+
+.btn-shopee-add.disabled-overbudget {
+  background: #FFF1F2 !important;
+  color: #E11D48 !important;
+  border: 1px solid #FECDD3 !important;
+  cursor: not-allowed !important;
+  opacity: 0.95;
+}
+
+.btn-shopee-add.disabled-overbudget:hover {
+  background: #FFE4E6 !important;
+  color: #BE123C !important;
 }
 
 .shopee-qty-stepper {

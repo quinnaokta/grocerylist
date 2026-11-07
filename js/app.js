@@ -425,7 +425,7 @@
     if (!isNaN(num) && num > 0) {
       const discountAmount = Math.min(unitPrice, num);
       const effPercent = unitPrice > 0 ? Math.round((discountAmount / unitPrice) * 100) : 0;
-      return { discountAmount, discountPercent: effPercent, label: `Rp ${formatRp(num)}` };
+      return { discountAmount, discountPercent: effPercent, label: formatRp(num) };
     }
 
     return { discountAmount: 0, discountPercent: 0, label: '' };
@@ -484,6 +484,138 @@
       finalSubtotal,
       totalSavings
     };
+  }
+
+  // Evaluasi Keamanan Anggaran (Fitur: Tidak Bisa Menambah Barang Jika Overbudget)
+  function getCartBudgetStatus(additionalCost = 0) {
+    let checkedSpent = 0;
+    let checkedCount = 0;
+    let totalAllSpent = 0;
+
+    state.activeItems.forEach(item => {
+      const p = calculateItemPricing(item);
+      totalAllSpent += p.finalSubtotal;
+      if (item.inCart) {
+        checkedCount++;
+        checkedSpent += p.finalSubtotal;
+      }
+    });
+
+    const baseSpent = checkedCount > 0 ? checkedSpent : totalAllSpent;
+    const userBudget = state.currentUser && state.currentUser.budget ? Number(state.currentUser.budget) : null;
+    const limit = (userBudget && userBudget > 0) ? userBudget : (state.budgetLimit || 400000);
+    const potentialSpent = baseSpent + Number(additionalCost || 0);
+
+    const isOverbudget = baseSpent > limit;
+    const wouldBeOverbudget = potentialSpent > limit;
+    const excess = Math.max(0, potentialSpent - limit);
+
+    return {
+      baseSpent,
+      potentialSpent,
+      limit,
+      isOverbudget,
+      wouldBeOverbudget,
+      excess
+    };
+  }
+
+  // Ambil Harga Efektif Produk per Toko (Memperhitungkan update harga & benchmark toko)
+  function getEffectiveProductPrice(prod, storeName) {
+    if (!prod) return 0;
+    const targetStore = storeName || state.storeLocation || 'Lotte Mart Grocery – Puri Indah';
+    const cleanStore = targetStore.toLowerCase().replace(/[–—]/g, '-').trim();
+    const prodName = (prod.name || '').trim().toLowerCase();
+    const cleanName = cleanItemNameForMatch(prodName);
+
+    // 1. Cek penyimpanan harga custom yang diperbarui pengguna di toko ini
+    if (window.SmartData && window.SmartData.SmartStorage && window.SmartData.SmartStorage.getCustomStorePrices) {
+      const customMap = window.SmartData.SmartStorage.getCustomStorePrices(targetStore);
+      if (customMap[prodName] && Number(customMap[prodName]) > 0) {
+        return Number(customMap[prodName]);
+      }
+      if (cleanName && customMap[cleanName] && Number(customMap[cleanName]) > 0) {
+        return Number(customMap[cleanName]);
+      }
+    }
+
+    // 2. Cek apakah barang sedang ada di keranjang belanja aktif
+    const inCart = state.activeItems.find(i => isSameGroceryItem(i, prod));
+    if (inCart && Number(inCart.unitPrice) > 0) {
+      return Number(inCart.unitPrice);
+    }
+
+    // 3. Cek STORE_BENCHMARK_PRICES sesuai toko yang aktif
+    if (window.SmartData && window.SmartData.STORE_BENCHMARK_PRICES) {
+      const keys = Object.keys(window.SmartData.STORE_BENCHMARK_PRICES);
+      const matchedKey = keys.find(k => {
+        const nK = k.toLowerCase().replace(/[–—]/g, '-').trim();
+        return nK === cleanStore || cleanStore.includes(nK) || nK.includes(cleanStore) ||
+               cleanStore.split('-')[0].trim() === nK.split('-')[0].trim();
+      });
+
+      if (matchedKey) {
+        const storeMap = window.SmartData.STORE_BENCHMARK_PRICES[matchedKey];
+        if (storeMap[prodName] && storeMap[prodName].lastPrice) {
+          return Number(storeMap[prodName].lastPrice);
+        }
+        if (cleanName && storeMap[cleanName] && storeMap[cleanName].lastPrice) {
+          return Number(storeMap[cleanName].lastPrice);
+        }
+        const foundKey = Object.keys(storeMap).find(k => k === cleanName || cleanName.includes(k) || k.includes(cleanName));
+        if (foundKey && storeMap[foundKey].lastPrice) {
+          return Number(storeMap[foundKey].lastPrice);
+        }
+      }
+    }
+
+    // 4. Fallback ke harga bawaan produk
+    return Number(prod.price) || 0;
+  }
+
+  // Update Harga Produk Toko & Sinkronisasi Realtime ke Etalase & Benchmark Toko
+  function updateStoreProductPrice(itemName, newPrice, storeName) {
+    const rawName = (itemName || '').trim();
+    const priceVal = Number(newPrice);
+    if (!rawName || isNaN(priceVal) || priceVal <= 0) return;
+
+    const targetStore = (storeName || state.storeLocation || 'Lotte Mart Grocery – Puri Indah').trim();
+
+    // 1. Simpan ke LocalStorage agar harga toko ini menetap
+    if (window.SmartData && window.SmartData.SmartStorage && window.SmartData.SmartStorage.saveStoreProductPrice) {
+      window.SmartData.SmartStorage.saveStoreProductPrice(targetStore, rawName, priceVal);
+    }
+
+    // 2. Perbarui harga di katalog SHOPEE_PRODUCTS
+    const matchProd = findMatchingShopeeProduct({ name: rawName });
+    if (matchProd) {
+      matchProd.price = priceVal;
+    }
+
+    // 3. Catat di state.benchmarks dan STORE_BENCHMARK_PRICES
+    const cleanLower = rawName.toLowerCase();
+    if (window.SmartData && window.SmartData.STORE_BENCHMARK_PRICES) {
+      const keys = Object.keys(window.SmartData.STORE_BENCHMARK_PRICES);
+      const matchedKey = keys.find(k => {
+        const nK = k.toLowerCase().replace(/[–—]/g, '-').trim();
+        const tS = targetStore.toLowerCase().replace(/[–—]/g, '-').trim();
+        return nK === tS || tS.includes(nK) || nK.includes(tS) || tS.split('-')[0].trim() === nK.split('-')[0].trim();
+      });
+
+      if (matchedKey) {
+        const storeMap = window.SmartData.STORE_BENCHMARK_PRICES[matchedKey];
+        if (!storeMap[cleanLower]) {
+          storeMap[cleanLower] = {
+            lastPrice: priceVal,
+            previousMonth: 'Bulan Lalu',
+            store: targetStore
+          };
+        }
+      }
+    }
+
+    // 4. Render ulang etalase agar harga dan badge update toko langsung berubah
+    renderShopeeCatalog();
   }
 
   // Price Trend Detector vs Historical Benchmarks (Membandingkan histori harga pada toko yang sama)
@@ -1037,6 +1169,35 @@
     filtered.forEach(prod => {
       const existingInCart = state.activeItems.find(i => isSameGroceryItem(i, prod));
       const qtyInCart = existingInCart ? Number(existingInCart.qty) || 0 : 0;
+      const effPrice = getEffectiveProductPrice(prod, state.storeLocation);
+      const trend = detectPriceTrend(prod.name, effPrice, state.storeLocation);
+      const storeShort = (state.storeLocation || 'Toko Ini').split(/[–—-]/)[0].trim();
+      const budgetStatus = getCartBudgetStatus();
+      const isOverbudget = budgetStatus.isOverbudget;
+
+      let trendPillHtml = '';
+      if (trend && trend.status === 'up') {
+        trendPillHtml = `
+          <div class="shopee-trend-pill up" title="Harga naik di ${escapeHtml(storeShort)} dibanding catatan sebelumnya">
+            <i data-lucide="arrow-up" style="width: 10px; height: 10px;"></i>
+            <span>Naik ${formatRp(trend.diff)}</span>
+          </div>
+        `;
+      } else if (trend && trend.status === 'drop') {
+        trendPillHtml = `
+          <div class="shopee-trend-pill drop" title="Harga turun di ${escapeHtml(storeShort)} dibanding catatan sebelumnya">
+            <i data-lucide="arrow-down" style="width: 10px; height: 10px;"></i>
+            <span>Turun ${formatRp(Math.abs(trend.diff))}</span>
+          </div>
+        `;
+      } else if (trend && trend.status === 'stable' && trend.pastPrice) {
+        trendPillHtml = `
+          <div class="shopee-trend-pill stable" title="Harga stabil di ${escapeHtml(storeShort)}">
+            <i data-lucide="equal" style="width: 10px; height: 10px;"></i>
+            <span>Stabil (${escapeHtml(storeShort)})</span>
+          </div>
+        `;
+      }
 
       const card = document.createElement('div');
       card.className = `shopee-card ${qtyInCart > 0 ? 'has-in-cart' : ''}`;
@@ -1049,9 +1210,10 @@
           <div class="shopee-card-tag">${formatCategory(prod.category)} • ${prod.unit || 'pcs'}</div>
           <div class="shopee-card-title" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</div>
           <div class="shopee-card-prices">
-            <span class="shopee-price-main">${formatRp(prod.price)}</span>
-            ${prod.originalPrice && prod.originalPrice > prod.price ? `<span class="shopee-price-original">${formatRp(prod.originalPrice)}</span>` : ''}
+            <span class="shopee-price-main">${formatRp(effPrice)}</span>
+            ${prod.originalPrice && prod.originalPrice > effPrice ? `<span class="shopee-price-original">${formatRp(prod.originalPrice)}</span>` : ''}
           </div>
+          ${trendPillHtml}
           <div class="shopee-card-action">
             ${qtyInCart > 0 ? `
               <div class="shopee-stepper-row">
@@ -1067,6 +1229,11 @@
               <button type="button" class="btn-shopee-check-toggle ${existingInCart && existingInCart.inCart ? 'is-checked' : ''}" title="Centang untuk hitung ke anggaran">
                 <i data-lucide="${existingInCart && existingInCart.inCart ? 'check-circle' : 'circle'}" style="width: 13px; height: 13px;"></i>
                 <span>${existingInCart && existingInCart.inCart ? 'Siap Beli (Dihitung)' : 'Centang Beli'}</span>
+              </button>
+            ` : isOverbudget ? `
+              <button type="button" class="btn-shopee-add disabled-overbudget" title="Tidak dapat menambah barang karena anggaran belanja sudah overbudget">
+                <i data-lucide="lock" style="width: 13px; height: 13px;"></i>
+                <span>Overbudget</span>
               </button>
             ` : `
               <button type="button" class="btn-shopee-add">
@@ -1114,6 +1281,17 @@
       if (checkToggleBtn && existingInCart) {
         checkToggleBtn.addEventListener('click', (e) => {
           e.stopPropagation();
+          if (!existingInCart.inCart) {
+            const p = calculateItemPricing(existingInCart);
+            const budgetCheck = getCartBudgetStatus(p.finalSubtotal);
+            if (budgetCheck.isOverbudget || budgetCheck.wouldBeOverbudget) {
+              const overAmt = budgetCheck.excess > 0 ? budgetCheck.excess : (budgetCheck.potentialSpent - budgetCheck.limit);
+              showToast(`🚨 Tidak dapat mencentang "${existingInCart.name}"! Total belanja melebihi pagu ${formatRp(budgetCheck.limit)} (Kelebihan ${formatRp(overAmt)}).`, 'danger');
+              if (window.soundCtrl) window.soundCtrl.playWarning();
+              showOverbudgetWarningPopup(budgetCheck.potentialSpent, budgetCheck.limit);
+              return;
+            }
+          }
           existingInCart.inCart = !existingInCart.inCart;
           saveAndRefresh();
           if (window.soundCtrl) window.soundCtrl.playPop();
@@ -1143,10 +1321,23 @@
   }
 
   function addToCartFromCatalog(prod) {
+    const effPrice = getEffectiveProductPrice(prod, state.storeLocation);
+    const budgetCheck = getCartBudgetStatus(effPrice);
+
+    // Fitur Proteksi Pagu: Tidak bisa menambahkan barang jika overbudget
+    if (budgetCheck.isOverbudget || budgetCheck.wouldBeOverbudget) {
+      const overAmount = budgetCheck.excess > 0 ? budgetCheck.excess : (budgetCheck.baseSpent + effPrice - budgetCheck.limit);
+      showToast(`🚨 Tidak bisa menambah "${prod.name}"! Anggaran dompet ${formatRp(budgetCheck.limit)} terlampaui (Overbudget ${formatRp(overAmount)}). Kurangi barang belanjaan lain terlebih dahulu!`, 'danger');
+      if (window.soundCtrl) window.soundCtrl.playWarning();
+      showOverbudgetWarningPopup(budgetCheck.potentialSpent, budgetCheck.limit);
+      return false;
+    }
+
     const existing = state.activeItems.find(i => isSameGroceryItem(i, prod));
     if (existing) {
       existing.qty = (Number(existing.qty) || 0) + 1;
       if (!existing.productId) existing.productId = prod.id;
+      if (effPrice > 0) existing.unitPrice = effPrice;
     } else {
       state.activeItems.push({
         id: 'item-' + Date.now() + '-' + Math.random().toString(36).substr(2, 4),
@@ -1155,11 +1346,11 @@
         category: prod.category,
         unit: prod.unit || 'pcs',
         qty: 1,
-        unitPrice: prod.price,
+        unitPrice: effPrice,
         discountType: prod.discountPercent ? 'percent' : 'none',
         discountValue: prod.discountPercent || 0,
         stackedDiscount: { enabled: false, type: 'percent', value: 0 },
-        inCart: false, // Default: masuk troli tapi belum dichecklist untuk dibeli
+        inCart: true,
         note: ''
       });
     }
@@ -1176,10 +1367,11 @@
       setTimeout(() => el.navCartCount.classList.remove('pop'), 250);
     }
 
-    showToast(`${prod.name} dimasukkan ke troli!`, 'success');
+    showToast(`${prod.name} (${formatRp(effPrice)}) dimasukkan ke keranjang!`, 'success');
     if (window.soundCtrl) window.soundCtrl.playPop();
 
     checkBudgetThresholdAndWarn();
+    return true;
   }
 
   function decreaseCartFromCatalog(prod) {
@@ -1601,6 +1793,17 @@
           const action = btn.dataset.action;
 
           if (action === 'toggle-cart') {
+            if (!item.inCart) {
+              const p = calculateItemPricing(item);
+              const budgetCheck = getCartBudgetStatus(p.finalSubtotal);
+              if (budgetCheck.isOverbudget || budgetCheck.wouldBeOverbudget) {
+                const overAmt = budgetCheck.excess > 0 ? budgetCheck.excess : (budgetCheck.potentialSpent - budgetCheck.limit);
+                showToast(`🚨 Tidak dapat mencentang "${item.name}"! Total belanja melebihi pagu anggaran ${formatRp(budgetCheck.limit)} (Kelebihan ${formatRp(overAmt)}).`, 'danger');
+                if (window.soundCtrl) window.soundCtrl.playWarning();
+                showOverbudgetWarningPopup(budgetCheck.potentialSpent, budgetCheck.limit);
+                return;
+              }
+            }
             item.inCart = !item.inCart;
             saveAndRefresh();
             if (window.soundCtrl) window.soundCtrl.playPop();
@@ -1608,6 +1811,20 @@
               showToast(`"${item.name}" dicentang siap beli!`, 'success');
             }
           } else if (action === 'qty-plus') {
+            const pricingNow = calculateItemPricing(item);
+            const tempMore = { ...item, qty: (Number(item.qty) || 1) + 1 };
+            const pricingMore = calculateItemPricing(tempMore);
+            const costDiff = pricingMore.finalSubtotal - pricingNow.finalSubtotal;
+            if (item.inCart) {
+              const budgetCheck = getCartBudgetStatus(costDiff);
+              if (budgetCheck.isOverbudget || budgetCheck.wouldBeOverbudget) {
+                const overAmt = budgetCheck.excess > 0 ? budgetCheck.excess : (budgetCheck.potentialSpent - budgetCheck.limit);
+                showToast(`🚨 Tidak dapat menambah kuantitas "${item.name}"! Total belanja melebihi pagu ${formatRp(budgetCheck.limit)} (Kelebihan ${formatRp(overAmt)}).`, 'danger');
+                if (window.soundCtrl) window.soundCtrl.playWarning();
+                showOverbudgetWarningPopup(budgetCheck.potentialSpent, budgetCheck.limit);
+                return;
+              }
+            }
             item.qty = (Number(item.qty) || 1) + 1;
             saveAndRefresh();
             if (window.soundCtrl) window.soundCtrl.playTick();
@@ -1646,6 +1863,21 @@
     }
     const allChecked = state.activeItems.every(i => i.inCart);
     const newStatus = !allChecked;
+    if (newStatus) {
+      let totalIfAll = 0;
+      state.activeItems.forEach(i => {
+        const p = calculateItemPricing(i);
+        totalIfAll += p.finalSubtotal;
+      });
+      const userBudget = state.currentUser && state.currentUser.budget ? Number(state.currentUser.budget) : null;
+      const limit = (userBudget && userBudget > 0) ? userBudget : (state.budgetLimit || 400000);
+      if (totalIfAll > limit) {
+        showToast(`🚨 Tidak dapat mencentang semua barang! Total belanja ${formatRp(totalIfAll)} melebihi batas anggaran ${formatRp(limit)}.`, 'danger');
+        if (window.soundCtrl) window.soundCtrl.playWarning();
+        showOverbudgetWarningPopup(totalIfAll, limit);
+        return;
+      }
+    }
     state.activeItems.forEach(i => {
       i.inCart = newStatus;
     });
@@ -2039,23 +2271,23 @@
     const finalSubtotal = discountedSubtotal + taxAmount;
 
     // Tampilkan Breakdown Persis Screenshot 2
-    if (el.liveNormalPrice) el.liveNormalPrice.textContent = `Rp ${formatRp(unitPrice)}`;
+    if (el.liveNormalPrice) el.liveNormalPrice.textContent = formatRp(unitPrice);
     if (el.liveDiscountDeduction) {
-      el.liveDiscountDeduction.textContent = `Rp ${formatRp(discountAmount)} (${discountPercent}%)`;
+      el.liveDiscountDeduction.textContent = `${formatRp(discountAmount)} (${discountPercent}%)`;
     }
     if (el.liveDiscountedPrice) {
-      el.liveDiscountedPrice.textContent = `Rp ${formatRp(discountedUnitPrice)}`;
+      el.liveDiscountedPrice.textContent = formatRp(discountedUnitPrice);
     }
     if (el.liveTaxRow && el.liveTaxAmount) {
       if (hasPPN) {
         el.liveTaxRow.style.display = 'flex';
-        el.liveTaxAmount.textContent = `+ Rp ${formatRp(taxAmount)}`;
+        el.liveTaxAmount.textContent = `+ ${formatRp(taxAmount)}`;
       } else {
         el.liveTaxRow.style.display = 'none';
       }
     }
     if (el.liveFinalSubtotal) {
-      el.liveFinalSubtotal.textContent = `Rp ${formatRp(finalSubtotal)}`;
+      el.liveFinalSubtotal.textContent = formatRp(finalSubtotal);
     }
   }
 
@@ -2152,8 +2384,11 @@
       // Edit existing
       const idx = state.activeItems.findIndex(i => i.id === state.editingItemId);
       if (idx !== -1) {
-        state.activeItems[idx] = {
-          ...state.activeItems[idx],
+        const oldItem = state.activeItems[idx];
+        const oldPricing = calculateItemPricing(oldItem);
+        const oldCost = oldItem.inCart ? oldPricing.finalSubtotal : 0;
+        const candidateItem = {
+          ...oldItem,
           name,
           category,
           unit,
@@ -2165,9 +2400,49 @@
           taxPPN,
           note
         };
+        const candidatePricing = calculateItemPricing(candidateItem);
+        const candidateCost = candidateItem.inCart ? candidatePricing.finalSubtotal : 0;
+        const costDiff = candidateCost - oldCost;
+
+        if (costDiff > 0) {
+          const budgetCheck = getCartBudgetStatus(costDiff);
+          if (budgetCheck.isOverbudget || budgetCheck.wouldBeOverbudget) {
+            const overAmt = budgetCheck.excess > 0 ? budgetCheck.excess : (budgetCheck.potentialSpent - budgetCheck.limit);
+            showToast(`🚨 Tidak dapat menyimpan perubahan "${name}"! Total belanja melebihi pagu anggaran ${formatRp(budgetCheck.limit)} (Kelebihan ${formatRp(overAmt)}). Kurangi kuantitas barang!`, 'danger');
+            if (window.soundCtrl) window.soundCtrl.playWarning();
+            showOverbudgetWarningPopup(budgetCheck.potentialSpent, budgetCheck.limit);
+            return;
+          }
+        }
+
+        state.activeItems[idx] = candidateItem;
         showToast(`"${name}" berhasil diperbarui!`, 'success');
+        updateStoreProductPrice(name, unitPrice, state.storeLocation);
       }
     } else {
+      // Add new or group: check overbudget protection
+      const candidateItem = {
+        name,
+        category,
+        unit,
+        qty,
+        unitPrice,
+        discountFormula,
+        discountType,
+        discountValue,
+        taxPPN,
+        inCart: true
+      };
+      const candidatePricing = calculateItemPricing(candidateItem);
+      const budgetCheck = getCartBudgetStatus(candidatePricing.finalSubtotal);
+      if (budgetCheck.isOverbudget || budgetCheck.wouldBeOverbudget) {
+        const overAmt = budgetCheck.excess > 0 ? budgetCheck.excess : (budgetCheck.potentialSpent - budgetCheck.limit);
+        showToast(`🚨 Tidak dapat menambahkan "${name}"! Total belanja melebihi pagu anggaran ${formatRp(budgetCheck.limit)} (Kelebihan ${formatRp(overAmt)}).`, 'danger');
+        if (window.soundCtrl) window.soundCtrl.playWarning();
+        showOverbudgetWarningPopup(budgetCheck.potentialSpent, budgetCheck.limit);
+        return;
+      }
+
       // Add new: check if same item already exists in cart, group if so!
       const existing = state.activeItems.find(i => isSameGroceryItem(i, { name, category, unit }));
       if (existing) {
@@ -2199,6 +2474,7 @@
         showToast(`"${name}" ditambahkan ke troli!`, 'success');
         if (window.soundCtrl) window.soundCtrl.playSuccess();
       }
+      updateStoreProductPrice(name, unitPrice, state.storeLocation);
     }
 
     state.activeItems = groupActiveItems(state.activeItems);
