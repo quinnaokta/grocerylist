@@ -691,6 +691,29 @@ class SmartStorage {
     return trimmed;
   }
 
+  // Custom Etalase Products (Tambah Barang ke Etalase)
+  static getCustomEtalaseProducts() {
+    return this.get('custom_etalase_products', []);
+  }
+
+  static saveCustomEtalaseProducts(products) {
+    this.set('custom_etalase_products', products || []);
+  }
+
+  static addCustomEtalaseProduct(product) {
+    const list = this.getCustomEtalaseProducts();
+    list.unshift(product);
+    this.saveCustomEtalaseProducts(list);
+    return product;
+  }
+
+  static deleteCustomEtalaseProduct(productId) {
+    let list = this.getCustomEtalaseProducts();
+    list = list.filter(p => p.id !== productId);
+    this.saveCustomEtalaseProducts(list);
+    return list;
+  }
+
   // Reset to initial demo data
   static resetToDemo() {
     localStorage.removeItem('sg_active_items');
@@ -699,10 +722,22 @@ class SmartStorage {
     localStorage.removeItem('sg_benchmark_prices');
     localStorage.removeItem('sg_current_user');
     localStorage.removeItem('sg_users_list');
+    localStorage.removeItem('sg_custom_etalase_products');
   }
 }
 
-const DEFAULT_USERS = [];
+const DEFAULT_USERS = [
+  {
+    id: 'user-budi',
+    name: 'Budi Santoso',
+    email: 'budi@rantau.id',
+    password: 'password123',
+    role: 'Mahasiswa Rantau',
+    city: 'Yogyakarta',
+    budget: 450000,
+    avatar: '👨‍🎓'
+  }
+];
 
 // Pre-seeded Catalog of Shopee-style Product Store for Anak Rantau
 const SHOPEE_PRODUCTS = [

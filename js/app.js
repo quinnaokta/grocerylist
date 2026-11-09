@@ -80,6 +80,30 @@
     closeAuthGateBtn: document.getElementById('closeAuthGateBtn'),
     menuOpenLoginBtn: document.getElementById('menuOpenLoginBtn'),
 
+    // Theme Switcher Elements
+    themeToggleBtn: document.getElementById('themeToggleBtn'),
+    gateThemeToggleBtn: document.getElementById('gateThemeToggleBtn'),
+    menuThemeToggleBtn: document.getElementById('menuThemeToggleBtn'),
+    menuThemeStatus: document.getElementById('menuThemeStatus'),
+
+    // Add to Etalase Elements
+    openAddEtalaseModalBtnTop: document.getElementById('openAddEtalaseModalBtnTop'),
+    openAddEtalaseModalBtn: document.getElementById('openAddEtalaseModalBtn'),
+    addEtalaseModal: document.getElementById('addEtalaseModal'),
+    closeAddEtalaseModalBtn: document.getElementById('closeAddEtalaseModalBtn'),
+    cancelAddEtalaseBtn: document.getElementById('cancelAddEtalaseBtn'),
+    saveAddEtalaseBtn: document.getElementById('saveAddEtalaseBtn'),
+    addEtalaseForm: document.getElementById('addEtalaseForm'),
+    etalaseItemName: document.getElementById('etalaseItemName'),
+    etalaseCategory: document.getElementById('etalaseCategory'),
+    etalaseUnit: document.getElementById('etalaseUnit'),
+    etalaseUnitChips: document.getElementById('etalaseUnitChips'),
+    etalasePrice: document.getElementById('etalasePrice'),
+    etalaseOriginalPrice: document.getElementById('etalaseOriginalPrice'),
+    etalaseEmoji: document.getElementById('etalaseEmoji'),
+    quickEmojiChips: document.getElementById('quickEmojiChips'),
+    etalaseDesc: document.getElementById('etalaseDesc'),
+
     // Session Meta Strip & Store Location Modal (Persis Screenshot 2)
     headerStoreLocationBtn: document.getElementById('headerStoreLocationBtn'),
     headerCurrentStoreName: document.getElementById('headerCurrentStoreName'),
@@ -794,7 +818,8 @@
   // App Initialization
   function initApp() {
     try { loadData(); } catch (e) { console.error('loadData error:', e); }
-    try { checkAuthGate(); } catch (e) { console.error('checkAuthGate error:', e); }
+    try { initTheme(); } catch (e) { console.error('initTheme error:', e); }
+    try { checkAuthGate(true); } catch (e) { console.error('checkAuthGate error:', e); }
     try { renderKatalogCategoryChips(); } catch (e) { console.error('renderKatalogCategoryChips error:', e); }
     try { renderShopeeCatalog(); } catch (e) { console.error('renderShopeeCatalog error:', e); }
     try { renderUserProfile(); } catch (e) { console.error('renderUserProfile error:', e); }
@@ -812,19 +837,86 @@
   }
 
   // ==========================================
+  // THEME (DARK / LIGHT MODE) SYSTEM
+  // ==========================================
+
+  function initTheme() {
+    const savedTheme = localStorage.getItem('sg_theme') || 'light';
+    applyTheme(savedTheme, false);
+  }
+
+  function applyTheme(theme, showNotice = false) {
+    const isDark = theme === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    document.body.classList.toggle('dark-mode', isDark);
+    localStorage.setItem('sg_theme', isDark ? 'dark' : 'light');
+
+    // Update icons
+    const themeIcons = document.querySelectorAll('.theme-toggle-icon');
+    themeIcons.forEach(icon => {
+      icon.setAttribute('data-lucide', isDark ? 'sun' : 'moon');
+    });
+
+    // Update labels
+    const gateThemeText = document.querySelector('.gate-theme-text');
+    if (gateThemeText) {
+      gateThemeText.textContent = isDark ? 'Mode Terang' : 'Mode Gelap';
+    }
+
+    const menuThemeStatus = document.getElementById('menuThemeStatus');
+    if (menuThemeStatus) {
+      menuThemeStatus.textContent = isDark ? 'Aktif' : 'Nonaktif';
+      menuThemeStatus.style.background = isDark ? 'var(--primary-soft)' : '';
+      menuThemeStatus.style.color = isDark ? 'var(--primary)' : '';
+    }
+
+    if (window.lucide) window.lucide.createIcons();
+
+    if (showNotice) {
+      showToast(isDark ? 'Mode Gelap diaktifkan 🌙' : 'Mode Terang diaktifkan ☀️', 'info');
+    }
+  }
+
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme') || 'light';
+    const newTheme = current === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme, true);
+    if (window.soundCtrl) window.soundCtrl.playTick();
+  }
+
+  // ==========================================
   // GATEKEEPER FULL-PAGE LOGIN CONTROLLER
   // ==========================================
 
-  function showAuthGate() {
+  function showAuthGate(fromInside = false) {
     if (el.authGateScreen) {
       el.authGateScreen.style.display = 'flex';
-      if (el.closeAuthGateBtn) {
-        el.closeAuthGateBtn.style.display = 'flex';
-      }
     }
+    if (el.mainAppContainer) {
+      el.mainAppContainer.style.display = 'none';
+    }
+    if (el.closeAuthGateBtn) {
+      // Tombol kembali hanya boleh aktif jika dipanggil dari dalam aplikasi (saat pengguna sudah login)
+      el.closeAuthGateBtn.style.display = (fromInside && state.currentUser) ? 'inline-flex' : 'none';
+    }
+    prefillAuthGate();
     switchGateTab('login');
     if (window.lucide && el.authGateScreen) {
       window.lucide.createIcons({ root: el.authGateScreen });
+    }
+  }
+
+  function prefillAuthGate() {
+    if (!el.gateLoginEmail) return;
+    const users = window.SmartData.SmartStorage.getUsers() || [];
+    const targetUser = state.currentUser || (users.length > 0 ? users[0] : null);
+    if (targetUser) {
+      if (!el.gateLoginEmail.value) {
+        el.gateLoginEmail.value = targetUser.email || '';
+      }
+      if (el.gateLoginPassword && !el.gateLoginPassword.value && targetUser.password) {
+        el.gateLoginPassword.value = targetUser.password;
+      }
     }
   }
 
@@ -840,26 +932,6 @@
     }
   }
 
-  function enterAsGuest() {
-    if (!state.currentUser) {
-      state.currentUser = {
-        name: 'Tamu Rantau',
-        email: 'tamu@rantau.id',
-        role: 'Penjelajah Belanja',
-        city: 'Semua Kota',
-        budget: 450000,
-        avatar: '🎒'
-      };
-      window.SmartData.SmartStorage.setCurrentUser(state.currentUser);
-    }
-    hideAuthGate();
-    renderUserProfile();
-    renderShopeeCatalog();
-    updateBudgetSafetyMeter();
-    switchTab('viewKatalog');
-    showToast('Masuk sebagai Tamu! Silakan jelajahi etalase & belanja.', 'info');
-  }
-
   function handleFloatingBudgetClick() {
     if (el.floatingBudgetBar && el.floatingBudgetBar.classList.contains('is-overbudget')) {
       checkBudgetThresholdAndWarn();
@@ -868,12 +940,15 @@
     }
   }
 
-  function checkAuthGate() {
+  function checkAuthGate(isInitialEntry = false) {
+    if (isInitialEntry) {
+      // Saat masuk/buka web, buka halaman login terlebih dahulu
+      showAuthGate(false);
+      return;
+    }
     const user = state.currentUser;
     if (!user) {
-      showAuthGate();
-      if (el.mainAppContainer) el.mainAppContainer.style.display = 'none';
-      if (el.closeAuthGateBtn) el.closeAuthGateBtn.style.display = 'flex';
+      showAuthGate(false);
     } else {
       hideAuthGate();
       renderUserProfile();
@@ -1136,6 +1211,90 @@
   // SHOPEE PRODUCT DISPLAY ETALASE CONTROLLER
   // ==========================================
 
+  function getAllEtalaseProducts() {
+    const custom = (window.SmartData && window.SmartData.SmartStorage) ? window.SmartData.SmartStorage.getCustomEtalaseProducts() : [];
+    const base = (window.SmartData && window.SmartData.SHOPEE_PRODUCTS) ? window.SmartData.SHOPEE_PRODUCTS : [];
+    const customList = Array.isArray(custom) ? custom : [];
+    const customIds = new Set(customList.map(p => p.id));
+    return [...customList, ...base.filter(p => !customIds.has(p.id))];
+  }
+
+  function openAddEtalaseModal() {
+    if (!el.addEtalaseModal) return;
+    if (el.addEtalaseForm) el.addEtalaseForm.reset();
+    if (el.etalaseEmoji) el.etalaseEmoji.value = '🛍️';
+    if (el.etalaseUnit) el.etalaseUnit.value = 'pcs';
+
+    if (el.etalaseUnitChips) {
+      el.etalaseUnitChips.querySelectorAll('.unit-chip').forEach(c => {
+        c.classList.toggle('active', c.getAttribute('data-unit') === 'pcs');
+      });
+    }
+
+    if (el.quickEmojiChips) {
+      el.quickEmojiChips.querySelectorAll('.emoji-pick-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-emoji') === '🛍️');
+      });
+    }
+
+    el.addEtalaseModal.style.display = 'flex';
+    if (window.lucide) window.lucide.createIcons({ root: el.addEtalaseModal });
+    setTimeout(() => {
+      if (el.etalaseItemName) el.etalaseItemName.focus();
+    }, 150);
+  }
+
+  function closeAddEtalaseModal() {
+    if (el.addEtalaseModal) {
+      el.addEtalaseModal.style.display = 'none';
+    }
+  }
+
+  function saveAddEtalase() {
+    const name = (el.etalaseItemName ? el.etalaseItemName.value : '').trim();
+    const category = el.etalaseCategory ? el.etalaseCategory.value : 'bahan_pokok';
+    const unit = el.etalaseUnit ? el.etalaseUnit.value : 'pcs';
+    const price = Number(el.etalasePrice ? el.etalasePrice.value : 0);
+    const origPrice = Number(el.etalaseOriginalPrice ? el.etalaseOriginalPrice.value : 0);
+    const emoji = (el.etalaseEmoji ? el.etalaseEmoji.value : '').trim() || '🛍️';
+    const desc = (el.etalaseDesc ? el.etalaseDesc.value : '').trim();
+
+    if (!name) {
+      showToast('Nama barang etalase wajib diisi!', 'warning');
+      if (el.etalaseItemName) el.etalaseItemName.focus();
+      return;
+    }
+
+    if (!price || price <= 0) {
+      showToast('Harga barang harus lebih dari Rp 0!', 'warning');
+      if (el.etalasePrice) el.etalasePrice.focus();
+      return;
+    }
+
+    const discountPercent = (origPrice > price) ? Math.round(((origPrice - price) / origPrice) * 100) : 0;
+
+    const newProduct = {
+      id: 'sp-custom-' + Date.now(),
+      name: name,
+      category: category,
+      unit: unit,
+      price: price,
+      originalPrice: origPrice > price ? origPrice : null,
+      discountPercent: discountPercent,
+      rating: 5.0,
+      soldCount: 'Baru',
+      emoji: emoji,
+      badge: 'Etalase Saya',
+      description: desc || 'Barang kebutuhan tambahan di etalase.'
+    };
+
+    window.SmartData.SmartStorage.addCustomEtalaseProduct(newProduct);
+    renderShopeeCatalog();
+    closeAddEtalaseModal();
+    showToast(`"${name}" berhasil ditambahkan ke etalase! 🎉`, 'success');
+    if (window.soundCtrl) window.soundCtrl.playSuccess();
+  }
+
   function renderKatalogCategoryChips() {
     if (!el.katalogCategoryChips) return;
     el.katalogCategoryChips.innerHTML = '';
@@ -1158,7 +1317,7 @@
     if (!el.shopeeProductGrid) return;
     el.shopeeProductGrid.innerHTML = '';
 
-    const products = window.SmartData.SHOPEE_PRODUCTS || [];
+    const products = getAllEtalaseProducts();
     const query = (state.katalogSearchQuery || '').toLowerCase().trim();
     const category = state.selectedKatalogCategory || 'all';
 
@@ -1216,12 +1375,15 @@
         `;
       }
 
+      const isCustomProd = prod.id && prod.id.startsWith('sp-custom-');
+
       const card = document.createElement('div');
       card.className = `shopee-card ${qtyInCart > 0 ? 'has-in-cart' : ''}`;
       card.innerHTML = `
         <div class="shopee-card-img-box" title="Klik untuk atur / perbarui barang ini">
           <span class="shopee-card-emoji">${prod.emoji || '🛍️'}</span>
-          ${qtyInCart > 0 ? `<span class="shopee-in-cart-indicator">${qtyInCart} di Troli</span>` : ''}
+          ${qtyInCart > 0 ? `<span class="shopee-in-cart-indicator">${qtyInCart} di Troli</span>` : isCustomProd ? `<span class="shopee-in-cart-indicator" style="background: var(--primary);">Etalase Saya</span>` : ''}
+          ${isCustomProd ? `<button type="button" class="btn-delete-custom-etalase" title="Hapus dari etalase"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>` : ''}
         </div>
         <div class="shopee-card-body">
           <div class="shopee-card-tag">${formatCategory(prod.category)} • ${prod.unit || 'pcs'}</div>
@@ -1267,6 +1429,17 @@
         addBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           addToCartFromCatalog(prod);
+        });
+      }
+
+      const delCustomBtn = card.querySelector('.btn-delete-custom-etalase');
+      if (delCustomBtn) {
+        delCustomBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          window.SmartData.SmartStorage.deleteCustomEtalaseProduct(prod.id);
+          renderShopeeCatalog();
+          showToast(`"${prod.name}" dihapus dari etalase.`, 'warning');
+          if (window.soundCtrl) window.soundCtrl.playTick();
         });
       }
 
@@ -1472,6 +1645,11 @@
   // Load Data from LocalStorage (0ms Synchronous Fallback for Offline / F5 Reload)
   function loadData() {
     state.currentUser = window.SmartData.SmartStorage.getCurrentUser();
+    // Bersihkan sisa akun tamu jika ada
+    if (state.currentUser && (state.currentUser.email === 'tamu@rantau.id' || state.currentUser.name === 'Tamu Rantau')) {
+      window.SmartData.SmartStorage.logoutUser();
+      state.currentUser = null;
+    }
     const rawItems = window.SmartData.SmartStorage.getActiveItems();
     state.activeItems = groupActiveItems(rawItems);
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
@@ -1879,17 +2057,14 @@
               saveAndRefresh();
               if (window.soundCtrl) window.soundCtrl.playTick();
             } else {
-              // Confirm removal if qty reaches 0
-              if (confirm(`Hapus "${item.name}" dari daftar belanja?`)) {
-                deleteItem(item.id);
-              }
+              // Langsung hapus saat kuantitas 0 tanpa minta persetujuan
+              deleteItem(item.id);
             }
           } else if (action === 'edit') {
             openEditItemModal(item);
           } else if (action === 'delete') {
-            if (confirm(`Hapus "${item.name}"?`)) {
-              deleteItem(item.id);
-            }
+            // Langsung hapus barang tanpa minta persetujuan
+            deleteItem(item.id);
           }
         });
 
@@ -3102,14 +3277,12 @@
   }
 
   function handleLogout() {
-    if (confirm('Apakah kamu yakin ingin keluar dari akun?')) {
-      window.SmartData.SmartStorage.logoutUser();
-      state.currentUser = null;
-      checkAuthGate();
-      renderUserProfile();
-      showToast('Kamu telah keluar dari akun.', 'info');
-      if (window.soundCtrl) window.soundCtrl.playTick();
-    }
+    window.SmartData.SmartStorage.logoutUser();
+    state.currentUser = null;
+    showAuthGate(false);
+    renderUserProfile();
+    showToast('Kamu telah keluar dari akun.', 'info');
+    if (window.soundCtrl) window.soundCtrl.playTick();
   }
 
   function togglePassword(inputId, iconId) {
@@ -3290,7 +3463,7 @@
     // Header user profile button tap -> Buka halaman login / ganti akun
     if (el.headerUserBtn) {
       el.headerUserBtn.addEventListener('click', () => {
-        showAuthGate();
+        showAuthGate(true);
       });
     }
 
@@ -3392,16 +3565,84 @@
     }
     if (el.menuOpenLoginBtn) {
       el.menuOpenLoginBtn.addEventListener('click', () => {
-        showAuthGate();
+        showAuthGate(true);
       });
     }
     if (el.menuSwitchAccountBtn) {
       el.menuSwitchAccountBtn.addEventListener('click', () => {
-        showAuthGate();
+        showAuthGate(true);
       });
+    }
+    if (el.menuThemeToggleBtn) {
+      el.menuThemeToggleBtn.addEventListener('click', toggleTheme);
+    }
+    if (el.themeToggleBtn) {
+      el.themeToggleBtn.addEventListener('click', toggleTheme);
+    }
+    if (el.gateThemeToggleBtn) {
+      el.gateThemeToggleBtn.addEventListener('click', toggleTheme);
     }
     if (el.menuSoundToggleBtn) {
       el.menuSoundToggleBtn.addEventListener('click', () => el.soundToggleBtn.click());
+    }
+
+    // Add to Etalase triggers
+    if (el.openAddEtalaseModalBtnTop) {
+      el.openAddEtalaseModalBtnTop.addEventListener('click', openAddEtalaseModal);
+    }
+    if (el.openAddEtalaseModalBtn) {
+      el.openAddEtalaseModalBtn.addEventListener('click', openAddEtalaseModal);
+    }
+    if (el.closeAddEtalaseModalBtn) {
+      el.closeAddEtalaseModalBtn.addEventListener('click', closeAddEtalaseModal);
+    }
+    if (el.cancelAddEtalaseBtn) {
+      el.cancelAddEtalaseBtn.addEventListener('click', closeAddEtalaseModal);
+    }
+    if (el.saveAddEtalaseBtn) {
+      el.saveAddEtalaseBtn.addEventListener('click', saveAddEtalase);
+    }
+    if (el.addEtalaseModal) {
+      el.addEtalaseModal.addEventListener('click', (e) => {
+        if (e.target === el.addEtalaseModal) {
+          closeAddEtalaseModal();
+        }
+      });
+    }
+
+    // Etalase Unit Selector Chips
+    if (el.etalaseUnitChips) {
+      const uChips = el.etalaseUnitChips.querySelectorAll('.unit-chip');
+      uChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          uChips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          if (el.etalaseUnit) el.etalaseUnit.value = chip.getAttribute('data-unit') || 'pcs';
+        });
+      });
+    }
+
+    // Etalase Emoji Selector Chips
+    if (el.quickEmojiChips) {
+      const eChips = el.quickEmojiChips.querySelectorAll('.emoji-pick-btn');
+      eChips.forEach(chip => {
+        chip.addEventListener('click', () => {
+          eChips.forEach(c => c.classList.remove('active'));
+          chip.classList.add('active');
+          const em = chip.getAttribute('data-emoji') || '🛍️';
+          if (el.etalaseEmoji) el.etalaseEmoji.value = em;
+        });
+      });
+    }
+
+    if (el.etalaseEmoji) {
+      el.etalaseEmoji.addEventListener('input', (e) => {
+        const val = e.target.value.trim();
+        if (el.quickEmojiChips) {
+          const eChips = el.quickEmojiChips.querySelectorAll('.emoji-pick-btn');
+          eChips.forEach(c => c.classList.toggle('active', c.getAttribute('data-emoji') === val));
+        }
+      });
     }
     if (el.forgotPassBtn) {
       el.forgotPassBtn.addEventListener('click', () => {
@@ -3613,7 +3854,10 @@
   window.gateQuickLogin = gateQuickLogin;
   window.switchGateTab = switchGateTab;
   window.switchAuthTab = switchAuthTab;
-  window.enterAsGuest = enterAsGuest;
+  window.toggleTheme = toggleTheme;
+  window.openAddEtalaseModal = openAddEtalaseModal;
+  window.closeAddEtalaseModal = closeAddEtalaseModal;
+  window.saveAddEtalase = saveAddEtalase;
   window.handleFloatingBudgetClick = handleFloatingBudgetClick;
   window.checkBudgetThresholdAndWarn = checkBudgetThresholdAndWarn;
   window.closeOverbudgetWarningPopup = closeOverbudgetWarningPopup;

@@ -47,16 +47,16 @@
            ========================================== -->
       <div class="auth-gate-screen" id="authGateScreen">
         
-        <!-- Header Nav Bar (Kembali & Guest Quick Action) -->
+        <!-- Header Nav Bar (Kembali & Dark Mode Action) -->
         <header class="auth-gate-topbar">
-          <button type="button" class="auth-gate-close-btn" id="closeAuthGateBtn" onclick="window.hideAuthGate && window.hideAuthGate()" title="Kembali ke Aplikasi" aria-label="Tutup Halaman Login">
+          <button type="button" class="auth-gate-close-btn" id="closeAuthGateBtn" onclick="window.hideAuthGate && window.hideAuthGate()" title="Kembali ke Aplikasi" aria-label="Tutup Halaman Login" style="display: none;">
             <i data-lucide="arrow-left" style="width: 18px; height: 18px;"></i>
             <span>Kembali</span>
           </button>
 
-          <button type="button" class="auth-quick-guest-btn" onclick="window.enterAsGuest && window.enterAsGuest()" title="Masuk tanpa login">
-            <span>Mode Tamu</span>
-            <i data-lucide="chevron-right" style="width: 14px; height: 14px;"></i>
+          <button type="button" class="auth-gate-theme-btn" id="gateThemeToggleBtn" title="Ganti Mode Gelap / Terang" aria-label="Toggle Dark Mode">
+            <i data-lucide="moon" style="width: 15px; height: 15px;" class="theme-toggle-icon"></i>
+            <span class="gate-theme-text">Mode Gelap</span>
           </button>
         </header>
 
@@ -114,8 +114,9 @@
                 <button type="button" class="forgot-pass-link" id="gateForgotPassBtn">Lupa sandi?</button>
               </div>
 
-              <button type="submit" class="btn-primary auth-submit-btn" id="gateSubmitLoginBtn">
-                <span>Masuk ke Akun 🐾</span>
+              <button type="submit" class="btn-primary auth-submit-btn btn-login-large" id="gateSubmitLoginBtn">
+                <i data-lucide="log-in" style="width: 20px; height: 20px;"></i>
+                <span>Masuk ke Akun</span>
               </button>
             </form>
 
@@ -183,14 +184,6 @@
               </div>
             </form>
 
-            <!-- Footer Guest Explore Button -->
-            <div class="guest-enter-wrapper">
-              <button type="button" class="btn-guest-enter" id="gateGuestBtn" onclick="window.enterAsGuest && window.enterAsGuest()">
-                <i data-lucide="compass" style="width: 15px; height: 15px;"></i>
-                <span>Eksplor Belanja sebagai Tamu</span>
-              </button>
-            </div>
-
           </div>
         </div>
       </div>
@@ -198,7 +191,7 @@
       <!-- ==========================================
            MAIN APP CONTAINER (Tampil Setelah Login)
            ========================================== -->
-      <div class="main-app-container" id="mainAppContainer">
+      <div class="main-app-container" id="mainAppContainer" style="display: none;">
 
         <!-- App Header (Compact Top Bar - Rapi & Elegan) -->
         <header class="app-header">
@@ -219,6 +212,9 @@
               </div>
             </div>
             <div class="header-actions">
+              <button class="icon-btn" id="themeToggleBtn" title="Mode Gelap / Terang" aria-label="Toggle Theme">
+                <i data-lucide="moon" style="width: 18px; height: 18px;" class="theme-toggle-icon"></i>
+              </button>
               <button class="icon-btn" id="soundToggleBtn" title="Efek Suara Aktif/Nonaktif" aria-label="Toggle Sound">
                 <i data-lucide="volume-2" style="width: 18px; height: 18px;" id="soundIcon"></i>
               </button>
@@ -282,6 +278,10 @@
                 <i data-lucide="store" style="width: 14px; height: 14px; color: var(--primary);"></i>
                 <span id="shopeeLocationText">Etalase Barang Kebutuhan</span>
               </div>
+              <button type="button" class="btn-top-add-etalase" id="openAddEtalaseModalBtnTop" title="Tambah Barang ke Etalase">
+                <i data-lucide="plus-circle" style="width: 15px; height: 15px;"></i>
+                <span>+ Tambah Barang</span>
+              </button>
             </div>
 
             <!-- Etalase Banner Bersih (Tanpa gimmick Shopee) -->
@@ -312,6 +312,10 @@
                 <span id="shopeeProductCount">29 Barang Tersedia</span>
                 <small>• Ketuk "+ Keranjang" untuk memilih</small>
               </div>
+              <button type="button" class="btn-tambah-etalase" id="openAddEtalaseModalBtn" title="Tambah barang baru ke etalase">
+                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                <span>Tambah Barang</span>
+              </button>
             </div>
 
             <!-- Shopee 2-Column Product Grid -->
@@ -634,6 +638,14 @@
                 <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--text-soft);"></i>
               </button>
 
+              <button class="account-menu-item" id="menuThemeToggleBtn" type="button">
+                <div class="menu-item-left">
+                  <i data-lucide="moon" style="width: 18px; height: 18px; color: var(--primary);" class="theme-toggle-icon"></i>
+                  <span>Mode Gelap (Dark Mode)</span>
+                </div>
+                <span class="menu-status-badge" id="menuThemeStatus">Nonaktif</span>
+              </button>
+
               <button class="account-menu-item" id="menuSoundToggleBtn" type="button">
                 <div class="menu-item-left">
                   <i data-lucide="volume-2" style="width: 18px; height: 18px; color: #10B981;"></i>
@@ -703,8 +715,8 @@
                 <button type="button" class="forgot-pass-link" id="forgotPassBtn">Lupa sandi?</button>
               </div>
 
-              <button type="submit" class="btn-primary auth-submit-btn" id="submitLoginBtn">
-                <i data-lucide="log-in" style="width: 17px; height: 17px;"></i>
+              <button type="submit" class="btn-primary auth-submit-btn btn-login-large" id="submitLoginBtn">
+                <i data-lucide="log-in" style="width: 20px; height: 20px;"></i>
                 <span>Masuk Sekarang</span>
               </button>
 
@@ -1183,6 +1195,116 @@
             </div>
           </div>
 
+        </div>
+      </div>
+
+      <!-- ==========================================
+           MODAL 7: TAMBAH BARANG KE ETALASE
+           ========================================== -->
+      <div class="modal-overlay" id="addEtalaseModal" style="display: none;">
+        <div class="bottom-sheet item-editor-sheet">
+          <div class="sheet-handle-bar"></div>
+          <div class="sheet-header">
+            <h3>Tambah Barang ke Etalase</h3>
+            <button class="icon-btn" id="closeAddEtalaseModalBtn" aria-label="Tutup Modal">
+              <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+            </button>
+          </div>
+
+          <div class="sheet-content">
+            <form id="addEtalaseForm" onsubmit="return false;">
+              <!-- Nama Barang -->
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label" for="etalaseItemName">Nama Kebutuhan / Barang *</label>
+                <input type="text" class="form-input" id="etalaseItemName" placeholder="Contoh: Susu UHT Cokelat 1L, Roti Tawar Gandum..." required autocomplete="off">
+              </div>
+
+              <!-- Kategori Produk -->
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label" for="etalaseCategory">Kategori Produk :</label>
+                <select class="form-input form-select" id="etalaseCategory">
+                  <option value="bahan_pokok">🍚 Bahan Pokok</option>
+                  <option value="telur_susu">🥛 Telur &amp; Susu</option>
+                  <option value="mandi_cuci">🧼 Mandi &amp; Cuci</option>
+                  <option value="camilan_minum">🥤 Camilan &amp; Minum</option>
+                  <option value="bumbu_dapur">🍳 Bumbu Dapur</option>
+                  <option value="kebutuhan_kos">🏠 Kebutuhan Kos</option>
+                  <option value="kesehatan">💊 Kesehatan</option>
+                </select>
+              </div>
+
+              <!-- Satuan Barang -->
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label">Pilih Satuan Barang :</label>
+                <input type="hidden" id="etalaseUnit" value="pcs">
+                <div class="unit-selector-chips" id="etalaseUnitChips">
+                  <button type="button" class="unit-chip active" data-unit="pcs">pcs</button>
+                  <button type="button" class="unit-chip" data-unit="kg">kg</button>
+                  <button type="button" class="unit-chip" data-unit="pack">pack</button>
+                  <button type="button" class="unit-chip" data-unit="liter">liter</button>
+                  <button type="button" class="unit-chip" data-unit="botol">botol</button>
+                  <button type="button" class="unit-chip" data-unit="pouch">pouch</button>
+                  <button type="button" class="unit-chip" data-unit="kaleng">kaleng</button>
+                  <button type="button" class="unit-chip" data-unit="ikat">ikat</button>
+                  <button type="button" class="unit-chip" data-unit="box">box</button>
+                </div>
+              </div>
+
+              <!-- Harga Satuan & Harga Normal/Coret -->
+              <div class="form-row-2" style="margin-bottom: 12px;">
+                <div class="form-group">
+                  <label class="form-label" for="etalasePrice">Harga Jual (Rp) *</label>
+                  <div class="currency-input-box">
+                    <span class="currency-prefix">Rp</span>
+                    <input type="number" class="form-input currency-input" id="etalasePrice" placeholder="0" min="0" step="500" inputmode="numeric" required>
+                  </div>
+                </div>
+
+                <div class="form-group">
+                  <label class="form-label" for="etalaseOriginalPrice">Harga Coret (Opsional)</label>
+                  <div class="currency-input-box">
+                    <span class="currency-prefix">Rp</span>
+                    <input type="number" class="form-input currency-input" id="etalaseOriginalPrice" placeholder="0" min="0" step="500" inputmode="numeric">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Ikon Emoji -->
+              <div class="form-group" style="margin-bottom: 12px;">
+                <label class="form-label">Pilih Ikon Emoji :</label>
+                <div class="emoji-selector-row">
+                  <input type="text" class="form-input emoji-input-box" id="etalaseEmoji" value="🛍️" maxlength="4">
+                  <div class="quick-emoji-chips" id="quickEmojiChips">
+                    <button type="button" class="emoji-pick-btn active" data-emoji="🛍️">🛍️</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🍚">🍚</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🥚">🥚</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🥛">🥛</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🍞">🍞</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🍜">🍜</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🧼">🧼</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🥤">🥤</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🍳">🍳</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="🏠">🏠</button>
+                    <button type="button" class="emoji-pick-btn" data-emoji="💊">💊</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Deskripsi Produk Singkat -->
+              <div class="form-group" style="margin-bottom: 14px;">
+                <label class="form-label" for="etalaseDesc">Deskripsi Singkat (Opsional)</label>
+                <input type="text" class="form-input" id="etalaseDesc" placeholder="Contoh: Kebutuhan masak harian anak kos">
+              </div>
+            </form>
+          </div>
+
+          <div class="sheet-footer">
+            <button type="button" class="btn-secondary" id="cancelAddEtalaseBtn">Batal</button>
+            <button type="button" class="btn-primary" id="saveAddEtalaseBtn">
+              <i data-lucide="plus" style="width: 18px; height: 18px;"></i>
+              <span>Tambah ke Etalase</span>
+            </button>
+          </div>
         </div>
       </div>
 
