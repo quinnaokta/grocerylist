@@ -153,8 +153,8 @@ body {
 }
 
 .brand-icon-box {
-  width: 36px;
-  height: 36px;
+  width: 40px;
+  height: 40px;
   background: linear-gradient(135deg, var(--primary-accent), var(--primary));
   border-radius: var(--radius-sm);
   display: flex;
@@ -165,11 +165,17 @@ body {
   flex-shrink: 0;
 }
 
+.brand-icon-box i,
+.brand-icon-box svg {
+  width: 22px !important;
+  height: 22px !important;
+}
+
 .brand-title-area {
   display: flex;
   flex-direction: column;
   min-width: 0;
-  line-height: 1.15;
+  line-height: 1.2;
 }
 
 .brand-title-row {
@@ -180,7 +186,7 @@ body {
 }
 
 .brand-title-area h1 {
-  font-size: 15px;
+  font-size: 18.5px;
   font-weight: 800;
   color: var(--text-main);
   margin: 0;
@@ -189,29 +195,29 @@ body {
 }
 
 .brand-tagline {
-  font-size: 10px;
+  font-size: 11.5px;
   font-weight: 700;
   color: var(--primary);
   text-transform: uppercase;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.4px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  margin-top: 1px;
+  margin-top: 2px;
 }
 
 .header-current-store {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
-  margin-top: 3px;
-  padding: 2px 7px;
-  background: rgba(225, 29, 72, 0.06);
+  gap: 5px;
+  margin-top: 4px;
+  padding: 3px 9px;
+  background: rgba(225, 29, 72, 0.08);
   border: 1px solid rgba(251, 207, 232, 0.85);
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
-  max-width: 230px;
+  max-width: 240px;
 }
 
 .header-current-store:hover {
@@ -221,20 +227,20 @@ body {
 }
 
 .header-current-store .store-prefix {
-  font-size: 9.5px;
+  font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 .header-current-store .store-name {
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   color: var(--primary);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 135px;
+  max-width: 145px;
 }
 
 .header-actions {
@@ -1980,8 +1986,8 @@ select.form-input:focus {
   gap: 6px;
   border: none;
   background: transparent;
-  padding: 9px 12px;
-  font-size: 13px;
+  padding: 10px 14px;
+  font-size: 14.5px;
   font-weight: 700;
   color: var(--text-muted);
   border-radius: var(--radius-full);
@@ -2195,8 +2201,21 @@ select.form-input:focus {
 
 .auth-submit-btn {
   width: 100%;
-  height: 44px;
+  height: 48px;
   margin-top: 4px;
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  border-radius: var(--radius-full);
+}
+
+#gateSubmitRegBtn,
+#submitRegisterBtn {
+  font-size: 16.5px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  height: 48px;
+  border-radius: var(--radius-full);
 }
 
 /* Demo Accounts Card */
@@ -3917,7 +3936,7 @@ select.form-input:focus {
 }
 
 .store-select-row {
-  background: #FFFFFF;
+  background: var(--bg-card, #FFFFFF);
   border: 1.5px solid var(--border-color);
   border-radius: 12px;
   padding: 12px 14px;
@@ -4571,10 +4590,29 @@ select.form-input:focus {
   background: var(--bg-card);
 }
 
+[data-theme="dark"] .store-select-row,
 [data-theme="dark"] .store-location-card {
-  background: #2B1E27;
-  border-color: var(--border-color);
-  color: var(--text-main);
+  background: #2B1E27 !important;
+  border-color: var(--border-color) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .store-select-row:hover {
+  background: var(--primary-soft) !important;
+  border-color: var(--primary) !important;
+}
+
+[data-theme="dark"] .store-select-row.is-active {
+  background: var(--primary-soft) !important;
+  border-color: var(--primary) !important;
+}
+
+[data-theme="dark"] .store-select-row .store-row-title {
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark"] .store-select-row.is-active .store-row-title {
+  color: var(--primary) !important;
 }
 
 [data-theme="dark"] .btn-detect-gps {
@@ -4602,6 +4640,19 @@ select.form-input:focus {
   background: #2B1E27;
   border-right-color: var(--border-color);
   color: var(--text-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .store-select-row {
+    background: #2B1E27;
+    border-color: rgba(255, 255, 255, 0.12);
+  }
+  .store-select-row .store-row-title {
+    color: #FDF2F5;
+  }
+  .store-select-row:hover {
+    background: #381C2A;
+  }
 }
 
 
