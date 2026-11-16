@@ -18,6 +18,7 @@
     historySubTab: 'trips',
     deferredPrompt: null,
     editingItemId: null,
+    editingEtalaseProdId: null,
     currentDiscountType: 'none', // 'none' | 'regular' | 'stacked'
     currentUser: null,
     authTab: 'login', // 'login' | 'register'
@@ -338,21 +339,22 @@
 
   // Find matching Shopee product catalog entry
   function findMatchingShopeeProduct(item) {
-    if (!item || !window.SmartData || !Array.isArray(window.SmartData.SHOPEE_PRODUCTS)) return null;
-    const products = window.SmartData.SHOPEE_PRODUCTS;
+    if (!item) return null;
+    const products = typeof getAllEtalaseProducts === 'function' ? getAllEtalaseProducts() : (window.SmartData?.SHOPEE_PRODUCTS || []);
+    if (!Array.isArray(products) || products.length === 0) return null;
     if (item.productId) {
       const found = products.find(p => p.id === item.productId);
       if (found) return found;
     }
     const name = (item.name || '').trim().toLowerCase();
     if (!name) return null;
-    let found = products.find(p => p.name.trim().toLowerCase() === name);
+    let found = products.find(p => (p.name || '').trim().toLowerCase() === name);
     if (found) return found;
 
     const ca = cleanItemNameForMatch(name);
     if (ca) {
       found = products.find(p => {
-        const cb = cleanItemNameForMatch(p.name);
+        const cb = cleanItemNameForMatch(p.name || '');
         return ca === cb || (ca.length >= 8 && cb.length >= 8 && (ca.includes(cb) || cb.includes(ca)));
       });
       if (found) return found;
@@ -405,9 +407,13 @@
         existing.qty = (Number(existing.qty) || 0) + (Number(item.qty) || 1);
         if (item.inCart) existing.inCart = true;
         if (item.productId && !existing.productId) existing.productId = item.productId;
-        if (item.unitPrice && (!existing.unitPrice || existing.unitPrice === 0)) existing.unitPrice = item.unitPrice;
-        if (!existing.note && item.note) existing.note = item.note;
-        if (!existing.unit && item.unit) existing.unit = item.unit;
+        if (item.unitPrice) existing.unitPrice = item.unitPrice;
+        if (item.name) existing.name = item.name;
+        if (item.unit) existing.unit = item.unit;
+        if (item.category) existing.category = item.category;
+        if (item.note) existing.note = item.note;
+        if (item.discountFormula) existing.discountFormula = item.discountFormula;
+        if (typeof item.taxPPN === 'boolean') existing.taxPPN = item.taxPPN;
       } else {
         grouped.push({
           ...item,
@@ -899,6 +905,9 @@
       // Tombol kembali hanya boleh aktif jika dipanggil dari dalam aplikasi (saat pengguna sudah login)
       el.closeAuthGateBtn.style.display = (fromInside && state.currentUser) ? 'inline-flex' : 'none';
     }
+    if (el.gateRememberMe) {
+      el.gateRememberMe.checked = localStorage.getItem('sg_remember_me') !== 'false';
+    }
     prefillAuthGate();
     switchGateTab('login');
     if (window.lucide && el.authGateScreen) {
@@ -908,14 +917,18 @@
 
   function prefillAuthGate() {
     if (!el.gateLoginEmail) return;
-    const users = window.SmartData.SmartStorage.getUsers() || [];
-    const targetUser = state.currentUser || (users.length > 0 ? users[0] : null);
-    if (targetUser) {
+    // Jangan default prefill email budi
+    if (state.currentUser && state.currentUser.email && state.currentUser.email !== 'budi@rantau.id') {
       if (!el.gateLoginEmail.value) {
-        el.gateLoginEmail.value = targetUser.email || '';
+        el.gateLoginEmail.value = state.currentUser.email || '';
       }
-      if (el.gateLoginPassword && !el.gateLoginPassword.value && targetUser.password) {
-        el.gateLoginPassword.value = targetUser.password;
+      if (el.gateLoginPassword && !el.gateLoginPassword.value && state.currentUser.password) {
+        el.gateLoginPassword.value = state.currentUser.password;
+      }
+    } else {
+      el.gateLoginEmail.value = '';
+      if (el.gateLoginPassword) {
+        el.gateLoginPassword.value = '';
       }
     }
   }
@@ -941,20 +954,18 @@
   }
 
   function checkAuthGate(isInitialEntry = false) {
-    if (isInitialEntry) {
-      // Saat masuk/buka web, buka halaman login terlebih dahulu
-      showAuthGate(false);
-      return;
-    }
+    const isRemembered = localStorage.getItem('sg_remember_me') !== 'false';
     const user = state.currentUser;
-    if (!user) {
-      showAuthGate(false);
-    } else {
+
+    if (user && isRemembered) {
+      // Jika user sudah login dan Ingat Saya aktif: Jangan logout saat refresh, langsung masuk ke app!
       hideAuthGate();
       renderUserProfile();
       if (el.shopeeLocationText && user.city) {
         el.shopeeLocationText.textContent = `Kost ${user.name.split(' ')[0]} • ${user.city}`;
       }
+    } else {
+      showAuthGate(false);
     }
     if (window.lucide) window.lucide.createIcons();
   }
@@ -993,6 +1004,8 @@
         state.budgetLimit = res.user.budget;
         window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
       }
+      const isRemember = el.gateRememberMe ? el.gateRememberMe.checked : true;
+      localStorage.setItem('sg_remember_me', isRemember ? 'true' : 'false');
       checkAuthGate();
       updateBudgetSafetyMeter();
       renderShopeeCatalog();
@@ -1033,6 +1046,7 @@
       window.SmartData.SmartStorage.saveBudgetLimit(budget);
       window.SmartData.SmartStorage.saveActiveItems([]);
       window.SmartData.SmartStorage.saveHistoryTrips([]);
+      localStorage.setItem('sg_remember_me', 'true');
       if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
         window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
       }
@@ -1211,12 +1225,61 @@
   // SHOPEE PRODUCT DISPLAY ETALASE CONTROLLER
   // ==========================================
 
+  function getEtalaseOverrides() {
+    try {
+      const raw = localStorage.getItem('sg_etalase_overrides');
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) {
+      return {};
+    }
+  }
+
+  function saveEtalaseOverride(productId, updates) {
+    if (!productId || !updates) return;
+    const overrides = getEtalaseOverrides();
+    overrides[productId] = { ...(overrides[productId] || {}), ...updates };
+    try {
+      localStorage.setItem('sg_etalase_overrides', JSON.stringify(overrides));
+    } catch (e) {}
+
+    // Update in-memory SHOPEE_PRODUCTS
+    if (window.SmartData && Array.isArray(window.SmartData.SHOPEE_PRODUCTS)) {
+      const p = window.SmartData.SHOPEE_PRODUCTS.find(x => x.id === productId);
+      if (p) {
+        Object.assign(p, updates);
+      }
+    }
+
+    // Update custom etalase products in storage and in-memory
+    if (window.SmartData && window.SmartData.SmartStorage && window.SmartData.SmartStorage.getCustomEtalaseProducts) {
+      const customList = window.SmartData.SmartStorage.getCustomEtalaseProducts();
+      let updated = false;
+      customList.forEach(cp => {
+        if (cp.id === productId || (updates.oldName && cp.name === updates.oldName)) {
+          Object.assign(cp, updates);
+          updated = true;
+        }
+      });
+      if (updated) {
+        window.SmartData.SmartStorage.saveCustomEtalaseProducts(customList);
+      }
+    }
+  }
+
   function getAllEtalaseProducts() {
     const custom = (window.SmartData && window.SmartData.SmartStorage) ? window.SmartData.SmartStorage.getCustomEtalaseProducts() : [];
     const base = (window.SmartData && window.SmartData.SHOPEE_PRODUCTS) ? window.SmartData.SHOPEE_PRODUCTS : [];
     const customList = Array.isArray(custom) ? custom : [];
     const customIds = new Set(customList.map(p => p.id));
-    return [...customList, ...base.filter(p => !customIds.has(p.id))];
+    const combined = [...customList, ...base.filter(p => !customIds.has(p.id))];
+
+    const overrides = getEtalaseOverrides();
+    return combined.map(prod => {
+      if (overrides[prod.id]) {
+        return { ...prod, ...overrides[prod.id] };
+      }
+      return prod;
+    });
   }
 
   function openAddEtalaseModal() {
@@ -1313,6 +1376,42 @@
     });
   }
 
+  // Buka Modal Edit Barang Etalase (Ubah Nama, Harga, Kategori, Satuan langsung di etalase)
+  function openEditEtalaseProductModal(prod) {
+    if (!prod) return;
+    const existingInCart = state.activeItems.find(i => isSameGroceryItem(i, prod));
+    state.editingEtalaseProdId = prod.id;
+    state.editingItemId = existingInCart ? existingInCart.id : null;
+
+    if (el.modalTitle) el.modalTitle.textContent = `Edit Barang: ${prod.name}`;
+    if (el.saveBtnText) el.saveBtnText.textContent = 'Simpan ke Etalase';
+    if (el.inputItemName) el.inputItemName.value = prod.name || '';
+    if (el.inputCategory) el.inputCategory.value = prod.category || 'bahan_pokok';
+    const unit = prod.unit || 'pcs';
+    if (el.inputUnit) el.inputUnit.value = unit;
+    setModalUnit(unit);
+
+    const effPrice = getEffectiveProductPrice(prod, state.storeLocation);
+    if (el.inputUnitPrice) el.inputUnitPrice.value = effPrice || prod.price || 0;
+    if (el.inputQty) el.inputQty.value = existingInCart ? (existingInCart.qty || 1) : 1;
+
+    let formula = existingInCart ? (existingInCart.discountFormula || '') : '';
+    if (!formula && prod.discountPercent) formula = `${prod.discountPercent}%`;
+    if (el.inputDiscountFormula) el.inputDiscountFormula.value = formula;
+    if (el.inputTaxPPN) el.inputTaxPPN.checked = existingInCart ? !!existingInCart.taxPPN : false;
+    if (el.inputItemNote) el.inputItemNote.value = existingInCart ? (existingInCart.note || '') : (prod.description || '');
+
+    updateModalCalculations();
+    checkModalPriceComparison();
+    if (el.itemModal) el.itemModal.classList.add('open');
+    setTimeout(() => {
+      if (el.inputItemName) {
+        el.inputItemName.focus();
+        el.inputItemName.select();
+      }
+    }, 150);
+  }
+
   function renderShopeeCatalog() {
     if (!el.shopeeProductGrid) return;
     el.shopeeProductGrid.innerHTML = '';
@@ -1380,15 +1479,18 @@
       const card = document.createElement('div');
       card.className = `shopee-card ${qtyInCart > 0 ? 'has-in-cart' : ''}`;
       card.innerHTML = `
-        <div class="shopee-card-img-box" title="Klik untuk atur / perbarui barang ini">
+        <div class="shopee-card-img-box" title="Klik untuk edit nama & harga barang di etalase" style="position: relative; cursor: pointer;">
           <span class="shopee-card-emoji">${prod.emoji || '🛍️'}</span>
           ${qtyInCart > 0 ? `<span class="shopee-in-cart-indicator">${qtyInCart} di Troli</span>` : isCustomProd ? `<span class="shopee-in-cart-indicator" style="background: var(--primary);">Etalase Saya</span>` : ''}
+          <button type="button" class="btn-shopee-edit-badge" title="Edit nama & harga barang ini di etalase" style="position: absolute; top: 6px; right: 6px; width: 28px; height: 28px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 4; box-shadow: 0 2px 6px rgba(0,0,0,0.15);">
+            <i data-lucide="edit-3" style="width: 13px; height: 13px; color: var(--primary);"></i>
+          </button>
           ${isCustomProd ? `<button type="button" class="btn-delete-custom-etalase" title="Hapus dari etalase"><i data-lucide="trash-2" style="width: 12px; height: 12px;"></i></button>` : ''}
         </div>
         <div class="shopee-card-body">
           <div class="shopee-card-tag">${formatCategory(prod.category)} • ${prod.unit || 'pcs'}</div>
-          <div class="shopee-card-title" title="${escapeHtml(prod.name)}">${escapeHtml(prod.name)}</div>
-          <div class="shopee-card-prices">
+          <div class="shopee-card-title" title="${escapeHtml(prod.name)}" style="cursor: pointer;">${escapeHtml(prod.name)}</div>
+          <div class="shopee-card-prices" style="cursor: pointer;" title="Klik untuk edit harga barang ini">
             <span class="shopee-price-main">${formatRp(effPrice)}</span>
             ${prod.originalPrice && prod.originalPrice > effPrice ? `<span class="shopee-price-original">${formatRp(prod.originalPrice)}</span>` : ''}
           </div>
@@ -1407,7 +1509,7 @@
               </div>
               <button type="button" class="btn-shopee-check-toggle ${existingInCart && existingInCart.inCart ? 'is-checked' : ''}" title="Centang untuk hitung ke anggaran">
                 <i data-lucide="${existingInCart && existingInCart.inCart ? 'check-circle' : 'circle'}" style="width: 13px; height: 13px;"></i>
-                <span>${existingInCart && existingInCart.inCart ? 'Siap Beli (Dihitung)' : 'Centang Beli'}</span>
+                <span>${existingInCart && existingInCart.inCart ? 'Masuk Troli' : 'Centang Beli'}</span>
               </button>
             ` : isOverbudget ? `
               <button type="button" class="btn-shopee-add disabled-overbudget" title="Tidak dapat menambah barang karena anggaran belanja sudah overbudget">
@@ -1415,10 +1517,15 @@
                 <span>Overbudget</span>
               </button>
             ` : `
-              <button type="button" class="btn-shopee-add">
-                <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
-                <span>+ Keranjang</span>
-              </button>
+              <div style="display: flex; gap: 6px; width: 100%;">
+                <button type="button" class="btn-shopee-add" style="flex: 1;">
+                  <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
+                  <span>+ Keranjang</span>
+                </button>
+                <button type="button" class="btn-shopee-edit-item" title="Edit Barang di Etalase" style="width: 36px; height: 36px; flex-shrink: 0;">
+                  <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+                </button>
+              </div>
             `}
           </div>
         </div>
@@ -1459,13 +1566,14 @@
         });
       }
 
-      const editBtn = card.querySelector('.btn-shopee-edit-item');
-      if (editBtn && existingInCart) {
-        editBtn.addEventListener('click', (e) => {
+      // Klik tombol edit, badge edit, judul, atau kotak harga -> Langsung buka modal edit etalase
+      const editTriggers = card.querySelectorAll('.btn-shopee-edit-item, .btn-shopee-edit-badge, .shopee-card-title, .shopee-card-prices');
+      editTriggers.forEach(btn => {
+        btn.addEventListener('click', (e) => {
           e.stopPropagation();
-          openEditItemModal(existingInCart);
+          openEditEtalaseProductModal(prod);
         });
-      }
+      });
 
       const checkToggleBtn = card.querySelector('.btn-shopee-check-toggle');
       if (checkToggleBtn && existingInCart) {
@@ -1489,44 +1597,12 @@
         });
       }
 
-      // Klik foto / emoji barang atau kotak harga untuk cepat edit harga barang di etalase tanpa refresh
+      // Klik foto / emoji barang (kecuali tombol hapus / badge) -> Buka edit etalase
       const imgBox = card.querySelector('.shopee-card-img-box');
       if (imgBox) {
-        imgBox.style.cursor = 'pointer';
-        imgBox.addEventListener('click', () => {
-          if (existingInCart) {
-            openEditItemModal(existingInCart);
-          } else {
-            openAddItemModal();
-            if (el.inputItemName) el.inputItemName.value = prod.name;
-            if (el.inputCategory) el.inputCategory.value = prod.category || 'bahan_pokok';
-            if (el.inputUnit) el.inputUnit.value = prod.unit || 'pcs';
-            setModalUnit(prod.unit || 'pcs');
-            if (el.inputUnitPrice) el.inputUnitPrice.value = effPrice || prod.price;
-            updateModalCalculations();
-            checkModalPriceComparison();
-          }
-        });
-      }
-
-      const priceBox = card.querySelector('.shopee-card-prices');
-      if (priceBox) {
-        priceBox.style.cursor = 'pointer';
-        priceBox.title = 'Klik untuk edit harga barang ini';
-        priceBox.addEventListener('click', (e) => {
-          e.stopPropagation();
-          if (existingInCart) {
-            openEditItemModal(existingInCart);
-          } else {
-            openAddItemModal();
-            if (el.inputItemName) el.inputItemName.value = prod.name;
-            if (el.inputCategory) el.inputCategory.value = prod.category || 'bahan_pokok';
-            if (el.inputUnit) el.inputUnit.value = prod.unit || 'pcs';
-            setModalUnit(prod.unit || 'pcs');
-            if (el.inputUnitPrice) el.inputUnitPrice.value = effPrice || prod.price;
-            updateModalCalculations();
-            checkModalPriceComparison();
-          }
+        imgBox.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-delete-custom-etalase') || e.target.closest('.btn-shopee-edit-badge')) return;
+          openEditEtalaseProductModal(prod);
         });
       }
 
@@ -1644,9 +1720,16 @@
 
   // Load Data from LocalStorage (0ms Synchronous Fallback for Offline / F5 Reload)
   function loadData() {
-    state.currentUser = window.SmartData.SmartStorage.getCurrentUser();
-    // Bersihkan sisa akun tamu jika ada
-    if (state.currentUser && (state.currentUser.email === 'tamu@rantau.id' || state.currentUser.name === 'Tamu Rantau')) {
+    const isRemembered = localStorage.getItem('sg_remember_me') !== 'false';
+    if (!isRemembered) {
+      // Jika pengguna tidak mencentang Ingat Saya, hapus sesi login saat refresh
+      window.SmartData.SmartStorage.logoutUser();
+      state.currentUser = null;
+    } else {
+      state.currentUser = window.SmartData.SmartStorage.getCurrentUser();
+    }
+    // Bersihkan sisa akun demo / tamu / budi jika ada
+    if (state.currentUser && (state.currentUser.email === 'tamu@rantau.id' || state.currentUser.name === 'Tamu Rantau' || state.currentUser.email === 'budi@rantau.id' || state.currentUser.name === 'Budi Santoso')) {
       window.SmartData.SmartStorage.logoutUser();
       state.currentUser = null;
     }
@@ -1913,7 +1996,7 @@
     // Update list count labels
     el.listCounterLabel.textContent = `${filtered.length} Barang Belanja`;
     if (el.listCheckedStatus) {
-      el.listCheckedStatus.textContent = checkedCount > 0 ? `• ${checkedCount} Siap Beli` : '• Belum ada dipilih';
+      el.listCheckedStatus.textContent = checkedCount > 0 ? `• ${checkedCount} Dipilih` : '• Belum ada dipilih';
     }
     if (el.toggleCheckAllText) {
       el.toggleCheckAllText.textContent = (checkedCount === state.activeItems.length && state.activeItems.length > 0) ? 'Batal Semua' : 'Pilih Semua';
@@ -1934,19 +2017,8 @@
         card.className = `grocery-card ${item.inCart ? 'in-cart' : ''}`;
         card.dataset.id = item.id;
 
-        // Discount tag text & Pajak PPN
+        // Discount tag text & Pajak PPN (Dihapus tulisan 5% off agar seimbang & rapi)
         let discountBadgeHtml = '';
-        if (item.discountFormula) {
-          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> Diskon: ${escapeHtml(item.discountFormula)}</span>`;
-        } else if (item.discountType === 'percent') {
-          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> ${item.discountValue}% Off</span>`;
-        } else if (item.discountType === 'amount') {
-          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="tag" style="width: 10px; height: 10px;"></i> -${formatRp(item.discountValue)}</span>`;
-        } else if (item.discountType === 'stacked') {
-          const s1 = item.stackedDiscount?.val1 || 0;
-          const s2 = item.stackedDiscount?.val2 || 0;
-          discountBadgeHtml = `<span class="discount-applied-badge"><i data-lucide="layers" style="width: 10px; height: 10px;"></i> ${s1}%+${s2}%</span>`;
-        }
 
         const taxBadgeHtml = item.taxPPN ? `<span class="discount-applied-badge" style="background: #FFF0F4; color: #D84A75; border-color: #FBCFE8;"><i data-lucide="receipt" style="width: 10px; height: 10px;"></i> PPN 11%</span>` : '';
 
@@ -1967,12 +2039,9 @@
           </button>
           
           <!-- 2. Informasi Barang Tengah (Sebaris & Padat) -->
-          <div class="card-center-info">
+          <div class="card-center-info" data-action="edit" style="cursor: pointer;" title="Klik untuk edit barang">
             <div class="card-name-row">
               <span class="item-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
-              ${item.inCart 
-                ? '<span class="pill-in-cart"><i data-lucide="check" style="width: 9px; height: 9px;"></i> Siap Beli</span>' 
-                : ''}
             </div>
             <div class="card-sub-row">
               <span class="item-price-at">@ ${formatRp(pricing.finalUnitPrice)}/${item.unit || 'pcs'}</span>
@@ -1992,7 +2061,7 @@
               <span class="stepper-value-compact">${item.qty}</span>
               <button class="stepper-btn-compact" data-action="qty-plus" aria-label="Tambah Jumlah">+</button>
             </div>
-            <div class="card-price-stack">
+            <div class="card-price-stack" data-action="edit" style="cursor: pointer;" title="Klik untuk edit barang">
               ${pricing.totalSavings > 0 ? `<div class="card-original-price">${formatRp(pricing.normalTotal)}</div>` : ''}
               <div class="card-final-subtotal">${formatRp(pricing.finalSubtotal)}</div>
             </div>
@@ -2212,7 +2281,7 @@
 
     // List header counter & status
     if (el.listCheckedStatus) {
-      el.listCheckedStatus.textContent = checkedCount > 0 ? `• ${checkedCount} Siap Beli` : '• Belum ada dipilih';
+      el.listCheckedStatus.textContent = checkedCount > 0 ? `• ${checkedCount} Dipilih` : '• Belum ada dipilih';
     }
     if (el.toggleCheckAllText) {
       el.toggleCheckAllText.textContent = (checkedCount === state.activeItems.length && state.activeItems.length > 0) ? 'Batal Semua' : 'Pilih Semua';
@@ -2415,6 +2484,7 @@
 
   function openAddItemModal() {
     state.editingItemId = null;
+    state.editingEtalaseProdId = null;
     if (el.modalTitle) el.modalTitle.textContent = 'Tambah Belanjaan Baru';
     if (el.saveBtnText) el.saveBtnText.textContent = 'Simpan ke Troli';
     if (el.inputItemName) el.inputItemName.value = '';
@@ -2438,6 +2508,7 @@
 
   function openEditItemModal(item) {
     state.editingItemId = item.id;
+    state.editingEtalaseProdId = item.productId || null;
     if (el.modalTitle) el.modalTitle.textContent = 'Edit Item Belanja';
     if (el.saveBtnText) el.saveBtnText.textContent = 'Perbarui Barang';
     if (el.inputItemName) el.inputItemName.value = item.name;
@@ -2464,9 +2535,14 @@
     updateModalCalculations();
     checkModalPriceComparison();
     if (el.itemModal) el.itemModal.classList.add('open');
+    setTimeout(() => {
+      if (el.inputItemName) el.inputItemName.focus();
+    }, 150);
   }
 
   function closeItemModal() {
+    state.editingItemId = null;
+    state.editingEtalaseProdId = null;
     if (el.itemModal) el.itemModal.classList.remove('open');
   }
 
@@ -2600,9 +2676,25 @@
       }
     }
 
+    // 1. UPDATE OVERRIDE DI ETALASE JIKA DIEDIT DARI ETALASE ATAU TERKAIT PRODUK ETALASE
+    const etalaseProdId = state.editingEtalaseProdId;
+    if (etalaseProdId) {
+      saveEtalaseOverride(etalaseProdId, {
+        name,
+        price: unitPrice,
+        unit,
+        category
+      });
+      updateStoreProductPrice(name, unitPrice, state.storeLocation, false);
+      updateStoreProductPrice(etalaseProdId, unitPrice, state.storeLocation, false);
+    }
+
     if (state.editingItemId) {
       // Edit existing
-      const idx = state.activeItems.findIndex(i => i.id === state.editingItemId);
+      let idx = state.activeItems.findIndex(i => i.id === state.editingItemId);
+      if (idx === -1) {
+        idx = state.activeItems.findIndex(i => isSameGroceryItem(i, { id: state.editingItemId, name }));
+      }
       if (idx !== -1) {
         const oldItem = state.activeItems[idx];
         const oldPricing = calculateItemPricing(oldItem);
@@ -2620,6 +2712,25 @@
           taxPPN,
           note
         };
+        const targetProdId = candidateItem.productId || oldItem.productId || etalaseProdId;
+        if (targetProdId) {
+          saveEtalaseOverride(targetProdId, {
+            name,
+            price: unitPrice,
+            unit,
+            category
+          });
+        }
+        const match = findMatchingShopeeProduct({ name: oldItem.name });
+        if (match) {
+          saveEtalaseOverride(match.id, {
+            name,
+            price: unitPrice,
+            unit,
+            category
+          });
+        }
+
         const candidatePricing = calculateItemPricing(candidateItem);
         const candidateCost = candidateItem.inCart ? candidatePricing.finalSubtotal : 0;
         const costDiff = candidateCost - oldCost;
@@ -2636,9 +2747,48 @@
         }
 
         state.activeItems[idx] = candidateItem;
+
+        // Perbarui harga toko di katalog / etalase & benchmark
+        updateStoreProductPrice(name, unitPrice, state.storeLocation, false);
+        if (oldItem.productId) {
+          updateStoreProductPrice(oldItem.productId, unitPrice, state.storeLocation, false);
+        }
+        if (oldItem.name && oldItem.name !== name) {
+          updateStoreProductPrice(oldItem.name, unitPrice, state.storeLocation, false);
+        }
+
+        // Perbarui custom etalase jika barang ini ada di custom etalase
+        if (window.SmartData && window.SmartData.SmartStorage && window.SmartData.SmartStorage.getCustomEtalaseProducts) {
+          const customList = window.SmartData.SmartStorage.getCustomEtalaseProducts();
+          let customUpdated = false;
+          customList.forEach(cp => {
+            if (cp.id === oldItem.productId || cp.id === oldItem.id || isSameGroceryItem(cp, { name: oldItem.name })) {
+              cp.name = name;
+              cp.price = unitPrice;
+              cp.category = category;
+              cp.unit = unit;
+              customUpdated = true;
+            }
+          });
+          if (customUpdated) {
+            window.SmartData.SmartStorage.saveCustomEtalaseProducts(customList);
+          }
+        }
+
         showToast(`"${name}" berhasil diperbarui!`, 'success');
-        updateStoreProductPrice(name, unitPrice, state.storeLocation);
       }
+      state.editingItemId = null;
+    } else if (etalaseProdId) {
+      // Diedit langsung dari etalase: sinkronkan juga barang di troli jika ada
+      state.activeItems.forEach(it => {
+        if (it.productId === etalaseProdId || isSameGroceryItem(it, { id: etalaseProdId, name })) {
+          it.name = name;
+          it.unitPrice = unitPrice;
+          it.unit = unit;
+          it.category = category;
+        }
+      });
+      showToast(`"${name}" di etalase berhasil diperbarui!`, 'success');
     } else {
       // Add new or group: check overbudget protection
       const candidateItem = {
@@ -3178,6 +3328,8 @@
         state.budgetLimit = Number(res.user.budget);
         window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
       }
+      const isRemember = el.rememberMeCheckbox ? el.rememberMeCheckbox.checked : true;
+      localStorage.setItem('sg_remember_me', isRemember ? 'true' : 'false');
       if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
         window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
       }
@@ -3227,6 +3379,7 @@
       window.SmartData.SmartStorage.saveBudgetLimit(budget);
       window.SmartData.SmartStorage.saveActiveItems([]);
       window.SmartData.SmartStorage.saveHistoryTrips([]);
+      localStorage.setItem('sg_remember_me', 'true');
       if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
         window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
       }
@@ -3279,6 +3432,7 @@
   function handleLogout() {
     window.SmartData.SmartStorage.logoutUser();
     state.currentUser = null;
+    localStorage.removeItem('sg_remember_me');
     showAuthGate(false);
     renderUserProfile();
     showToast('Kamu telah keluar dari akun.', 'info');
@@ -3314,24 +3468,26 @@
       });
     }
 
-    // Install Prompt Listener
+    // Install Prompt Listener (Prompt di layar utama dinonaktifkan sesuai permintaan)
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       state.deferredPrompt = e;
-      el.pwaBanner.style.display = 'flex';
+      if (el.pwaBanner) el.pwaBanner.style.display = 'none';
     });
 
-    el.pwaInstallBtn.addEventListener('click', async () => {
-      if (state.deferredPrompt) {
-        state.deferredPrompt.prompt();
-        const { outcome } = await state.deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          showToast('Terima kasih telah memasang Smart Grocery!', 'success');
+    if (el.pwaInstallBtn) {
+      el.pwaInstallBtn.addEventListener('click', async () => {
+        if (state.deferredPrompt) {
+          state.deferredPrompt.prompt();
+          const { outcome } = await state.deferredPrompt.userChoice;
+          if (outcome === 'accepted') {
+            showToast('Terima kasih telah memasang Smart Grocery!', 'success');
+          }
+          state.deferredPrompt = null;
         }
-        state.deferredPrompt = null;
-        el.pwaBanner.style.display = 'none';
-      }
-    });
+        if (el.pwaBanner) el.pwaBanner.style.display = 'none';
+      });
+    }
   }
 
   // Event Listeners
@@ -3680,23 +3836,26 @@
     el.cancelItemModalBtn.addEventListener('click', closeItemModal);
     el.saveItemModalBtn.addEventListener('click', saveItemFromModal);
 
-    // Enter key shortcuts to quickly save item
-    if (el.inputItemName) {
-      el.inputItemName.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          saveItemFromModal();
-        }
+    // Form submit listener
+    const itemForm = document.getElementById('itemForm');
+    if (itemForm) {
+      itemForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        saveItemFromModal();
       });
     }
-    if (el.inputUnitPrice) {
-      el.inputUnitPrice.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') {
-          e.preventDefault();
-          saveItemFromModal();
-        }
-      });
-    }
+
+    // Enter key shortcuts across all inputs to quickly save item
+    [el.inputItemName, el.inputUnitPrice, el.inputQty, el.inputDiscountFormula, el.inputItemNote].forEach(inp => {
+      if (inp) {
+        inp.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            saveItemFromModal();
+          }
+        });
+      }
+    });
 
     // Unit selector chips in Modal (Persis Screenshot 2)
     if (el.unitSelectorChips) {
@@ -3729,11 +3888,6 @@
         el.inputUnitPrice.addEventListener(evt, () => {
           updateModalCalculations();
           checkModalPriceComparison();
-          const val = Number(el.inputUnitPrice.value);
-          const currentName = el.inputItemName ? el.inputItemName.value.trim() : '';
-          if (val > 0 && currentName) {
-            updateStoreProductPrice(currentName, val, state.storeLocation, true);
-          }
         });
       });
     }
@@ -3747,11 +3901,6 @@
       ['input', 'change', 'keyup'].forEach(evt => {
         el.inputItemName.addEventListener(evt, () => {
           checkModalPriceComparison();
-          const val = Number(el.inputUnitPrice ? el.inputUnitPrice.value : 0);
-          const currentName = el.inputItemName.value.trim();
-          if (val > 0 && currentName) {
-            updateStoreProductPrice(currentName, val, state.storeLocation, true);
-          }
         });
       });
     }
@@ -3845,6 +3994,8 @@
   window.switchTab = switchTab;
   window.openAddItemModal = openAddItemModal;
   window.openEditItemModal = openEditItemModal;
+  window.openEditEtalaseProductModal = openEditEtalaseProductModal;
+  window.saveEtalaseOverride = saveEtalaseOverride;
   window.saveItemFromModal = saveItemFromModal;
   window.closeItemModal = closeItemModal;
   window.setModalUnit = setModalUnit;

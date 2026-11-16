@@ -532,7 +532,8 @@ class SmartStorage {
 
   // User Authentication & Profile Data
   static getUsers() {
-    return this.get('users_list', DEFAULT_USERS);
+    const list = this.get('users_list', DEFAULT_USERS);
+    return Array.isArray(list) ? list.filter(u => u && u.email !== 'budi@rantau.id' && u.id !== 'user-budi') : [];
   }
 
   static saveUsers(users) {
@@ -726,18 +727,7 @@ class SmartStorage {
   }
 }
 
-const DEFAULT_USERS = [
-  {
-    id: 'user-budi',
-    name: 'Budi Santoso',
-    email: 'budi@rantau.id',
-    password: 'password123',
-    role: 'Mahasiswa Rantau',
-    city: 'Yogyakarta',
-    budget: 450000,
-    avatar: '👨‍🎓'
-  }
-];
+const DEFAULT_USERS = [];
 
 // Pre-seeded Catalog of Shopee-style Product Store for Anak Rantau
 const SHOPEE_PRODUCTS = [

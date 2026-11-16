@@ -642,6 +642,18 @@ body {
   box-shadow: 0 2px 8px rgba(16, 185, 129, 0.12);
 }
 
+.grocery-card.in-cart .item-name {
+  color: #111827;
+}
+
+.grocery-card.in-cart .item-price-at {
+  color: #374151;
+}
+
+.grocery-card.in-cart .card-sub-row {
+  color: #4B5563;
+}
+
 /* 1. Custom Checkbox Ramah Jempol (Tombol Centang Beli) */
 .cart-check-btn {
   width: 36px;
@@ -693,37 +705,31 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .card-name-row {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: nowrap;
+  width: 100%;
 }
 
 .item-name {
   font-size: 13.5px;
   font-weight: 700;
   color: var(--text-main);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
   line-height: 1.25;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+  flex: 1;
+  min-width: 0;
 }
 
-.pill-in-cart {
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 1px 6px;
-  border-radius: var(--radius-full);
-  background: #D1FAE5;
-  color: #065F46;
-  display: inline-flex;
-  align-items: center;
-  gap: 3px;
-  flex-shrink: 0;
+.pill-in-cart,
+.discount-applied-badge {
+  display: none !important;
 }
 
 .card-sub-row {
@@ -732,9 +738,11 @@ body {
   gap: 5px;
   font-size: 11px;
   color: var(--text-muted);
-  flex-wrap: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex-wrap: nowrap !important;
+  line-height: 1.2;
 }
 
 .sub-sep {
@@ -1615,17 +1623,9 @@ select.form-input:focus {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* PWA Install Banner */
+/* PWA Install Banner (Dihapus/disembunyikan sesuai permintaan) */
 .pwa-banner {
-  background: linear-gradient(135deg, #FFF0F4, #FFFFFF);
-  border: 1px solid var(--border-color);
-  border-radius: var(--radius-md);
-  padding: 12px 14px;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
+  display: none !important;
 }
 
 .pwa-banner-text {
@@ -4443,13 +4443,111 @@ select.form-input:focus {
   box-shadow: 0 4px 16px rgba(244, 114, 182, 0.2);
 }
 
-[data-theme="dark"] .shopee-qty-stepper {
+[data-theme="dark"] .shopee-qty-stepper,
+body.dark-mode .shopee-qty-stepper {
   background: #171115;
   border-color: var(--border-color);
 }
 
-[data-theme="dark"] .shopee-stepper-btn {
-  color: var(--primary);
+[data-theme="dark"] .shopee-stepper-btn,
+body.dark-mode .shopee-stepper-btn {
+  background: #3A202F !important;
+  color: #F472B6 !important;
+  border: 1px solid rgba(244, 114, 182, 0.4) !important;
+}
+
+[data-theme="dark"] .shopee-stepper-btn:hover,
+body.dark-mode .shopee-stepper-btn:hover {
+  background: #F472B6 !important;
+  color: #1A0D15 !important;
+}
+
+[data-theme="dark"] .shopee-stepper-val,
+body.dark-mode .shopee-stepper-val {
+  color: #FDF2F5 !important;
+}
+
+[data-theme="dark"] .btn-shopee-add,
+body.dark-mode .btn-shopee-add {
+  background: #341D2B !important;
+  border: 1.5px solid #F472B6 !important;
+  color: #F472B6 !important;
+}
+
+[data-theme="dark"] .btn-shopee-add i,
+[data-theme="dark"] .btn-shopee-add svg,
+body.dark-mode .btn-shopee-add i,
+body.dark-mode .btn-shopee-add svg {
+  color: #F472B6 !important;
+  stroke: #F472B6 !important;
+}
+
+[data-theme="dark"] .btn-shopee-add:hover,
+body.dark-mode .btn-shopee-add:hover {
+  background: #F472B6 !important;
+  color: #1A0D15 !important;
+}
+
+[data-theme="dark"] .btn-shopee-add:hover i,
+[data-theme="dark"] .btn-shopee-add:hover svg,
+body.dark-mode .btn-shopee-add:hover i,
+body.dark-mode .btn-shopee-add:hover svg {
+  color: #1A0D15 !important;
+  stroke: #1A0D15 !important;
+}
+
+[data-theme="dark"] .add-item-trigger-btn,
+body.dark-mode .add-item-trigger-btn,
+[data-theme="dark"] .btn-tambah-etalase,
+body.dark-mode .btn-tambah-etalase {
+  background: linear-gradient(135deg, #E05A7E, #BE185D) !important;
+  color: #FFFFFF !important;
+  border: 1px solid rgba(255, 255, 255, 0.25) !important;
+  box-shadow: 0 3px 12px rgba(224, 90, 126, 0.45) !important;
+}
+
+[data-theme="dark"] .add-item-trigger-btn i,
+[data-theme="dark"] .add-item-trigger-btn svg,
+body.dark-mode .add-item-trigger-btn i,
+body.dark-mode .add-item-trigger-btn svg,
+[data-theme="dark"] .btn-tambah-etalase i,
+[data-theme="dark"] .btn-tambah-etalase svg,
+body.dark-mode .btn-tambah-etalase i,
+body.dark-mode .btn-tambah-etalase svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
+[data-theme="dark"] .add-item-trigger-btn:hover,
+body.dark-mode .add-item-trigger-btn:hover,
+[data-theme="dark"] .btn-tambah-etalase:hover,
+body.dark-mode .btn-tambah-etalase:hover {
+  background: linear-gradient(135deg, #EC4899, #DB2777) !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .stepper-control-compact,
+body.dark-mode .stepper-control-compact {
+  background: #251B22 !important;
+  border: 1px solid #382430 !important;
+}
+
+[data-theme="dark"] .stepper-btn-compact,
+body.dark-mode .stepper-btn-compact {
+  background: #3A202F !important;
+  color: #F472B6 !important;
+  border: 1px solid rgba(244, 114, 182, 0.35) !important;
+}
+
+[data-theme="dark"] .stepper-btn-compact:hover,
+body.dark-mode .stepper-btn-compact:hover {
+  background: #F472B6 !important;
+  color: #1A0D15 !important;
+}
+
+[data-theme="dark"] .stepper-value-compact,
+body.dark-mode .stepper-value-compact {
+  color: #FDF2F5 !important;
 }
 
 [data-theme="dark"] .btn-shopee-edit-item {
@@ -4517,15 +4615,121 @@ select.form-input:focus {
   border-color: var(--primary);
 }
 
-[data-theme="dark"] .grocery-card {
-  background: var(--bg-card);
-  border-color: var(--border-color);
-  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+[data-theme="dark"] .grocery-card,
+body.dark-mode .grocery-card {
+  background: #22181F !important;
+  border-color: #382430 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3) !important;
 }
 
-[data-theme="dark"] .grocery-card.is-checked {
-  border-color: rgba(244, 114, 182, 0.4);
-  background: linear-gradient(135deg, rgba(56, 28, 42, 0.5) 0%, var(--bg-card) 100%);
+[data-theme="dark"] .grocery-card .item-name,
+body.dark-mode .grocery-card .item-name {
+  color: #FDF2F5 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .grocery-card .item-price-at,
+body.dark-mode .grocery-card .item-price-at {
+  color: #D1BAC5 !important;
+}
+
+[data-theme="dark"] .grocery-card .card-final-subtotal,
+body.dark-mode .grocery-card .card-final-subtotal {
+  color: #FDF2F5 !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="dark"] .grocery-card .category-tag-mini,
+body.dark-mode .grocery-card .category-tag-mini {
+  background: rgba(244, 114, 182, 0.2) !important;
+  color: #F472B6 !important;
+}
+
+/* KETIKA BARANG DI KERANJANG (in-cart): TULISAN JELAS, TAJAM & KONTRAS TINGGI */
+[data-theme="dark"] .grocery-card.in-cart,
+body.dark-mode .grocery-card.in-cart,
+[data-theme="dark"] .grocery-card.is-checked,
+body.dark-mode .grocery-card.is-checked {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.18) 0%, #201820 100%) !important;
+  border-color: #10B981 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4), 0 0 12px rgba(16, 185, 129, 0.2) !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .item-name,
+body.dark-mode .grocery-card.in-cart .item-name,
+[data-theme="dark"] .grocery-card.is-checked .item-name,
+body.dark-mode .grocery-card.is-checked .item-name {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  display: block !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .item-price-at,
+body.dark-mode .grocery-card.in-cart .item-price-at,
+[data-theme="dark"] .grocery-card.is-checked .item-price-at,
+body.dark-mode .grocery-card.is-checked .item-price-at {
+  color: #E2E8F0 !important;
+  font-weight: 600 !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .card-sub-row,
+body.dark-mode .grocery-card.in-cart .card-sub-row,
+[data-theme="dark"] .grocery-card.is-checked .card-sub-row,
+body.dark-mode .grocery-card.is-checked .card-sub-row {
+  color: #CBD5E1 !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  flex-wrap: nowrap !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .sub-sep,
+body.dark-mode .grocery-card.in-cart .sub-sep,
+[data-theme="dark"] .grocery-card.is-checked .sub-sep,
+body.dark-mode .grocery-card.is-checked .sub-sep {
+  color: #64748B !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .item-note-inline,
+body.dark-mode .grocery-card.in-cart .item-note-inline,
+[data-theme="dark"] .grocery-card.is-checked .item-note-inline,
+body.dark-mode .grocery-card.is-checked .item-note-inline {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .card-final-subtotal,
+body.dark-mode .grocery-card.in-cart .card-final-subtotal,
+[data-theme="dark"] .grocery-card.is-checked .card-final-subtotal,
+body.dark-mode .grocery-card.is-checked .card-final-subtotal {
+  color: #34D399 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .grocery-card.in-cart .card-original-price,
+body.dark-mode .grocery-card.in-cart .card-original-price,
+[data-theme="dark"] .grocery-card.is-checked .card-original-price,
+body.dark-mode .grocery-card.is-checked .card-original-price {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .stepper-value-compact,
+body.dark-mode .grocery-card.in-cart .stepper-value-compact,
+[data-theme="dark"] .grocery-card.is-checked .stepper-value-compact,
+body.dark-mode .grocery-card.is-checked .stepper-value-compact {
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+}
+
+[data-theme="dark"] .grocery-card.in-cart .pill-in-cart,
+body.dark-mode .grocery-card.in-cart .pill-in-cart,
+[data-theme="dark"] .grocery-card.is-checked .pill-in-cart,
+body.dark-mode .grocery-card.is-checked .pill-in-cart {
+  display: none !important;
 }
 
 [data-theme="dark"] .item-unit-badge {
@@ -4891,6 +5095,21 @@ body.dark-mode .cart-check-btn {
   color: #D1BAC5 !important;
 }
 
+[data-theme="dark"] .cart-check-btn.checked,
+body.dark-mode .cart-check-btn.checked {
+  background: #10B981 !important;
+  border-color: #10B981 !important;
+  color: #FFFFFF !important;
+}
+
+[data-theme="dark"] .cart-check-btn.checked i,
+[data-theme="dark"] .cart-check-btn.checked svg,
+body.dark-mode .cart-check-btn.checked i,
+body.dark-mode .cart-check-btn.checked svg {
+  color: #FFFFFF !important;
+  stroke: #FFFFFF !important;
+}
+
 [data-theme="dark"] .btn-warning-action.outline,
 body.dark-mode .btn-warning-action.outline {
   background: #251B22 !important;
@@ -4964,6 +5183,43 @@ body.dark-mode .sheet-handle-bar {
   background: #2B1E27 !important;
   border-right-color: var(--border-color);
   color: var(--text-muted);
+}
+
+[data-theme="dark"] .store-location-sheet,
+body.dark-mode .store-location-sheet,
+[data-theme="dark"] .store-select-row,
+body.dark-mode .store-select-row {
+  background: #251B22 !important;
+  border-color: #382430 !important;
+}
+
+[data-theme="dark"] .store-select-row .store-row-title,
+body.dark-mode .store-select-row .store-row-title {
+  color: #FDF2F5 !important;
+}
+
+[data-theme="dark"] .store-select-row:hover,
+body.dark-mode .store-select-row:hover,
+[data-theme="dark"] .store-select-row.is-active,
+body.dark-mode .store-select-row.is-active {
+  background: #381C2A !important;
+  border-color: #F472B6 !important;
+}
+
+[data-theme="dark"] .store-select-row.is-active .store-row-title,
+body.dark-mode .store-select-row.is-active .store-row-title {
+  color: #F472B6 !important;
+}
+
+[data-theme="dark"] .btn-detect-gps,
+body.dark-mode .btn-detect-gps,
+[data-theme="dark"] .input-new-store,
+body.dark-mode .input-new-store,
+[data-theme="dark"] .discount-formula-input,
+body.dark-mode .discount-formula-input {
+  background: #171115 !important;
+  border-color: #382430 !important;
+  color: #FDF2F5 !important;
 }
 
 @media (prefers-color-scheme: dark) {

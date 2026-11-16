@@ -30,7 +30,7 @@
   </script>
 
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=2.6">
+  <link rel="stylesheet" href="css/style.css?v=2.9">
 </head>
 <body>
 
@@ -126,7 +126,7 @@
                 <label class="form-label" for="gateRegName">Nama Lengkap</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="user" class="auth-input-icon"></i>
-                  <input type="text" class="form-input" id="gateRegName" placeholder="Contoh: Budi Pratama" required>
+                  <input type="text" class="form-input" id="gateRegName" placeholder="Contoh: Nama Lengkap" required>
                 </div>
               </div>
 
@@ -321,19 +321,8 @@
 
           </section>
 
-          <!-- ==========================================
-               SCREEN 1: BELANJA (Active Grocery Trolley)
-               ========================================== -->
+          <!-- Section 1: Belanja (Active Grocery Trolley) -->
           <section class="screen-view" id="viewBelanja">
-          
-          <!-- PWA Install Prompt Banner (jika didukung) -->
-          <div class="pwa-banner" id="pwaBanner" style="display: none;">
-            <div class="pwa-banner-text">
-              <strong>Pasang Aplikasi Smart Grocery</strong>
-              Buka cepat langsung dari layar utama HP kamu!
-            </div>
-            <button class="pwa-install-btn" id="pwaInstallBtn">Pasang</button>
-          </div>
 
           <!-- Realtime Shopping Session Strip (Lokasi Toko, Tanggal, Multi-Device Cloud Sync) -->
           <div class="session-meta-strip" id="sessionMetaStrip">
@@ -397,7 +386,7 @@
           <div class="list-actions-row">
             <div class="list-count-wrapper">
               <span class="list-counter-label" id="listCounterLabel">5 Barang Belanja</span>
-              <span class="list-checked-status" id="listCheckedStatus">• 3 Siap Beli</span>
+              <span class="list-checked-status" id="listCheckedStatus">• 3 Dipilih</span>
             </div>
             <div class="list-quick-actions">
               <button type="button" class="btn-check-toggle" id="toggleCheckAllBtn" title="Centang / Batal Semua">
@@ -589,10 +578,10 @@
                 <div class="user-big-avatar" id="profileBigAvatar">👨‍🎓</div>
                 <div class="user-hero-info">
                   <div class="user-hero-name-row">
-                    <h3 id="profileFullName">Budi Santoso</h3>
+                    <h3 id="profileFullName">Pengguna Rantau</h3>
                     <span class="user-role-badge" id="profileRoleBadge">Mahasiswa Rantau</span>
                   </div>
-                  <div class="user-hero-email" id="profileEmail">budi@rantau.id</div>
+                  <div class="user-hero-email" id="profileEmail">-</div>
                   <div class="user-hero-location" id="profileLocation">📍 Kost Sleman, Yogyakarta</div>
                 </div>
               </div>
@@ -728,7 +717,7 @@
                 <label class="form-label" for="regName">Nama Lengkap</label>
                 <div class="auth-input-wrapper">
                   <i data-lucide="user" class="auth-input-icon"></i>
-                  <input type="text" class="form-input" id="regName" placeholder="Contoh: Budi Pratama" required>
+                  <input type="text" class="form-input" id="regName" placeholder="Contoh: Nama Lengkap" required>
                 </div>
               </div>
 
