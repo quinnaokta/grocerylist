@@ -293,10 +293,65 @@
     toastContainer: document.getElementById('toastContainer')
   };
 
-  // Helper: Format Indonesian Rupiah
+  // Helper: Format number with Indonesian dot thousands separators (misal: 50.000, 400.000 - BUKAN 0000)
+  function formatNumberDots(num) {
+    if (num === null || num === undefined || num === '') return '';
+    const clean = String(num).replace(/[^\d]/g, '');
+    if (!clean) return '';
+    const n = parseInt(clean, 10);
+    return n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  // Helper: Parse currency / number string with dots into integer (misal: "50.000" -> 50000)
+  function parseCurrencyInput(val) {
+    if (val === null || val === undefined || val === '') return 0;
+    if (typeof val === 'number') return Math.round(val);
+    const clean = String(val).replace(/[^\d]/g, '');
+    return clean ? parseInt(clean, 10) : 0;
+  }
+
+  // Helper: Format Indonesian Rupiah (misal: Rp 50.000, Rp 400.000 - format titik, BUKAN 0000)
   function formatRp(num) {
+    if (num === null || num === undefined || num === '') return 'Rp 0';
+    if (typeof num === 'string') {
+      const clean = num.replace(/[^\d]/g, '');
+      if (!clean) return 'Rp 0';
+      const n = parseInt(clean, 10);
+      return 'Rp ' + n.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
     const val = Math.round(Number(num) || 0);
-    return 'Rp ' + val.toLocaleString('id-ID');
+    return 'Rp ' + val.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+  }
+
+  // Mask & Format real-time input angka mata uang dengan titik (misal 50.000, bukan 50000)
+  function setupCurrencyInputs() {
+    const currencyInputs = document.querySelectorAll('.currency-input');
+    currencyInputs.forEach(input => {
+      if (input.dataset.masked) return;
+      input.dataset.masked = 'true';
+
+      input.addEventListener('input', () => {
+        const cursor = input.selectionStart;
+        const prevLen = input.value.length;
+        const raw = input.value.replace(/[^\d]/g, '');
+        if (!raw) {
+          input.value = '';
+          return;
+        }
+        const formatted = formatNumberDots(raw);
+        input.value = formatted;
+        const diff = formatted.length - prevLen;
+        if (cursor !== null) {
+          const newPos = Math.max(0, cursor + diff);
+          input.setSelectionRange(newPos, newPos);
+        }
+      });
+
+      // Format nilai awal jika ada
+      if (input.value) {
+        input.value = formatNumberDots(input.value);
+      }
+    });
   }
 
   // Helper: Format Category Name
@@ -450,8 +505,9 @@
       return { discountAmount, discountPercent: pct, label: formula };
     }
 
-    // Flat amount: misal "Rp 5.000" atau "5000"
-    const num = parseFloat(raw.replace(/[^0-9.]/g, ''));
+    // Flat amount: misal "Rp 5.000" atau "5000" atau "5.000"
+    const digitsOnly = raw.replace(/[^\d]/g, '');
+    const num = digitsOnly ? parseInt(digitsOnly, 10) : 0;
     if (!isNaN(num) && num > 0) {
       const discountAmount = Math.min(unitPrice, num);
       const effPercent = unitPrice > 0 ? Math.round((discountAmount / unitPrice) * 100) : 0;
@@ -837,6 +893,7 @@
     try { renderHistoryScreen(); } catch (e) { console.error('renderHistoryScreen error:', e); }
     try { renderAnggaranScreen(); } catch (e) { console.error('renderAnggaranScreen error:', e); }
     try { bindEvents(); } catch (e) { console.error('bindEvents error:', e); }
+    try { setupCurrencyInputs(); } catch (e) { console.error('setupCurrencyInputs error:', e); }
     try { initFirestoreRealtime(); } catch (e) { console.error('initFirestoreRealtime error:', e); }
     try { initPWA(); } catch (e) { console.error('initPWA error:', e); }
     try { if (window.lucide) window.lucide.createIcons(); } catch (e) { console.error('lucide error:', e); }
@@ -1026,7 +1083,7 @@
     const password = el.gateRegPassword.value.trim();
     const role = el.gateRegRole.value;
     const city = el.gateRegCity.value.trim();
-    const budget = Number(el.gateRegBudget.value) || 450000;
+    const budget = parseCurrencyInput(el.gateRegBudget.value) || 450000;
 
     const res = window.SmartData.SmartStorage.registerUser({
       name,
@@ -1317,8 +1374,8 @@
     const name = (el.etalaseItemName ? el.etalaseItemName.value : '').trim();
     const category = el.etalaseCategory ? el.etalaseCategory.value : 'bahan_pokok';
     const unit = el.etalaseUnit ? el.etalaseUnit.value : 'pcs';
-    const price = Number(el.etalasePrice ? el.etalasePrice.value : 0);
-    const origPrice = Number(el.etalaseOriginalPrice ? el.etalaseOriginalPrice.value : 0);
+    const price = parseCurrencyInput(el.etalasePrice ? el.etalasePrice.value : 0);
+    const origPrice = parseCurrencyInput(el.etalaseOriginalPrice ? el.etalaseOriginalPrice.value : 0);
     const emoji = (el.etalaseEmoji ? el.etalaseEmoji.value : '').trim() || '🛍️';
     const desc = (el.etalaseDesc ? el.etalaseDesc.value : '').trim();
 
@@ -1392,7 +1449,7 @@
     setModalUnit(unit);
 
     const effPrice = getEffectiveProductPrice(prod, state.storeLocation);
-    if (el.inputUnitPrice) el.inputUnitPrice.value = effPrice || prod.price || 0;
+    if (el.inputUnitPrice) el.inputUnitPrice.value = formatNumberDots(effPrice || prod.price || 0);
     if (el.inputQty) el.inputQty.value = existingInCart ? (existingInCart.qty || 1) : 1;
 
     let formula = existingInCart ? (existingInCart.discountFormula || '') : '';
@@ -1755,7 +1812,7 @@
     if (el.sessionLocationDisplay) el.sessionLocationDisplay.textContent = state.storeLocation || 'Lotte Mart Grocery – Puri Indah';
     if (el.headerCurrentStoreName) el.headerCurrentStoreName.textContent = state.storeLocation || 'Lotte Mart Grocery – Puri Indah';
     if (el.sessionShoppingDate) el.sessionShoppingDate.value = state.shoppingDate;
-    if (el.budgetLimitInput) el.budgetLimitInput.value = state.budgetLimit;
+    if (el.budgetLimitInput) el.budgetLimitInput.value = formatNumberDots(state.budgetLimit);
     syncStoreChips(state.storeLocation);
   }
 
@@ -1971,7 +2028,7 @@
         el.inputItemName.value = sug.name;
         el.inputCategory.value = sug.category;
         el.inputUnit.value = sug.unit;
-        el.inputUnitPrice.value = sug.defaultPrice;
+        el.inputUnitPrice.value = formatNumberDots(sug.defaultPrice);
         updateModalCalculations();
         checkModalPriceComparison();
         if (window.soundCtrl) window.soundCtrl.playPop();
@@ -2517,13 +2574,13 @@
     if (el.inputUnit) el.inputUnit.value = unit;
     setModalUnit(unit);
     if (el.inputQty) el.inputQty.value = item.qty || 1;
-    if (el.inputUnitPrice) el.inputUnitPrice.value = item.unitPrice || 0;
+    if (el.inputUnitPrice) el.inputUnitPrice.value = formatNumberDots(item.unitPrice || 0);
 
     // Diskon formula fleksibel (25%, 50% + 20%, Rp 5000)
     let formula = item.discountFormula || '';
     if (!formula) {
       if (item.discountType === 'percent' && item.discountValue) formula = `${item.discountValue}%`;
-      else if (item.discountType === 'amount' && item.discountValue) formula = `Rp ${item.discountValue}`;
+      else if (item.discountType === 'amount' && item.discountValue) formula = `Rp ${formatNumberDots(item.discountValue)}`;
       else if (item.discountType === 'stacked' && (item.stackedDiscount?.val1 || item.stackedDiscount?.val2)) {
         formula = `${item.stackedDiscount.val1}% + ${item.stackedDiscount.val2}%`;
       }
@@ -2549,7 +2606,7 @@
   // Live Reactive Discount Simulator Calculation inside Modal (Persis Screenshot 2)
   function updateModalCalculations() {
     const qty = Math.max(1, Number(el.inputQty?.value) || 1);
-    const unitPrice = Math.max(0, Number(el.inputUnitPrice?.value) || 0);
+    const unitPrice = Math.max(0, parseCurrencyInput(el.inputUnitPrice?.value) || 0);
 
     const formula = el.inputDiscountFormula ? el.inputDiscountFormula.value.trim() : '';
     const parsed = parseDiscountFormula(formula, unitPrice);
@@ -2591,7 +2648,7 @@
   // Catatan: Kotak antar toko di Screenshot 4 sudah dihapus sesuai instruksi user
   function checkModalPriceComparison() {
     const name = el.inputItemName ? el.inputItemName.value : '';
-    const price = Number(el.inputUnitPrice ? el.inputUnitPrice.value : 0) || 0;
+    const price = parseCurrencyInput(el.inputUnitPrice ? el.inputUnitPrice.value : 0) || 0;
     if (!name.trim() || price <= 0) {
       if (el.priceComparisonNotice) el.priceComparisonNotice.style.display = 'none';
       return;
@@ -2638,7 +2695,7 @@
     const name = el.inputItemName.value.trim();
     const category = el.inputCategory.value;
     const unit = el.inputUnit.value || 'pcs';
-    const rawPrice = Number(el.inputUnitPrice.value);
+    const rawPrice = parseCurrencyInput(el.inputUnitPrice.value);
     const rawQty = Number(el.inputQty.value);
 
     if (!name) {
@@ -2647,7 +2704,7 @@
       return;
     }
 
-    if (el.inputUnitPrice.value === '' || isNaN(rawPrice) || rawPrice <= 0) {
+    if (!el.inputUnitPrice.value.trim() || isNaN(rawPrice) || rawPrice <= 0) {
       showToast('Harga satuan harus lebih besar dari Rp 0 dan tidak boleh negatif!', 'warning');
       if (el.inputUnitPrice) el.inputUnitPrice.focus();
       return;
@@ -3109,7 +3166,7 @@
   // ==========================================
 
   function renderAnggaranScreen() {
-    el.budgetLimitInput.value = state.budgetLimit;
+    el.budgetLimitInput.value = formatNumberDots(state.budgetLimit);
     el.budgetCardLimit.textContent = formatRp(state.budgetLimit);
 
     // Hitung pengeluaran hanya dari barang yang sudah dichecklist
@@ -3134,7 +3191,7 @@
   }
 
   function saveBudgetLimit() {
-    const val = Number(el.budgetLimitInput.value);
+    const val = parseCurrencyInput(el.budgetLimitInput.value);
     if (!val || val <= 0) {
       showToast('Masukkan batas anggaran yang valid.', 'warning');
       return;
@@ -3359,7 +3416,7 @@
     const password = el.regPassword.value.trim();
     const role = el.regRole.value;
     const city = el.regCity.value.trim();
-    const budget = Number(el.regBudget.value) || 400000;
+    const budget = parseCurrencyInput(el.regBudget.value) || 400000;
 
     const res = window.SmartData.SmartStorage.registerUser({
       name,
@@ -3950,7 +4007,7 @@
     // Budget Limit Preset Chips
     document.querySelectorAll('[data-preset]').forEach(btn => {
       btn.addEventListener('click', () => {
-        el.budgetLimitInput.value = btn.dataset.preset;
+        el.budgetLimitInput.value = formatNumberDots(btn.dataset.preset);
         saveBudgetLimit();
       });
     });
@@ -4014,6 +4071,8 @@
   window.closeOverbudgetWarningPopup = closeOverbudgetWarningPopup;
   window.formatCategory = formatCategory;
   window.formatRp = formatRp;
+  window.formatNumberDots = formatNumberDots;
+  window.parseCurrencyInput = parseCurrencyInput;
   window.renderShopeeCatalog = renderShopeeCatalog;
   window.handleGoogleSignIn = handleGoogleSignIn;
   window.confirmGoogleAccount = confirmGoogleAccount;

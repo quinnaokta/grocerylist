@@ -30,7 +30,7 @@
   </script>
 
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=3.0">
+  <link rel="stylesheet" href="css/style.css?v=3.1">
 </head>
 <body>
 
@@ -170,7 +170,7 @@
                 <label class="form-label" for="gateRegBudget">Pagu Anggaran Bulanan</label>
                 <div class="currency-input-box">
                   <span class="currency-prefix">Rp</span>
-                  <input type="number" class="form-input currency-input" id="gateRegBudget" value="400000" step="10000" inputmode="numeric">
+                  <input type="text" class="form-input currency-input" id="gateRegBudget" value="400.000" placeholder="400.000" inputmode="numeric">
                 </div>
               </div>
 
@@ -493,7 +493,7 @@
               <label class="form-label">Nominal Batas Anggaran</label>
               <div class="currency-input-box">
                 <span class="currency-prefix">Rp</span>
-                <input type="number" class="form-input currency-input" id="budgetLimitInput" value="450000" step="10000" min="50000" max="5000000" inputmode="numeric">
+                <input type="text" class="form-input currency-input" id="budgetLimitInput" value="450.000" placeholder="450.000" inputmode="numeric">
               </div>
             </div>
 
@@ -760,7 +760,7 @@
                 <label class="form-label" for="regBudget">Pagu Anggaran Bulanan</label>
                 <div class="currency-input-box">
                   <span class="currency-prefix">Rp</span>
-                  <input type="number" class="form-input currency-input" id="regBudget" value="400000" step="10000" inputmode="numeric">
+                  <input type="text" class="form-input currency-input" id="regBudget" value="400.000" placeholder="400.000" inputmode="numeric">
                 </div>
               </div>
 
@@ -900,7 +900,7 @@
                   <label class="form-label">HARGA SATUAN (RP) :</label>
                   <div class="currency-input-box">
                     <span class="currency-prefix">Rp</span>
-                    <input type="number" class="form-input currency-input" id="inputUnitPrice" placeholder="0" min="0" step="500" inputmode="numeric" required style="font-weight: 700;">
+                    <input type="text" class="form-input currency-input" id="inputUnitPrice" placeholder="0" inputmode="numeric" required style="font-weight: 700;">
                   </div>
                 </div>
               </div>
@@ -911,7 +911,7 @@
               <!-- Diskon (Kalkulator) Card (Persis Screenshot 2) -->
               <div class="discount-calc-card">
                 <label class="discount-calc-label">DISKON (KALKULATOR)</label>
-                <input type="text" class="form-input discount-formula-input" id="inputDiscountFormula" placeholder="Contoh: 25% atau 50% + 20% atau 20% + 5% atau Rp 1000" autocomplete="off">
+                <input type="text" class="form-input discount-formula-input" id="inputDiscountFormula" placeholder="Contoh: 25% atau 50% + 20% atau 20% + 5% atau Rp 5.000" autocomplete="off">
                 
                 <div class="discount-preset-chips" id="discountPresetChips">
                   <button type="button" class="dis-preset-chip" data-formula="25%">25% (Sabun Cuci)</button>
@@ -1241,7 +1241,7 @@
                   <label class="form-label" for="etalasePrice">Harga Jual (Rp) *</label>
                   <div class="currency-input-box">
                     <span class="currency-prefix">Rp</span>
-                    <input type="number" class="form-input currency-input" id="etalasePrice" placeholder="0" min="0" step="500" inputmode="numeric" required>
+                    <input type="text" class="form-input currency-input" id="etalasePrice" placeholder="0" inputmode="numeric" required>
                   </div>
                 </div>
 
@@ -1249,7 +1249,7 @@
                   <label class="form-label" for="etalaseOriginalPrice">Harga Coret (Opsional)</label>
                   <div class="currency-input-box">
                     <span class="currency-prefix">Rp</span>
-                    <input type="number" class="form-input currency-input" id="etalaseOriginalPrice" placeholder="0" min="0" step="500" inputmode="numeric">
+                    <input type="text" class="form-input currency-input" id="etalaseOriginalPrice" placeholder="0" inputmode="numeric">
                   </div>
                 </div>
               </div>
