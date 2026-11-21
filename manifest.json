@@ -1,14 +1,14 @@
 {
-  "name": "Smart Grocery & Budget Safety Tracker",
-  "short_name": "Smart Grocery",
-  "description": "Aplikasi PWA tracker belanja bulanan anak rantau dengan simulasi diskon, deteksi harga pasar, dan kontrol keamanan anggaran.",
+  "name": "ICT Codehub - Integrated Learning Space",
+  "short_name": "ICT Codehub",
+  "description": "Integrated Learning Space untuk Mutiara Bangsa 2 School - Smart Grocery & Budget Safety Tracker",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#FAF4F6",
   "theme_color": "#E05A7E",
-  "lang": "id",
+  "lang": "en",
   "icons": [
     {
       "src": "icons/icon-192.png",
@@ -29,5 +29,5 @@
       "purpose": "any"
     }
   ],
-  "categories": ["finance", "shopping", "utilities"]
+  "categories": ["education", "finance", "shopping", "utilities"]
 }
