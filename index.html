@@ -30,7 +30,7 @@
   </script>
 
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=3.2">
+  <link rel="stylesheet" href="css/style.css?v=3.3">
 </head>
 <body>
 
@@ -577,12 +577,15 @@
               <div class="user-profile-header">
                 <div class="user-big-avatar" id="profileBigAvatar">👨‍🎓</div>
                 <div class="user-hero-info">
-                  <div class="user-hero-name-row">
-                    <h3 id="profileFullName">Pengguna Rantau</h3>
+                  <h3 class="user-hero-name" id="profileFullName">Pengguna Rantau</h3>
+                  <div class="user-hero-badge-wrap">
                     <span class="user-role-badge" id="profileRoleBadge">Mahasiswa Rantau</span>
                   </div>
                   <div class="user-hero-email" id="profileEmail">-</div>
-                  <div class="user-hero-location" id="profileLocation">📍 Kost Sleman, Yogyakarta</div>
+                  <div class="user-hero-location" id="profileLocation">
+                    <i data-lucide="map-pin" style="width: 12px; height: 12px; color: var(--primary); flex-shrink: 0;"></i>
+                    <span>Kost Sleman, Yogyakarta</span>
+                  </div>
                 </div>
               </div>
 

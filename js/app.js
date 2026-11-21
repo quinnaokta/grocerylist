@@ -3280,7 +3280,10 @@
       if (el.profileFullName) el.profileFullName.textContent = user.name;
       if (el.profileRoleBadge) el.profileRoleBadge.textContent = user.role || 'Mahasiswa Rantau';
       if (el.profileEmail) el.profileEmail.textContent = user.email;
-      if (el.profileLocation) el.profileLocation.textContent = `📍 Kost di ${user.city || 'Yogyakarta'}`;
+      if (el.profileLocation) {
+        el.profileLocation.innerHTML = `<i data-lucide="map-pin" style="width: 12px; height: 12px; color: var(--primary); flex-shrink: 0;"></i><span>Kost di ${escapeHtml(user.city || 'Yogyakarta')}</span>`;
+        if (window.lucide) window.lucide.createIcons({ root: el.profileLocation });
+      }
       const budgetVal = (user && user.budget) ? user.budget : (state.budgetLimit || 450000);
       if (el.profileBudgetLimit) el.profileBudgetLimit.textContent = formatRp(budgetVal);
 
