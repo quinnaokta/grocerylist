@@ -974,8 +974,7 @@
 
   function prefillAuthGate() {
     if (!el.gateLoginEmail) return;
-    // Jangan default prefill email budi
-    if (state.currentUser && state.currentUser.email && state.currentUser.email !== 'budi@rantau.id') {
+    if (state.currentUser && state.currentUser.email && state.currentUser.id !== 'user-quinna' && state.currentUser.email !== 'budi@rantau.id') {
       if (!el.gateLoginEmail.value) {
         el.gateLoginEmail.value = state.currentUser.email || '';
       }
@@ -1790,8 +1789,8 @@
     } else {
       state.currentUser = window.SmartData.SmartStorage.getCurrentUser();
     }
-    // Bersihkan sisa akun demo / tamu / budi jika ada
-    if (state.currentUser && (state.currentUser.email === 'tamu@rantau.id' || state.currentUser.name === 'Tamu Rantau' || state.currentUser.email === 'budi@rantau.id' || state.currentUser.name === 'Budi Santoso')) {
+    // Bersihkan sisa akun demo / tamu / budi / default lama jika ada
+    if (state.currentUser && (state.currentUser.id === 'user-quinna' || state.currentUser.email === 'tamu@rantau.id' || state.currentUser.name === 'Tamu Rantau' || state.currentUser.email === 'budi@rantau.id' || state.currentUser.name === 'Budi Santoso')) {
       window.SmartData.SmartStorage.logoutUser();
       state.currentUser = null;
     }
