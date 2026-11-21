@@ -30,7 +30,7 @@
   </script>
 
   <!-- Main Stylesheet -->
-  <link rel="stylesheet" href="css/style.css?v=4.0.2">
+  <link rel="stylesheet" href="css/style.css?v=4.0.3">
 </head>
 <body>
 
@@ -651,6 +651,14 @@
                   <span style="color: var(--danger-rose); font-weight: 700;">Keluar dari Akun (Logout)</span>
                 </div>
                 <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: var(--danger-rose);"></i>
+              </button>
+
+              <button class="account-menu-item danger-delete" id="btnDeleteAccount" type="button">
+                <div class="menu-item-left">
+                  <i data-lucide="trash-2" style="width: 18px; height: 18px; color: #DC2626;"></i>
+                  <span style="color: #DC2626; font-weight: 700;">Hapus Akun Permanen</span>
+                </div>
+                <i data-lucide="chevron-right" style="width: 16px; height: 16px; color: #DC2626;"></i>
               </button>
             </div>
           </div>
@@ -1299,6 +1307,42 @@
         </div>
       </div>
 
+      <!-- ==========================================
+           MODAL 8: KONFIRMASI HAPUS AKUN PERMANEN
+           ========================================== -->
+      <div class="modal-overlay warning-overlay" id="deleteAccountModal" style="display: none;">
+        <div class="warning-popup-card delete-account-card">
+          <button type="button" class="warning-popup-close-btn" id="closeDeleteAccountModalBtn" aria-label="Tutup Konfirmasi Hapus Akun">
+            <i data-lucide="x" style="width: 18px; height: 18px;"></i>
+          </button>
+
+          <div class="delete-account-icon-wrapper">
+            <i data-lucide="trash-2" style="width: 28px; height: 28px; color: #EF4444;"></i>
+          </div>
+
+          <h3 class="delete-account-title">Hapus Akun Permanen?</h3>
+          
+          <div class="delete-account-user-pill" id="deleteAccountUserPill">
+            <span id="deleteAccountUserName">Nama Pengguna</span>
+            <small id="deleteAccountUserEmail">email@domain.com</small>
+          </div>
+
+          <p class="delete-account-desc">
+            Tindakan ini <strong>tidak dapat dibatalkan</strong>. Akun kamu, data profil, riwayat belanja, dan sinkronisasi sesi belanja di cloud Firestore akan <strong>dihapus secara permanen</strong> dari server dan perangkat ini.
+          </p>
+
+          <div class="delete-account-actions">
+            <button type="button" class="btn-cancel-delete" id="cancelDeleteAccountBtn">
+              <span>Batal</span>
+            </button>
+            <button type="button" class="btn-confirm-delete" id="confirmDeleteAccountBtn">
+              <i data-lucide="trash-2" style="width: 16px; height: 16px;"></i>
+              <span>Ya, Hapus Akun</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
     </main>
   </div>
 
@@ -1308,8 +1352,8 @@
   <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
 
   <!-- Scripts with cache-busting version query -->
-  <script src="js/sound.js?v=4.0.2"></script>
-  <script src="js/data.js?v=4.0.2"></script>
-  <script src="js/app.js?v=4.0.2"></script>
+  <script src="js/sound.js?v=4.0.3"></script>
+  <script src="js/data.js?v=4.0.3"></script>
+  <script src="js/app.js?v=4.0.3"></script>
 </body>
 </html>

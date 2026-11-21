@@ -422,6 +422,14 @@ class SmartStorage {
     }
   }
 
+  static remove(key) {
+    try {
+      localStorage.removeItem('sg_' + key);
+    } catch (e) {
+      console.error('Storage remove error', e);
+    }
+  }
+
   // Active Grocery Cart Items (Bersih saat pertama kali log on / buat akun baru)
   static getActiveItems() {
     const user = this.getCurrentUser();
@@ -741,6 +749,56 @@ class SmartStorage {
     this.set('history_trips', []);
 
     return { success: true, user: newUser };
+  }
+
+  // Hapus akun pengguna secara permanen dari Cloud Firestore & LocalStorage
+  static async deleteUserAccount(identifier) {
+    const users = this.getUsers();
+    const cleanId = String(identifier || '').trim().toLowerCase();
+
+    const targetUser = users.find(u =>
+      (u.id && String(u.id).toLowerCase() === cleanId) ||
+      (u.email && u.email.toLowerCase() === cleanId)
+    );
+
+    const email = targetUser ? targetUser.email : cleanId;
+    const userId = targetUser ? targetUser.id : cleanId;
+    const cleanEmail = String(email || '').trim().toLowerCase();
+    const safeEmail = cleanEmail.replace(/[^a-z0-9_-]/g, '_');
+
+    // 1. Hapus dari Firestore Cloud (user_accounts & shopping_sessions)
+    const db = initFirebaseAppOnce();
+    if (db && safeEmail) {
+      try {
+        await db.collection('user_accounts').doc(safeEmail).delete();
+      } catch (e) {
+        console.warn('Gagal hapus user_accounts dari cloud:', e);
+      }
+      try {
+        await db.collection('shopping_sessions').doc(`session_${safeEmail}`).delete();
+      } catch (e) {
+        console.warn('Gagal hapus shopping_sessions dari cloud:', e);
+      }
+    }
+
+    // 2. Hapus akun dari daftar pengguna lokal
+    const remainingUsers = users.filter(u =>
+      (u.id && String(u.id).toLowerCase() !== cleanId && String(u.id).toLowerCase() !== String(userId).toLowerCase()) &&
+      (u.email && u.email.toLowerCase() !== cleanEmail)
+    );
+    this.saveUsers(remainingUsers);
+
+    // 3. Bersihkan data belanja lokal
+    if (userId) {
+      this.remove(`active_items_${userId}`);
+      this.remove(`history_trips_${userId}`);
+    }
+    this.remove('active_items');
+    this.remove('history_trips');
+    this.remove('budget_limit');
+    this.logoutUser();
+
+    return { success: true };
   }
 
   // Google OAuth Login or Register Helper (Persis Screenshot 1)

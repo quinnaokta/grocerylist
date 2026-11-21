@@ -281,6 +281,13 @@
     quickLoginBudi: document.getElementById('quickLoginBudi'),
     quickLoginSiti: document.getElementById('quickLoginSiti'),
     btnLogoutUser: document.getElementById('btnLogoutUser'),
+    btnDeleteAccount: document.getElementById('btnDeleteAccount'),
+    deleteAccountModal: document.getElementById('deleteAccountModal'),
+    closeDeleteAccountModalBtn: document.getElementById('closeDeleteAccountModalBtn'),
+    cancelDeleteAccountBtn: document.getElementById('cancelDeleteAccountBtn'),
+    confirmDeleteAccountBtn: document.getElementById('confirmDeleteAccountBtn'),
+    deleteAccountUserName: document.getElementById('deleteAccountUserName'),
+    deleteAccountUserEmail: document.getElementById('deleteAccountUserEmail'),
     menuSetBudgetBtn: document.getElementById('menuSetBudgetBtn'),
     menuSwitchAccountBtn: document.getElementById('menuSwitchAccountBtn'),
     menuSoundToggleBtn: document.getElementById('menuSoundToggleBtn'),
@@ -3538,6 +3545,80 @@
     if (window.soundCtrl) window.soundCtrl.playTick();
   }
 
+  // ==========================================
+  // FITUR HAPUS AKUN PERMANEN (CLOUD & LOCAL)
+  // ==========================================
+
+  function openDeleteAccountModal() {
+    if (!state.currentUser) {
+      showToast('Tidak ada akun yang sedang aktif.', 'warning');
+      return;
+    }
+    if (el.deleteAccountUserName) el.deleteAccountUserName.textContent = state.currentUser.name || 'Pengguna';
+    if (el.deleteAccountUserEmail) el.deleteAccountUserEmail.textContent = state.currentUser.email || '-';
+    if (el.deleteAccountModal) {
+      el.deleteAccountModal.style.display = 'flex';
+      if (window.lucide) window.lucide.createIcons({ root: el.deleteAccountModal });
+    }
+    if (window.soundCtrl) window.soundCtrl.playTick();
+  }
+
+  function closeDeleteAccountModal() {
+    if (el.deleteAccountModal) {
+      el.deleteAccountModal.style.display = 'none';
+    }
+  }
+
+  async function handleConfirmDeleteAccount() {
+    if (!state.currentUser) {
+      closeDeleteAccountModal();
+      return;
+    }
+
+    const userToDelete = state.currentUser;
+    const confirmBtn = el.confirmDeleteAccountBtn;
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.innerHTML = '<span>Menghapus...</span>';
+    }
+
+    try {
+      await window.SmartData.SmartStorage.deleteUserAccount(userToDelete.email || userToDelete.id);
+      state.currentUser = null;
+      state.activeItems = [];
+      state.historyTrips = [];
+      state.budgetLimit = 400000;
+      localStorage.removeItem('sg_remember_me');
+
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(null);
+      }
+
+      closeDeleteAccountModal();
+      renderUserProfile();
+      renderGroceryList();
+      renderShopeeCatalog();
+      updateBudgetSafetyMeter();
+      renderAnggaranScreen();
+      syncCartBadges();
+
+      showToast(`Akun ${userToDelete.name} berhasil dihapus permanen dari sistem & cloud.`, 'success');
+      if (window.soundCtrl) window.soundCtrl.playWarning();
+
+      showAuthGate(true);
+      switchGateTab('register');
+    } catch (err) {
+      console.error('Delete account error:', err);
+      showToast('Gagal menghapus akun. Silakan coba lagi.', 'danger');
+    } finally {
+      if (confirmBtn) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i data-lucide="trash-2" style="width: 16px; height: 16px;"></i><span>Ya, Hapus Akun</span>';
+        if (window.lucide) window.lucide.createIcons({ root: confirmBtn });
+      }
+    }
+  }
+
   function togglePassword(inputId, iconId) {
     const inp = document.getElementById(inputId);
     const icon = document.getElementById(iconId);
@@ -3814,6 +3895,23 @@
     // Profile menu actions
     if (el.btnLogoutUser) {
       el.btnLogoutUser.addEventListener('click', handleLogout);
+    }
+    if (el.btnDeleteAccount) {
+      el.btnDeleteAccount.addEventListener('click', openDeleteAccountModal);
+    }
+    if (el.closeDeleteAccountModalBtn) {
+      el.closeDeleteAccountModalBtn.addEventListener('click', closeDeleteAccountModal);
+    }
+    if (el.cancelDeleteAccountBtn) {
+      el.cancelDeleteAccountBtn.addEventListener('click', closeDeleteAccountModal);
+    }
+    if (el.confirmDeleteAccountBtn) {
+      el.confirmDeleteAccountBtn.addEventListener('click', handleConfirmDeleteAccount);
+    }
+    if (el.deleteAccountModal) {
+      el.deleteAccountModal.addEventListener('click', (e) => {
+        if (e.target === el.deleteAccountModal) closeDeleteAccountModal();
+      });
     }
     if (el.menuSetBudgetBtn) {
       el.menuSetBudgetBtn.addEventListener('click', () => switchTab('viewAnggaran'));
