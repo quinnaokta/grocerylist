@@ -2090,49 +2090,46 @@
         }
 
         card.innerHTML = `
-          <!-- 1. Tombol Centang Beli (Left) -->
-          <button class="cart-check-btn ${item.inCart ? 'checked' : ''}" data-action="toggle-cart" title="${item.inCart ? 'Dicentang untuk dibeli (Klik untuk batalkan)' : 'Klik centang saat ingin beli barang ini'}" aria-label="Tandai Beli">
-            <i data-lucide="check" style="width: 17px; height: 17px;"></i>
-          </button>
-          
-          <!-- 2. Informasi Barang Tengah (Sebaris & Padat) -->
-          <div class="card-center-info" data-action="edit" style="cursor: pointer;" title="Klik untuk edit barang">
-            <div class="card-name-row">
-              <span class="item-name" title="${escapeHtml(item.name)}">${escapeHtml(item.name)}</span>
+          <!-- Baris 1: Tombol Centang Beli (Kiri) + Nama Barang Penuh Sebaris + Tombol Edit/Hapus (Kanan) -->
+          <div class="card-top-line">
+            <button class="cart-check-btn ${item.inCart ? 'checked' : ''}" data-action="toggle-cart" title="${item.inCart ? 'Dicentang untuk dibeli (Klik untuk batalkan)' : 'Klik centang saat ingin beli barang ini'}" aria-label="Tandai Beli">
+              <i data-lucide="check" style="width: 16px; height: 16px;"></i>
+            </button>
+            <div class="card-name-block" data-action="edit" title="Klik untuk edit barang">
+              <span class="item-name">${escapeHtml(item.name)}</span>
+              <div class="card-sub-row">
+                <span class="item-price-at">@ ${formatRp(pricing.finalUnitPrice)}/${item.unit || 'pcs'}</span>
+                <span class="sub-sep">•</span>
+                <span class="category-tag-mini">${catObj.name}</span>
+                ${trendBadgeHtml}
+                ${discountBadgeHtml}
+                ${taxBadgeHtml}
+              </div>
             </div>
-            <div class="card-sub-row">
-              <span class="item-price-at">@ ${formatRp(pricing.finalUnitPrice)}/${item.unit || 'pcs'}</span>
-              <span class="sub-sep">•</span>
-              <span class="category-tag-mini">${catObj.name}</span>
-              ${trendBadgeHtml}
-              ${discountBadgeHtml}
-              ${taxBadgeHtml}
+            <div class="card-mini-actions-row">
+              <button class="card-action-icon-btn" data-action="edit" title="Edit Barang" aria-label="Edit">
+                <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
+              </button>
+              <button class="card-action-icon-btn delete" data-action="delete" title="Hapus Barang" aria-label="Hapus">
+                <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
+              </button>
             </div>
-            ${item.note ? `<div class="item-note-inline"><em>Catatan: ${escapeHtml(item.note)}</em></div>` : ''}
           </div>
 
-          <!-- 3. Stepper & Subtotal Kanan (Sebaris) -->
-          <div class="card-right-group">
+          <!-- Baris 2: Subtotal Harga Sebaris (Kiri) + Stepper Ramah Jari Layar HP (Kanan) -->
+          <div class="card-bottom-line">
+            <div class="card-price-stack" data-action="edit" title="Klik untuk edit barang">
+              <span class="card-price-label">Subtotal:</span>
+              ${pricing.totalSavings > 0 ? `<span class="card-original-price">${formatRp(pricing.normalTotal)}</span>` : ''}
+              <span class="card-final-subtotal">${formatRp(pricing.finalSubtotal)}</span>
+            </div>
             <div class="stepper-control-compact">
               <button class="stepper-btn-compact" data-action="qty-minus" aria-label="Kurangi Jumlah">−</button>
               <span class="stepper-value-compact">${item.qty}</span>
               <button class="stepper-btn-compact" data-action="qty-plus" aria-label="Tambah Jumlah">+</button>
             </div>
-            <div class="card-price-stack" data-action="edit" style="cursor: pointer;" title="Klik untuk edit barang">
-              ${pricing.totalSavings > 0 ? `<div class="card-original-price">${formatRp(pricing.normalTotal)}</div>` : ''}
-              <div class="card-final-subtotal">${formatRp(pricing.finalSubtotal)}</div>
-            </div>
           </div>
-
-          <!-- 4. Quick Mini Actions (Edit & Hapus) -->
-          <div class="card-mini-actions-row">
-            <button class="card-action-icon-btn" data-action="edit" title="Edit Barang" aria-label="Edit">
-              <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>
-            </button>
-            <button class="card-action-icon-btn delete" data-action="delete" title="Hapus Barang" aria-label="Hapus">
-              <i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>
-            </button>
-          </div>
+          ${item.note ? `<div class="item-note-inline"><em>Catatan: ${escapeHtml(item.note)}</em></div>` : ''}
         `;
 
         // Card button click delegation
