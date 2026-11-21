@@ -1520,7 +1520,7 @@
               <div style="display: flex; gap: 6px; width: 100%;">
                 <button type="button" class="btn-shopee-add" style="flex: 1;">
                   <i data-lucide="plus" style="width: 14px; height: 14px;"></i>
-                  <span>+ Keranjang</span>
+                  <span>Keranjang</span>
                 </button>
                 <button type="button" class="btn-shopee-edit-item" title="Edit Barang di Etalase" style="width: 36px; height: 36px; flex-shrink: 0;">
                   <i data-lucide="edit-3" style="width: 14px; height: 14px;"></i>

@@ -217,7 +217,7 @@ body {
   border-radius: 999px;
   cursor: pointer;
   transition: all 0.2s ease;
-  max-width: 280px;
+  max-width: 320px;
 }
 
 .header-current-store:hover {
@@ -227,10 +227,7 @@ body {
 }
 
 .header-current-store .store-prefix {
-  font-size: 12px;
-  font-weight: 600;
-  color: var(--text-muted);
-  white-space: nowrap;
+  display: none !important;
 }
 
 .header-current-store .store-name {
@@ -240,7 +237,7 @@ body {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-  max-width: 175px;
+  max-width: 250px;
 }
 
 .header-actions {
@@ -2205,16 +2202,23 @@ select.form-input:focus {
 #gateSubmitLoginBtn,
 #submitLoginBtn {
   width: 100%;
-  height: 52px !important;
-  margin-top: 6px;
-  font-size: 18px !important;
+  height: 56px !important;
+  min-height: 56px !important;
+  margin-top: 14px;
+  font-size: 17px !important;
   font-weight: 800 !important;
-  letter-spacing: 0.4px !important;
-  border-radius: var(--radius-full);
+  letter-spacing: 0.3px !important;
+  border-radius: 16px !important;
+  background: var(--primary) !important;
+  color: #FFFFFF !important;
+  border: none !important;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
+  gap: 10px;
+  box-shadow: 0 8px 24px var(--primary-glow) !important;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
 }
 
 .auth-submit-btn span,
@@ -2222,9 +2226,10 @@ select.form-input:focus {
 #submitRegisterBtn span,
 #gateSubmitLoginBtn span,
 #submitLoginBtn span {
-  font-size: 18px !important;
+  font-size: 17px !important;
   font-weight: 800 !important;
-  letter-spacing: 0.4px !important;
+  letter-spacing: 0.3px !important;
+  color: #FFFFFF !important;
 }
 
 .auth-submit-btn:active,
