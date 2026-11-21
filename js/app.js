@@ -1043,7 +1043,7 @@
     }
   }
 
-  function handleGateLoginSubmit(e) {
+  async function handleGateLoginSubmit(e) {
     e.preventDefault();
     const email = el.gateLoginEmail ? el.gateLoginEmail.value.trim() : '';
     const pass = el.gateLoginPassword ? el.gateLoginPassword.value.trim() : '';
@@ -1054,7 +1054,7 @@
       return;
     }
 
-    const res = window.SmartData.SmartStorage.loginUser(email, pass);
+    const res = await window.SmartData.SmartStorage.loginUserWithCloudFallback(email, pass);
     if (res.success) {
       state.currentUser = res.user;
       window.SmartData.SmartStorage.setCurrentUser(res.user);
@@ -1064,6 +1064,12 @@
       }
       const isRemember = el.gateRememberMe ? el.gateRememberMe.checked : true;
       localStorage.setItem('sg_remember_me', isRemember ? 'true' : 'false');
+
+      // Sambungkan realtime listener ke sesi akun pengguna
+      if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user);
+      }
+
       hideAuthGate();
       renderUserProfile();
       updateBudgetSafetyMeter();
@@ -1071,6 +1077,7 @@
       renderGroceryList();
       renderAnggaranScreen();
       syncCartBadges();
+      pushToFirestore();
       switchTab('viewKatalog');
       showToast(`Selamat datang kembali, ${res.user.name}! 👋`, 'success');
       if (window.soundCtrl) window.soundCtrl.playSuccess();
@@ -1109,7 +1116,7 @@
       window.SmartData.SmartStorage.saveHistoryTrips([]);
       localStorage.setItem('sg_remember_me', 'true');
       if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
-        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
+        window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user);
       }
       hideAuthGate();
       updateBudgetSafetyMeter();
@@ -1794,6 +1801,9 @@
       window.SmartData.SmartStorage.logoutUser();
       state.currentUser = null;
     }
+    if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+      window.SmartData.FirestoreRealtimeSync.setSessionUser(state.currentUser);
+    }
     const rawItems = window.SmartData.SmartStorage.getActiveItems();
     state.activeItems = groupActiveItems(rawItems);
     window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
@@ -2413,7 +2423,7 @@
     const sessionPayload = {
       storeLocation: state.storeLocation || 'Lotte Mart Grocery - Puri Indah',
       shoppingDate: state.shoppingDate || new Date().toISOString().split('T')[0],
-      walletLimit: Number(state.currentUser && state.currentUser.budget ? state.currentUser.budget : state.budgetLimit) || 400000,
+      walletLimit: Number(state.budgetLimit) || 450000,
       items: state.activeItems,
       totalSpent: checkedSpent,
       totalSavings: checkedSavings,
@@ -2441,41 +2451,54 @@
       return;
     }
 
-    // Subscribe to REALTIME listener onSnapshot() - NO getDoc() / getDocs()
+    // Subscribe ke listener REALTIME onSnapshot() - NO getDoc() / getDocs()
+    // Setiap ada perubahan data di HP atau PC lain, listener aktif ini langsung menangkap mutasi & UI re-render seketika!
     syncMgr.listenToSession(cloudData => {
       if (!cloudData) return;
 
       const isFromOtherDevice = cloudData.updateDeviceId && cloudData.updateDeviceId !== syncMgr.deviceId;
       let hasChanged = false;
 
-      // 1. Items array from Firestore
+      // 1. Items array dari Firestore (tambah item, ubah qty, centang beli, atau hapus)
       if (Array.isArray(cloudData.items)) {
-        state.activeItems = cloudData.items;
-        window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
-        hasChanged = true;
-      }
-
-      // 2. Wallet limit from Firestore (Hanya ubah jika akun tidak memiliki pagu spesifik)
-      if (typeof cloudData.walletLimit === 'number' && cloudData.walletLimit > 0) {
-        const userBudget = state.currentUser && state.currentUser.budget ? Number(state.currentUser.budget) : null;
-        if (!userBudget && state.budgetLimit !== cloudData.walletLimit) {
-          state.budgetLimit = cloudData.walletLimit;
-          window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
+        const curJson = JSON.stringify(state.activeItems);
+        const cloudJson = JSON.stringify(cloudData.items);
+        if (curJson !== cloudJson) {
+          state.activeItems = groupActiveItems(cloudData.items);
+          window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
           hasChanged = true;
         }
       }
 
-      // 3. Store location from Firestore
+      // 2. Wallet limit dari Firestore (ubah batas anggaran / limit dompet secara realtime)
+      if (typeof cloudData.walletLimit === 'number' && cloudData.walletLimit > 0) {
+        if (state.budgetLimit !== cloudData.walletLimit) {
+          state.budgetLimit = cloudData.walletLimit;
+          window.SmartData.SmartStorage.saveBudgetLimit(state.budgetLimit);
+          if (state.currentUser) {
+            state.currentUser.budget = cloudData.walletLimit;
+            window.SmartData.SmartStorage.setCurrentUser(state.currentUser);
+            window.SmartData.SmartStorage.updateUserBudget(state.currentUser.id || state.currentUser.email, cloudData.walletLimit);
+          }
+          if (el.budgetLimitInput) {
+            el.budgetLimitInput.value = formatNumberDots(state.budgetLimit);
+          }
+          hasChanged = true;
+        }
+      }
+
+      // 3. Store location dari Firestore (pindah supermarket)
       if (cloudData.storeLocation && cloudData.storeLocation !== state.storeLocation) {
         state.storeLocation = cloudData.storeLocation;
         window.SmartData.SmartStorage.saveStoreLocation(state.storeLocation);
         if (el.sessionStoreLocation) el.sessionStoreLocation.value = state.storeLocation;
         if (el.sessionLocationDisplay) el.sessionLocationDisplay.textContent = state.storeLocation;
         if (el.headerCurrentStoreName) el.headerCurrentStoreName.textContent = state.storeLocation;
+        syncStoreChips(state.storeLocation);
         hasChanged = true;
       }
 
-      // 4. Shopping date from Firestore
+      // 4. Shopping date dari Firestore
       if (cloudData.shoppingDate && cloudData.shoppingDate !== state.shoppingDate) {
         state.shoppingDate = cloudData.shoppingDate;
         window.SmartData.SmartStorage.saveShoppingDate(state.shoppingDate);
@@ -2483,7 +2506,7 @@
         hasChanged = true;
       }
 
-      // If cloud update received, re-render UI instantaneously without writing back
+      // Render ulang seluruh UI otomatis seketika tanpa perlu me-reload / F5 browser!
       if (hasChanged) {
         renderShopeeCatalog();
         renderGroceryList();
@@ -2491,7 +2514,7 @@
         renderAnggaranScreen();
         syncCartBadges();
 
-        // If change was made on another device, notify user with audio & visual toast
+        // Notifikasi realtime jika perubahan dibuat dari perangkat lain (HP -> PC atau PC -> HP)
         if (isFromOtherDevice) {
           showToast(`⚡ Sinkron Realtime: Belanjaan diperbarui dari ${cloudData.updatedBy || 'perangkat lain'}!`, 'info');
           if (window.soundCtrl) window.soundCtrl.playPop();
@@ -3494,6 +3517,9 @@
     window.SmartData.SmartStorage.logoutUser();
     state.currentUser = null;
     localStorage.removeItem('sg_remember_me');
+    if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
+      window.SmartData.FirestoreRealtimeSync.setSessionUser(null);
+    }
     showAuthGate(false);
     renderUserProfile();
     showToast('Kamu telah keluar dari akun.', 'info');
