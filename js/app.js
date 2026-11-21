@@ -1087,7 +1087,7 @@
     }
   }
 
-  function handleGateRegisterSubmit(e) {
+  async function handleGateRegisterSubmit(e) {
     e.preventDefault();
     const name = el.gateRegName.value.trim();
     const email = el.gateRegEmail.value.trim();
@@ -1096,7 +1096,12 @@
     const city = el.gateRegCity.value.trim();
     const budget = parseCurrencyInput(el.gateRegBudget.value) || 450000;
 
-    const res = window.SmartData.SmartStorage.registerUser({
+    if (!name || !email || !password) {
+      showToast('Nama, email, dan kata sandi wajib diisi!', 'warning');
+      return;
+    }
+
+    const res = await window.SmartData.SmartStorage.registerUser({
       name,
       email,
       password,
@@ -1133,6 +1138,13 @@
     } else {
       showToast(res.message, 'danger');
       if (window.soundCtrl) window.soundCtrl.playTick();
+
+      // Jika email sudah terdaftar, otomatis arahkan ke tab login agar tidak double akun
+      if (res.code === 'ALREADY_REGISTERED' || (res.message && res.message.includes('terdaftar'))) {
+        switchGateTab('login');
+        if (el.gateLoginEmail) el.gateLoginEmail.value = email;
+        if (el.gateLoginPassword) el.gateLoginPassword.focus();
+      }
     }
   }
 
@@ -2464,7 +2476,7 @@
         const curJson = JSON.stringify(state.activeItems);
         const cloudJson = JSON.stringify(cloudData.items);
         if (curJson !== cloudJson) {
-          state.activeItems = groupActiveItems(cloudData.items);
+          state.activeItems = cloudData.items;
           window.SmartData.SmartStorage.saveActiveItems(state.activeItems);
           hasChanged = true;
         }

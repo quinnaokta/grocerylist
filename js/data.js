@@ -379,6 +379,30 @@ const GROCERY_SUGGESTIONS = [
   { name: 'Tolak Angin Sachet isi 5', category: 'kesehatan', unit: 'box', defaultPrice: 18500 }
 ];
 
+// Firebase Configuration for Multi-Device Realtime Cloud Firestore
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyA4-z4Tb4q9kOe7Rywf9YV2Xv-8-K5B3BE",
+  authDomain: "smartgrocery-app-65895.firebaseapp.com",
+  projectId: "smartgrocery-app-65895",
+  storageBucket: "smartgrocery-app-65895.firebasestorage.app",
+  messagingSenderId: "159154578335",
+  appId: "1:159154578335:web:a43e9f13eddcb8e785d3aa"
+};
+
+function initFirebaseAppOnce() {
+  if (typeof firebase !== 'undefined') {
+    try {
+      if (!firebase.apps || !firebase.apps.length) {
+        firebase.initializeApp(FIREBASE_CONFIG);
+      }
+      return firebase.firestore();
+    } catch (e) {
+      console.warn('Firebase init error:', e);
+    }
+  }
+  return null;
+}
+
 class SmartStorage {
   static get(key, defaultValue) {
     try {
@@ -586,32 +610,45 @@ class SmartStorage {
   }
 
   static async loginUserWithCloudFallback(email, password) {
-    let res = this.loginUser(email, password);
-    if (res.success) return res;
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
 
-    // Coba periksa ke cloud Firestore jika akun didaftarkan dari perangkat lain (HP / PC)
-    if (window.firebase && firebase.apps && firebase.apps.length) {
+    // 1. Coba periksa di local storage
+    const users = this.getUsers();
+    const localUser = users.find(u => u.email.toLowerCase() === cleanEmail);
+    if (localUser) {
+      if (localUser.password === cleanPass) {
+        this.setCurrentUser(localUser);
+        return { success: true, user: localUser };
+      } else {
+        return { success: false, message: 'Kata sandi salah. Silakan periksa kembali.' };
+      }
+    }
+
+    // 2. Coba periksa ke cloud Firestore jika akun didaftarkan dari perangkat lain (HP / PC)
+    const db = initFirebaseAppOnce();
+    if (db) {
       try {
-        const cleanEmail = (email || '').trim().toLowerCase();
         const safe = cleanEmail.replace(/[^a-z0-9_-]/g, '_');
-        const doc = await firebase.firestore().collection('user_accounts').doc(safe).get();
+        const doc = await db.collection('user_accounts').doc(safe).get();
         if (doc && doc.exists) {
           const cloudUser = doc.data();
-          if (cloudUser && cloudUser.password === (password || '').trim()) {
-            const users = this.getUsers();
+          if (cloudUser && String(cloudUser.password).trim() === cleanPass) {
             if (!users.some(u => u.email.toLowerCase() === cleanEmail)) {
               users.push(cloudUser);
               this.saveUsers(users);
             }
             this.setCurrentUser(cloudUser);
             return { success: true, user: cloudUser };
+          } else if (cloudUser) {
+            return { success: false, message: 'Kata sandi salah. Silakan periksa kembali.' };
           }
         }
       } catch (e) {
         console.warn('Cloud login check error:', e);
       }
     }
-    return res;
+    return { success: false, message: 'Akun dengan email ini belum terdaftar. Silakan buat akun di tab Daftar.' };
   }
 
   static updateUserBudget(identifier, newBudget) {
@@ -637,7 +674,7 @@ class SmartStorage {
     }
   }
 
-  static registerUser(userData) {
+  static async registerUser(userData) {
     const users = this.getUsers();
     const cleanEmail = (userData.email || '').trim().toLowerCase();
 
@@ -645,8 +682,31 @@ class SmartStorage {
       return { success: false, message: 'Nama, email, dan password wajib diisi!' };
     }
 
+    // 1. Cek duplikasi di local storage perangkat ini
     if (users.some(u => u.email.toLowerCase() === cleanEmail)) {
-      return { success: false, message: 'Email sudah terdaftar! Silakan login.' };
+      return {
+        success: false,
+        code: 'ALREADY_REGISTERED',
+        message: 'Email sudah terdaftar! Akun ini sudah ada. Silakan langsung masuk (login) di tab Masuk.'
+      };
+    }
+
+    // 2. Cek di Firestore user_accounts (cloud) agar email hanya bisa daftar akun sekali (ga double akun antar perangkat)
+    const db = initFirebaseAppOnce();
+    const safe = cleanEmail.replace(/[^a-z0-9_-]/g, '_');
+    if (db) {
+      try {
+        const cloudDoc = await db.collection('user_accounts').doc(safe).get();
+        if (cloudDoc && cloudDoc.exists) {
+          return {
+            success: false,
+            code: 'ALREADY_REGISTERED',
+            message: 'Email sudah terdaftar di cloud! Akun ini sudah ada. Silakan langsung masuk (login) di tab Masuk menggunakan kata sandi Anda.'
+          };
+        }
+      } catch (e) {
+        console.warn('Gagal cek email di Firestore:', e);
+      }
     }
 
     const newUser = {
@@ -666,10 +726,9 @@ class SmartStorage {
     this.setCurrentUser(newUser);
 
     // Sync akun baru ke Firestore agar perangkat lain (PC / HP) bisa langsung login
-    if (window.firebase && firebase.apps && firebase.apps.length) {
+    if (db) {
       try {
-        const safe = cleanEmail.replace(/[^a-z0-9_-]/g, '_');
-        firebase.firestore().collection('user_accounts').doc(safe).set(newUser, { merge: true });
+        await db.collection('user_accounts').doc(safe).set(newUser, { merge: true });
       } catch (e) {
         console.warn('Gagal sync user ke cloud:', e);
       }
@@ -1194,16 +1253,6 @@ const SHOPEE_PRODUCTS = [
   }
 ];
 
-// Firebase Configuration for Multi-Device Realtime Cloud Firestore
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyA4-z4Tb4q9kOe7Rywf9YV2Xv-8-K5B3BE",
-  authDomain: "smartgrocery-app-65895.firebaseapp.com",
-  projectId: "smartgrocery-app-65895",
-  storageBucket: "smartgrocery-app-65895.firebasestorage.app",
-  messagingSenderId: "159154578335",
-  appId: "1:159154578335:web:a43e9f13eddcb8e785d3aa"
-};
-
 class FirestoreRealtimeSync {
   constructor() {
     this.db = null;
@@ -1220,14 +1269,29 @@ class FirestoreRealtimeSync {
     this.statusListeners = [];
   }
 
+  ensureDb() {
+    if (!this.db) {
+      this.db = initFirebaseAppOnce();
+    }
+    if (this.db) {
+      this.isReady = true;
+      const targetSessionId = this.getCurrentSessionId();
+      if (!this.sessionDocRef || this.sessionId !== targetSessionId) {
+        this.sessionId = targetSessionId;
+        this.sessionDocRef = this.db.collection('shopping_sessions').doc(this.sessionId);
+      }
+    }
+    return this.isReady;
+  }
+
   getCurrentSessionId() {
     try {
       const user = SmartStorage.getCurrentUser();
       if (user && user.email) {
-        const safeEmail = String(user.email).toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+        const safeEmail = String(user.email).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
         return `session_${safeEmail}`;
       } else if (user && user.id) {
-        const safeId = String(user.id).toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+        const safeId = String(user.id).trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
         return `session_${safeId}`;
       }
     } catch (e) {}
@@ -1235,8 +1299,9 @@ class FirestoreRealtimeSync {
   }
 
   setSessionUser(user) {
+    this.ensureDb();
     const email = typeof user === 'object' && user ? (user.email || user.id) : user;
-    const safe = String(email || '').toLowerCase().replace(/[^a-z0-9_-]/g, '_');
+    const safe = String(email || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '_');
     const newSessionId = safe ? `session_${safe}` : 'active_shared_session';
 
     if (this.sessionId !== newSessionId || !this.sessionDocRef) {
@@ -1252,28 +1317,13 @@ class FirestoreRealtimeSync {
   }
 
   init() {
-    if (typeof firebase === 'undefined') {
-      console.warn('Firebase SDK belum termuat atau offline. Menggunakan LocalStorage fallback.');
+    this.ensureDb();
+    if (!this.isReady) {
       this.notifyStatus('offline');
       return false;
     }
-
-    try {
-      if (!firebase.apps || !firebase.apps.length) {
-        firebase.initializeApp(FIREBASE_CONFIG);
-      }
-      this.db = firebase.firestore();
-
-      this.sessionId = this.getCurrentSessionId();
-      this.sessionDocRef = this.db.collection('shopping_sessions').doc(this.sessionId);
-      this.isReady = true;
-      this.notifyStatus('connected');
-      return true;
-    } catch (e) {
-      console.error('Firebase init error:', e);
-      this.notifyStatus('offline');
-      return false;
-    }
+    this.notifyStatus('connected');
+    return true;
   }
 
   onStatusChange(fn) {
@@ -1293,6 +1343,7 @@ class FirestoreRealtimeSync {
     }
     const callback = this.cloudDataCallback;
 
+    this.ensureDb();
     if (!this.isReady || !this.sessionDocRef) {
       this.notifyStatus('offline');
       return null;
@@ -1306,9 +1357,8 @@ class FirestoreRealtimeSync {
 
     this.notifyStatus('syncing');
 
-    // Live real-time stream via onSnapshot() - fires on every cloud mutation instantly
+    // Live real-time stream via onSnapshot() - fires on every cloud mutation instantly across all devices
     this.unsubscribeListener = this.sessionDocRef.onSnapshot(
-      { includeMetadataChanges: false },
       (docSnapshot) => {
         this.notifyStatus('connected');
         if (docSnapshot && docSnapshot.exists) {
@@ -1346,6 +1396,7 @@ class FirestoreRealtimeSync {
   // Push local mutation to Firestore dengan debouncing aman
   pushSession(sessionData) {
     if (this.isApplyingCloudUpdate) return; // Prevent echo feedback loop
+    this.ensureDb();
     if (!this.isReady || !this.sessionDocRef) return;
 
     this.pendingSessionPayload = sessionData;
@@ -1356,7 +1407,7 @@ class FirestoreRealtimeSync {
 
     this.pushDebounceTimer = setTimeout(async () => {
       await this._executePush();
-    }, 120);
+    }, 60);
   }
 
   async _executePush() {
@@ -1371,7 +1422,7 @@ class FirestoreRealtimeSync {
         storeLocation: sessionData.storeLocation || 'Lotte Mart Grocery - Puri Indah',
         shoppingDate: sessionData.shoppingDate || new Date().toISOString().split('T')[0],
         walletLimit: Number(sessionData.walletLimit) || 450000,
-        items: sessionData.items || [],
+        items: Array.isArray(sessionData.items) ? sessionData.items : [],
         totalSpent: Number(sessionData.totalSpent) || 0,
         totalSavings: Number(sessionData.totalSavings) || 0,
         checkedCount: Number(sessionData.checkedCount) || 0,
@@ -1388,7 +1439,7 @@ class FirestoreRealtimeSync {
     } finally {
       setTimeout(() => {
         this.isPushing = false;
-      }, 150);
+      }, 120);
     }
   }
 }
