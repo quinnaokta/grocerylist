@@ -1012,10 +1012,10 @@
 
   function checkAuthGate(isInitialEntry = false) {
     const isRemembered = localStorage.getItem('sg_remember_me') !== 'false';
-    const user = state.currentUser;
+    const user = state.currentUser || (window.SmartData && window.SmartData.SmartStorage ? window.SmartData.SmartStorage.getCurrentUser() : null);
 
     if (user && isRemembered) {
-      // Jika user sudah login dan Ingat Saya aktif: Jangan logout saat refresh, langsung masuk ke app!
+      state.currentUser = user;
       hideAuthGate();
       renderUserProfile();
       if (el.shopeeLocationText && user.city) {
@@ -1046,27 +1046,32 @@
 
   function handleGateLoginSubmit(e) {
     e.preventDefault();
-    const email = el.gateLoginEmail.value.trim();
-    const pass = el.gateLoginPassword.value.trim();
+    const email = el.gateLoginEmail ? el.gateLoginEmail.value.trim() : '';
+    const pass = el.gateLoginPassword ? el.gateLoginPassword.value.trim() : '';
 
-    if (!email || !pass) {
-      showToast('Harap masukkan email/nama dan password!', 'warning');
+    if (!email) {
+      showToast('Harap masukkan email atau nama pengguna!', 'warning');
+      if (el.gateLoginEmail) el.gateLoginEmail.focus();
       return;
     }
 
     const res = window.SmartData.SmartStorage.loginUser(email, pass);
     if (res.success) {
       state.currentUser = res.user;
+      window.SmartData.SmartStorage.setCurrentUser(res.user);
       if (res.user.budget) {
         state.budgetLimit = res.user.budget;
         window.SmartData.SmartStorage.saveBudgetLimit(res.user.budget);
       }
       const isRemember = el.gateRememberMe ? el.gateRememberMe.checked : true;
       localStorage.setItem('sg_remember_me', isRemember ? 'true' : 'false');
-      checkAuthGate();
+      hideAuthGate();
+      renderUserProfile();
       updateBudgetSafetyMeter();
       renderShopeeCatalog();
+      renderGroceryList();
       renderAnggaranScreen();
+      syncCartBadges();
       switchTab('viewKatalog');
       showToast(`Selamat datang kembali, ${res.user.name}! 👋`, 'success');
       if (window.soundCtrl) window.soundCtrl.playSuccess();
@@ -1107,7 +1112,7 @@
       if (window.SmartData && window.SmartData.FirestoreRealtimeSync) {
         window.SmartData.FirestoreRealtimeSync.setSessionUser(res.user.id);
       }
-      checkAuthGate();
+      hideAuthGate();
       updateBudgetSafetyMeter();
       renderShopeeCatalog();
       renderGroceryList();

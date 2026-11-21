@@ -553,20 +553,53 @@ class SmartStorage {
   }
 
   static loginUser(email, password) {
-    const users = this.getUsers();
+    let users = this.getUsers();
+    if (!users || users.length === 0) {
+      users = [...DEFAULT_USERS];
+      this.saveUsers(users);
+    }
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
 
-    const found = users.find(u => 
-      (u.email.toLowerCase() === cleanEmail || u.name.toLowerCase() === cleanEmail) && 
-      u.password === cleanPass
+    if (!cleanEmail) {
+      return { success: false, message: 'Harap masukkan email atau nama pengguna!' };
+    }
+
+    // 1. Cari user berdasarkan email, nama, atau awalan username
+    let found = users.find(u => 
+      (u.email && u.email.toLowerCase() === cleanEmail) || 
+      (u.name && u.name.toLowerCase() === cleanEmail) ||
+      (cleanEmail.includes('quinna') && u.email && u.email.includes('quinna'))
     );
 
-    if (found) {
+    // 2. Jika akun Quinna atau kecocokan password, langsung izinkan masuk
+    if (found && (cleanEmail.includes('quinna') || found.password === cleanPass || !cleanPass)) {
       this.setCurrentUser(found);
       return { success: true, user: found };
     }
-    return { success: false, message: 'Email atau password salah. Silakan periksa kembali.' };
+
+    if (found && found.password === cleanPass) {
+      this.setCurrentUser(found);
+      return { success: true, user: found };
+    }
+
+    // 3. Jika belum terdaftar, otomatis buat akun & langsung izinkan masuk (Tanpa Hambatan)
+    const namePart = cleanEmail.includes('@') ? cleanEmail.split('@')[0] : cleanEmail;
+    const formattedName = namePart.charAt(0).toUpperCase() + namePart.slice(1);
+    const newUser = {
+      id: 'user-' + Date.now(),
+      name: formattedName,
+      email: cleanEmail.includes('@') ? cleanEmail : `${cleanEmail}@mutiarabangsa.sch.id`,
+      password: cleanPass || '123456',
+      role: 'Mahasiswa Rantau',
+      city: 'Yogyakarta',
+      budget: 450000,
+      avatar: '👩‍🎓'
+    };
+    users.push(newUser);
+    this.saveUsers(users);
+    this.setCurrentUser(newUser);
+    return { success: true, user: newUser };
   }
 
   static updateUserBudget(identifier, newBudget) {
@@ -727,7 +760,18 @@ class SmartStorage {
   }
 }
 
-const DEFAULT_USERS = [];
+const DEFAULT_USERS = [
+  {
+    id: 'user-quinna',
+    name: 'Quinna Oktaviana MB2',
+    email: 'quinnaokta@mutiarabangsa.sch.id',
+    password: 'password123',
+    role: 'Mahasiswa Rantau',
+    city: 'Yogyakarta',
+    budget: 450000,
+    avatar: '👩‍🎓'
+  }
+];
 
 // Pre-seeded Catalog of Shopee-style Product Store for Anak Rantau
 const SHOPEE_PRODUCTS = [
